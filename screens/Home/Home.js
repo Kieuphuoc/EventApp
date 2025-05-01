@@ -9,8 +9,10 @@ import FeaturedPosts from '../../components/FeaturedPosts';
 import { COLORS } from '../../constants/colors';
 import Apis, { endpoints } from '../../configs/Apis';
 import { Chip } from 'react-native-paper';
+import { useNavigation } from "@react-navigation/native";
 
 const Home = () => {
+  const navigation = useNavigation();
 
   const [categories, setCategories] = useState([]);
   const [events, setEvents] = useState([]);
@@ -76,23 +78,15 @@ const Home = () => {
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
 
         <FlatList
-        // data={events}
-        // keyExtractor={(item) => item.id.toString()}
-        // renderItem={renderItem}
-        // horizontal
-        // showsHorizontalScrollIndicator={false}
-        />
-
-        <FlatList
           data={events}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <EventCard event={item} />
+            <EventCard 
+            item={item}
+            onPress={() => navigation.navigate('eventDetail', { item })}
+            />
           )}
-          // horizontal
           showsHorizontalScrollIndicator={false}
-
-          style={{ height: 400 }}
         />
 
 

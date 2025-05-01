@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, StatusBar, S
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
 
-const avouriteEvents = [
+const favouriteEvent = [
   {
     id: '1',
     title: 'Summer Music Fest',
@@ -77,7 +77,7 @@ const FavouriteEvent = () => {
         </View>
       </View>
       <FlatList
-        data={favouriteEvents}
+        data={favouriteEvent}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}

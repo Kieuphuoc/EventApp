@@ -2,20 +2,25 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../constants/colors";
 
-const EventCard = ({ event }) => {
+const EventCard = ({ item, onPress }) => {
+
+  const date = new Date(item.start_time);
+  const dayMonth= `${date.getDate()}/${date.getMonth() + 1}`;
+  const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
 
   return (
     <TouchableOpacity 
       style={styles.card}
+      onPress={onPress}
     >
       <View style={styles.imageContainer}>
         <Image 
-          source={{ uri: event.image }} 
+          source={{ uri: item.image }} 
           style={styles.image}
         />
         <View style={styles.overlay}>
           <View style={styles.category}>
-            <Text style={styles.categoryText}>{event.category}</Text>
+            <Text style={styles.categoryText}>{item.category_id}</Text>
           </View>
         </View>
       </View>
@@ -23,10 +28,10 @@ const EventCard = ({ event }) => {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title} numberOfLines={2}>
-            {event.title}
+            {item.title}
           </Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>${event.price}</Text>
+            <Text style={styles.priceText}>${item.ticket_price}</Text>
           </View>
         </View>
 
@@ -34,16 +39,16 @@ const EventCard = ({ event }) => {
           <View style={styles.detailRow}>
             <View style={styles.detailItem}>
               <Ionicons name="calendar" size={14} color={COLORS.primary} />
-              <Text style={styles.detailText}>{event.date}</Text>
+              <Text style={styles.detailText}>{dayMonth}</Text>
             </View>
-            <View style={styles.detailItem}>
+            <View style={styles.detailItem}>  
               <Ionicons name="time" size={14} color={COLORS.primary} />
-              <Text style={styles.detailText}>{event.time}</Text>
+              <Text style={styles.detailText}>{time}</Text>
             </View>
           </View>
           <View style={styles.detailItem}>
             <Ionicons name="location" size={14} color={COLORS.primary} />
-            <Text style={styles.detailText}>{event.location}</Text>
+            <Text style={styles.detailText}>{item.location}</Text>
           </View>
         </View>
 

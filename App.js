@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
     </Stack.Navigator>
@@ -57,7 +57,7 @@ const TabNavigator = () => {
         }} component={CreateEvent} />
       <Tab.Screen name="favouriteEvent"
         options={{
-          title: 'Favourite',
+          title: 'Favourite Event',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
           ),
