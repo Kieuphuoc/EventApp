@@ -15,7 +15,7 @@ const EventCard = ({ event }) => {
         />
         <View style={styles.overlay}>
           <View style={styles.category}>
-            <Text style={styles.categoryText}>{event.eventType}</Text>
+            <Text style={styles.categoryText}>{event.category}</Text>
           </View>
         </View>
       </View>

@@ -2,7 +2,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import COLORS from '../constants/colors';
 
-const EventType = ({ type, iconName }) => {
+const Category = ({ type, iconName }) => {
 
     return (
         <View style={styles.container}>
@@ -31,4 +31,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default EventType;
+export default Category;

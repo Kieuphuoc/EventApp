@@ -3,7 +3,7 @@ import { ScrollView, View, Text, FlatList } from 'react-native';
 import { styles } from './styles';
 import Header from '../../components/Header';
 import SearchBox from '../../components/SearchBox';
-import EventType from '../../components/EventType';
+import Category from '../../components/Category';
 import EventCard from '../../components/EventCard';
 import FeaturedPosts from '../../components/FeaturedPosts';
 import { COLORS } from '../../constants/colors';
@@ -22,7 +22,7 @@ const Home = () => {
   // }
 
   const loadCates = async () => {
-    let res = await Apis.get(endpoints['event_type']);
+    let res = await Apis.get(endpoints['category']);
     setCategories(res.data);
   }
 
@@ -31,7 +31,8 @@ const Home = () => {
       setLoading(true);
 
       let res = await Apis.get(endpoints['event']);
-      setEvents(res.data.results);
+      console.log("Dữ liệu trả về:", res.data); 
+      setEvents(res.data);
     } catch (ex) {
       console.error(ex);
     } finally {
@@ -57,10 +58,10 @@ const Home = () => {
         <Text style={styles.sectionTitle}>Categories</Text>
 
         {/* <View style={styles.categoryRow}>
-          <EventType type="Football" iconName="football" />
-          <EventType type="Library" iconName="library" />
-          <EventType type="Camera" iconName="camera" />
-          <EventType type="Headset" iconName="headset" />
+          <Category type="Football" iconName="football" />
+          <Category type="Library" iconName="library" />
+          <Category type="Camera" iconName="camera" />
+          <Category type="Headset" iconName="headset" />
         </View> */}
         <View style={styles.categoryRow}>
           {categories.map((c) => {
@@ -68,9 +69,8 @@ const Home = () => {
             if (c.name.includes("Sport")) icon = "football";
             else if (c.name.includes("")) icon = "library";
             else if (c.name.includes("Alo")) icon = "headset";
-            return <EventType key={c.id} type={c.name} iconName={icon} />;
+            return <Category key={c.id} type={c.name} iconName={icon} />;
           })}
-
         </View>
 
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
@@ -87,18 +87,10 @@ const Home = () => {
           data={events}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <EventCard
-              title={item.title}
-              description={item.description}
-              date={item.start_time}
-              eventType={item.event_type_id}
-              price={item.ticket_price}
-              location={item.location}
-              image={item.image}
-            />
+            <EventCard event={item} />
           )}
-          horizontal
-                  showsHorizontalScrollIndicator={false}
+          // horizontal
+          showsHorizontalScrollIndicator={false}
 
           style={{ height: 400 }}
         />
