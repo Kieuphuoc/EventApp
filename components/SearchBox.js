@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import COLORS from "../constants/colors";
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Searchbar } from "react-native-paper";
 
-
-const SearchBox = () => {
+const SearchBox = ({q, setQ}) => {
+    
   return (
-    <View style={styles.container}>
-      <TextInput style={[styles.input, styles.boxStyles]} placeholder="Search Event.." placeholderTextColor={'gray'}/>
+    <View style={styles.container} >
+      <TextInput style={[styles.input, styles.boxStyles]} 
+        placeholder="Search Event.." 
+        placeholderTextColor={'gray'}
+        value={q} onChangeText={setQ}/>
+
       <View style={[styles.button, styles.boxStyles]}>
         <Ionicons name="search" size={24}  color="white" />
       </View>

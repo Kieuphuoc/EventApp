@@ -2,32 +2,37 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ReviewItem = ({ reviewerName, reviewerImage, rating, reviewDate, reviewText }) => {
+const ReviewItem = ({ review }) => {
+
+    const fullName = `${review.participant.first_name} ${review.participant.last_name}`; //Lấy đầy đủ tên
+    const d = new Date(review.created_date);
+    const date = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+
     return (
         <View style={styles.reviewItem}>
             <View style={styles.reviewerInfo}>
                 <Image
-                    source={{ uri: reviewerImage }}
+                    source={{ uri: review.participant.avatar }}
                     style={styles.reviewerImage}
                 />
                 <View style={styles.reviewerDetails}>
-                    <Text style={styles.reviewerName}>{reviewerName}</Text>
+                    <Text style={styles.reviewerName}>{fullName}</Text>
                     <View style={styles.reviewMeta}>
                         <View style={styles.starContainer}>
                             {[...Array(5)].map((_, index) => (
                                 <Ionicons
                                     key={index}
-                                    name={index < rating ? "star" : "star-outline"}
+                                    name={index < review.rating ? "star" : "star-outline"}
                                     size={16}
                                     color="#FFD700"
                                 />
                             ))}
                         </View>
-                        <Text style={styles.reviewDate}>{reviewDate}</Text>
+                        <Text style={styles.reviewDate}>{date}</Text>
                     </View>
                 </View>
             </View>
-            <Text style={styles.reviewText}>{reviewText}</Text>
+            <Text style={styles.reviewText}>{review.comment}</Text>
             <View style={styles.reviewActions}>
                 <TouchableOpacity style={styles.reviewActionButton}>
                     <Ionicons name="thumbs-up" size={16} color="#666" />
@@ -51,6 +56,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#f0f0f0',
+        marginBottom:10,
     },
     reviewerInfo: {
         flexDirection: 'row',

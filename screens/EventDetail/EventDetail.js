@@ -2,39 +2,35 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, FlatList, 
 import React, { useState, useEffect } from 'react';
 import COLORS from '../../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
-import EventCard from '../../components/EventCard';
 import TabReviews from '../../components/TabReviews';
-// import TabLocation from '../../components/TabLocation';
+import TabLocation from '../../components/TabLocation';
 import TabAbout from '../../components/TabAbout';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Apis, { endpoints } from '../../configs/Apis';
+
 
 const EventDetail = ({ route }) => {
 
     const { item } = route.params;
-
-    const [events, setEvents] = useState([]);
-
-    const loadEvents = async () => {
-        try {
-            setLoading(true);
-
-            let res = await Apis.get(endpoints['event']);
-            console.log("Dữ liệu trả về:", res.data);
-            setEvents(res.data);
-        } catch (ex) {
-            console.error(ex);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        loadEvents();
-    }, []);
-
     const [tabItem, moveTab] = useState(1);
+    const [rating, setRating] = useState([]);
 
+    const loadRating = async () => {
+        try {
+            let res = await Apis.get(endpoints['stats_rating'](item.id));
+            setRating(res.data);
+        } catch (error){
+            console.error('Lỗi gọi API:', error);
+        }
+    };
+
+    
+    useEffect(() => {
+        loadRating();
+    }, []);
+    
     return (
-        <View style={styles.container}>
+        <GestureHandlerRootView style={styles.container}>
             <StatusBar barStyle="light-content" />
             <ScrollView>
                 <View style={styles.imageContainer}>
@@ -50,12 +46,12 @@ const EventDetail = ({ route }) => {
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <View style={styles.eventTypeContainer}>
-                            <Text style={styles.eventType}>{item.category_id}</Text>
+                            <Text style={styles.eventType}>{item.category.name}</Text>
                         </View>
                         <View style={styles.ratingContainer}>
                             <Ionicons name="star" size={18} color="#FFD700" />
-                            <Text style={styles.rating}>4.5</Text>
-                            <Text style={styles.reviewCount}>(563 reviews)</Text>
+                            <Text style={styles.rating}>{rating.average_rating}</Text>
+                            <Text style={styles.reviewCount}>( {rating.review_count} reviewers )</Text>
                         </View>
                     </View>
 
@@ -86,7 +82,8 @@ const EventDetail = ({ route }) => {
                             <Text style={[styles.tabText, tabItem === 3 && styles.activeTabText]}>Reviews</Text>
                         </TouchableOpacity>
                     </View>
-
+                     
+                    {/* Tab About */}
                     {tabItem === 1 && (
                         <TabAbout
                             description={item.description}
@@ -98,27 +95,19 @@ const EventDetail = ({ route }) => {
                         />
                     )}
 
-                    {/* {tabItem === 2 && (
-                        <TabLocation location={event.location} title={event.title} />
-                    )} */}
+                    {/* Tab Location */}
+                    {tabItem === 2 && (
+                        <TabLocation item={item} />
+                    )}
 
+                    {/* Tab Reviews */}
                     {tabItem === 3 && (
-                        <TabReviews />
+                        <TabReviews event_id={item.id} />
                     )}
 
                     <Text style={styles.sectionTitle}>Popular Events</Text>
                     
-                    <FlatList
-                        data={events}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                            <EventCard
-                                item={item}
-                                onPress={() => navigation.navigate('eventDetail', { item })}
-                            />
-                        )}
-                        showsHorizontalScrollIndicator={false}
-                    />
+                
                 </View>
             </ScrollView>
 
@@ -128,12 +117,12 @@ const EventDetail = ({ route }) => {
                     <Text style={styles.priceLabel}>Total price</Text>
                     <Text style={styles.price}>${item.ticket_price}.000</Text>
                 </View>
-                <TouchableOpacity style={styles.bookButton} onPress={() => router.push('/booking')}>
+                <TouchableOpacity style={styles.bookButton}>
                     <Ionicons name="cart" size={20} color="#fff" />
                     <Text style={styles.bookButtonText}>Book Now</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </GestureHandlerRootView>
     );
 }
 

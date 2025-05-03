@@ -13,9 +13,11 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../../constants/colors';
+import COLORS from '../constants/colors';
+import { useRouter } from 'expo-router';
 
 const Register = ()=> {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +37,7 @@ const Register = ()=> {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Image
-              source={require('../../assets/images/logo.png')}
+              source={require('../assets/images/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />

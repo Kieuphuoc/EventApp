@@ -1,27 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import RatingBar from './RatingBar';
 import ReviewItem from './ReviewItem';
+import { FlatList } from 'react-native-gesture-handler';
+import Apis, { endpoints } from '../configs/Apis';
+import { useRoute } from '@react-navigation/native';
 
-const TabReviews = () => {
-    const reviews = [
-        {
-            reviewerName: 'Kieu Phuoc',
-            reviewerImage: 'https://scontent.fsgn5-5.fna.fbcdn.net/v/t39.30808-1/475956704_1685629878975007_6583137161822352104_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=100&ccb=1-7&_nc_sid=e99d92&_nc_ohc=0HhZTOoFeX0Q7kNvwH9MA1T&_nc_oc=AdmH6lpVyqVVPSK20JwwEPIxn--3Gg_zkrA-aL3iBEE-cquWljxNgq179LRbYBuxpNglLNlBb0PuvWrqFkl-HJPh&_nc_zt=24&_nc_ht=scontent.fsgn5-5.fna&_nc_gid=v-tC03AAndyF2BfnNQ605w&oh=00_AfHlQcufmgNPmxZ_zFdM1_dLOpylpD_ZFUKxKde-FbHYrA&oe=67FC69DE',
-            rating: 5,
-            reviewDate: '2 days ago',
-            reviewText: 'Amazing event! The organization was perfect and the atmosphere was incredible. Would definitely recommend to anyone interested in this type of event.'
-        },
-        {
-            reviewerName: 'Duc Tri',
-            reviewerImage: 'https://scontent.fsgn5-12.fna.fbcdn.net/v/t39.30808-6/483923150_1709516066586388_4735012284407839614_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=fe5ecc&_nc_ohc=2hflF4UzDH4Q7kNvwHdZUZp&_nc_oc=Adn9W5dIAaI06SYo6LVx63ZQ4fMJWWeCqVnlVHcxtkm81RZ8gkW9kse0jve2tVAO5kvXyEmEvigjN9z4ZdP4P4Zi&_nc_zt=23&_nc_ht=scontent.fsgn5-12.fna&_nc_gid=McFONR-W5KTPdabnzf636g&oh=00_AfEu9CsGGDkV1TF3Y5398cK-eWJv5NETDMMarZVXut-7qw&oe=67FC72F2',
-            rating: 4,
-            reviewDate: '1 week ago',
-            reviewText: 'Had a great time at the event. The speakers were knowledgeable and the networking opportunities were valuable.'
+const TabReviews = ({ event_id }) => {
+    const route = useRoute();
+    const [reviews, setReviews] = useState([]);
+    const [showAll, setShowAll] = useState(false);  // Thêm state để kiểm soát việc hiển thị tất cả review
+
+    const loadReviews = async () => {
+        try {
+            let eventIdInt = parseInt(event_id, 10);
+
+            console.log(event_id);
+
+            if (isNaN(eventIdInt)) {
+                console.error('event_id phải là một số nguyên hợp lệ');
+                return;
+            }
+
+            let res = await Apis.get(endpoints['review'](eventIdInt));
+            setReviews(res.data);
+        } catch (error) {
+            console.error('Lỗi khi gọi API:', error);
         }
-    ];
+    };
+
+    const loadMore = () => {
+        setShowAll(true);  // Khi nhấn nút "Load More", hiển thị tất cả review
+    };
+
+    useEffect(() => {
+        loadReviews();
+    }, []);
 
     return (
         <View style={styles.tabContent}>
@@ -45,23 +61,22 @@ const TabReviews = () => {
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.reviewList}>
-                {reviews.map((review, index) => (
-                    <ReviewItem
-                        key={index}
-                        reviewerName={review.reviewerName}
-                        reviewerImage={review.reviewerImage}
-                        rating={review.rating}
-                        reviewDate={review.reviewDate}
-                        reviewText={review.reviewText}
-                    />
-                ))}
-            </View>
+            <FlatList
+                data={showAll ? reviews : reviews.slice(0, 3)}  // Hiển thị 3 review đầu tiên hoặc tất cả
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                    <ReviewItem review={item} />
+                )}
+                showsHorizontalScrollIndicator={false}
+            />
 
-            <TouchableOpacity style={styles.loadMoreButton}>
-                <Text style={styles.loadMoreText}>Load More Reviews</Text>
-                <Ionicons name="chevron-down" size={20} color={COLORS.primary} />
-            </TouchableOpacity>
+            {/* Chỉ hiển thị nút "Load More Reviews" nếu có nhiều hơn 3 review */}
+            {reviews.length > 3 && !showAll && (
+                <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore}>
+                    <Text style={styles.loadMoreText}>Load More Reviews</Text>
+                    <Ionicons name="chevron-down" size={20} color={COLORS.primary} />
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
@@ -114,9 +129,6 @@ const styles = StyleSheet.create({
     writeReviewText: {
         color: '#fff',
         fontWeight: '600',
-    },
-    reviewList: {
-        gap: 20,
     },
     loadMoreButton: {
         flexDirection: 'row',

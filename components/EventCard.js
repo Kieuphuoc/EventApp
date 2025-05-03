@@ -11,8 +11,7 @@ const EventCard = ({ item, onPress }) => {
   return (
     <TouchableOpacity 
       style={styles.card}
-      onPress={onPress}
-    >
+      onPress={onPress} >
       <View style={styles.imageContainer}>
         <Image 
           source={{ uri: item.image }} 
@@ -20,7 +19,7 @@ const EventCard = ({ item, onPress }) => {
         />
         <View style={styles.overlay}>
           <View style={styles.category}>
-            <Text style={styles.categoryText}>{item.category_id}</Text>
+            <Text style={styles.categoryText}>{item.category.name}</Text>
           </View>
         </View>
       </View>

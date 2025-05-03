@@ -1,38 +1,68 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import COLORS from '../constants/colors';
 
-const TabLocation = ({ location, title }) => {
+const TabLocation = ({ item }) => {
+    const openGoogleMaps = () => {
+        // Tạo URL mở Google Maps trực tiếp (cho cả trình duyệt và ứng dụng)
+        const googleMapsUrl = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
+        const iosMapsUrl = `comgooglemaps://?q=${item.latitude},${item.longitude}`;
+        
+        // Kiểm tra xem thiết bị có phải là iOS và có ứng dụng Google Maps không
+        if (Platform.OS === 'ios') {
+            Linking.canOpenURL(iosMapsUrl)
+                .then((supported) => {
+                    if (supported) {
+                        Linking.openURL(iosMapsUrl); // Mở Google Maps trên iOS
+                    } else {
+                        Linking.openURL(googleMapsUrl); // Nếu không có Google Maps, mở trên trình duyệt
+                    }
+                })
+                .catch((err) => console.error('Error opening Google Maps on iOS', err));
+        } else {
+            // Trên Android, luôn sử dụng Google Maps URL
+            Linking.canOpenURL(iosMapsUrl)
+                .then((supported) => {
+                    if (supported) {
+                        Linking.openURL(iosMapsUrl); // Mở Google Maps trên Android
+                    } else {
+                        Linking.openURL(googleMapsUrl); // Nếu không có Google Maps, mở trên trình duyệt
+                    }
+                })
+                .catch((err) => console.error('Error opening Google Maps on Android', err));
+        }
+    };
+
     return (
         <View style={{ marginBottom: 30 }}>
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15 }}>Location</Text>
-            <View style={{ height: 250, borderRadius:8, overflow: 'hidden', marginBottom: 15 }}>
+            <View style={{ height: 250, borderRadius: 8, overflow: 'hidden', marginBottom: 15 }}>
                 <MapView
                     style={{ width: '100%', height: '100%' }}
                     initialRegion={{
-                        latitude: 10.762622,
-                        longitude: 106.660172,
+                        latitude: item.latitude,
+                        longitude: item.longitude,
                         latitudeDelta: 0.0922,
                         longitudeDelta: 0.0421,
                     }}
                 >
                     <Marker
                         coordinate={{
-                            latitude: 10.762622,
-                            longitude: 106.660172,
+                            latitude: item.latitude,
+                            longitude: item.longitude,
                         }}
-                        title={location}
-                        description={title}
+                        title={item.location}
+                        description={item.title}
                     />
                 </MapView>
             </View>
             <View style={styles.locationInfo}>
                 <Ionicons name="location" size={24} color={COLORS.primary} />
-                <Text style={styles.locationText}>{location}</Text>
+                <Text style={styles.locationText}>{item.location}</Text>
             </View>
-            <TouchableOpacity style={styles.directionsButton}>
+            <TouchableOpacity style={styles.directionsButton} onPress={openGoogleMaps}>
                 <Ionicons name="navigate" size={20} color="#fff" />
                 <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Get Directions</Text>
             </TouchableOpacity>

@@ -23,6 +23,15 @@ const StackNavigator = () => {
   );
 }
 
+const StackNavigatorProfile = () =>{
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name ="profile" component={Profile}/>
+      <Stack.Screen name ="register" component={Register}/>
+    </Stack.Navigator>
+  )
+}
+
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
   return (
@@ -68,7 +77,7 @@ const TabNavigator = () => {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
           ),
-        }} component={Profile} />
+        }} component={StackNavigatorProfile} />
     </Tab.Navigator>
   );
 }

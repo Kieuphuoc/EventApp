@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
+import { useNavigation } from "@react-navigation/native";
 
 const menuItems = [
   { icon: 'person', label: 'Edit Profile', screen: 'editProfile' },
@@ -23,8 +24,8 @@ const menuItems = [
   { icon: 'information-circle', label: 'About', screen: 'about' },
 ];
 
-export default function Profile() {
-
+const Profile= ()=> {
+  const navigation = useNavigation();
  
   const handleLogout = () => {
     Alert.alert(
@@ -69,10 +70,10 @@ export default function Profile() {
         </View>
 
         <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
+          <TouchableOpacity style={styles.statItem} onPress={()=> navigation.navigate('register')}>
             <Text style={styles.statNumber}>12</Text>
             <Text style={styles.statLabel}>Events</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>8</Text>
@@ -109,7 +110,6 @@ export default function Profile() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -226,3 +226,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default Profile;

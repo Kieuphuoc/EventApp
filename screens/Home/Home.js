@@ -8,20 +8,18 @@ import EventCard from '../../components/EventCard';
 import FeaturedPosts from '../../components/FeaturedPosts';
 import { COLORS } from '../../constants/colors';
 import Apis, { endpoints } from '../../configs/Apis';
-import { Chip } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
 
 const Home = () => {
   const navigation = useNavigation();
 
+
   const [categories, setCategories] = useState([]);
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState([false]);
-
-  // const loadEvents = async () => {
-  //   let res = await Apis.get(endpoints['event']);
-  //   setEvents(res.data);
-  // }
+  const [loading, setLoading] = useState(false);
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
 
   const loadCates = async () => {
     let res = await Apis.get(endpoints['category']);
@@ -32,11 +30,19 @@ const Home = () => {
     try {
       setLoading(true);
 
-      let res = await Apis.get(endpoints['event']);
-      console.log("Dữ liệu trả về:", res.data); 
-      setEvents(res.data);
+      let url = `${endpoints['event']}`;
+
+      if (q) {
+        url = `${url}?search=${q}`;
+      }
+
+      let res = await Apis.get(url); 
+      if (res.data) {
+        setEvents(res.data);
+      }
     } catch (ex) {
-      console.error(ex);
+      console.error("Error loading events:", ex);
+      setEvents([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -48,23 +54,18 @@ const Home = () => {
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [q]);
 
 
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         <Header />
-        <SearchBox />
+        <SearchBox q={q} setQ={setQ}/>
 
+        {/* <Searchbar value={q} onChangeText={setQ}  /> */}
         <Text style={styles.sectionTitle}>Categories</Text>
 
-        {/* <View style={styles.categoryRow}>
-          <Category type="Football" iconName="football" />
-          <Category type="Library" iconName="library" />
-          <Category type="Camera" iconName="camera" />
-          <Category type="Headset" iconName="headset" />
-        </View> */}
         <View style={styles.categoryRow}>
           {categories.map((c) => {
             let icon = "alert"; // mặc định
@@ -82,11 +83,18 @@ const Home = () => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <EventCard 
-            item={item}
-            onPress={() => navigation.navigate('eventDetail', { item })}
+              item={item}
+              onPress={() => navigation.navigate('eventDetail', { item })}
             />
           )}
-          showsHorizontalScrollIndicator={false}
+          // horizontal
+          scrollEnabled={false}
+          ListEmptyComponent={() => (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text>No events found</Text>
+            </View>
+          )}
+          ListFooterComponent={loading && <ActivityIndicator size={30} />}
         />
 
 

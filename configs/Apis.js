@@ -1,9 +1,11 @@
-const BASE_URL = "https://1f65-2001-ee1-df06-98a0-ec81-6ff9-f11c-3aaf.ngrok-free.app/";
+const BASE_URL = "https://5b93-2405-4802-6451-4ec0-8156-de08-9259-a29e.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
    'event': '/event/',
-   'category': '/category/'
+   'category': '/category/',
+   'review': (event_id) => `/event/${event_id}/reviews/`,
+   'stats_rating' : (event_id) => `/event/${event_id}/reviews/stats/`,
 }
 
 export default axios.create({
