@@ -70,15 +70,15 @@ const Profile= ()=> {
         </View>
 
         <View style={styles.statsContainer}>
-          <TouchableOpacity style={styles.statItem} onPress={()=> navigation.navigate('register')}>
+          <TouchableOpacity style={styles.statItem} onPress={()=> navigation.navigate('login')}>
             <Text style={styles.statNumber}>12</Text>
             <Text style={styles.statLabel}>Events</Text>
           </TouchableOpacity>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
+          <TouchableOpacity style={styles.statItem} onPress={()=> navigation.navigate('register')}>
             <Text style={styles.statNumber}>8</Text>
             <Text style={styles.statLabel}>Tickets</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>5</Text>

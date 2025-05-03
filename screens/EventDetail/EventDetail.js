@@ -1,4 +1,4 @@
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, FlatList, StatusBar } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import COLORS from '../../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,33 +8,52 @@ import TabAbout from '../../components/TabAbout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Apis, { endpoints } from '../../configs/Apis';
 
-
 const EventDetail = ({ route }) => {
+    const {id} = route.params;
+    // console.log(title);
 
-    const { item } = route.params;
     const [tabItem, moveTab] = useState(1);
-    const [rating, setRating] = useState([]);
+    const [rating, setRating] = useState({});
+    const [events, setEvents] = useState({});
+    const [loading, setLoading] = useState(true); // Đã thêm loading state
+
+    const loadEvents = async () => {
+        try {
+            let res = await Apis.get(endpoints['eventDetail'](id));
+            if (res.data) {
+                setEvents(res.data);
+            }
+        } catch (ex) {
+            console.error("Error loading events:", ex);
+            setEvents({}); // Đảm bảo item là object
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const loadRating = async () => {
         try {
-            let res = await Apis.get(endpoints['stats_rating'](item.id));
-            setRating(res.data);
-        } catch (error){
+            let res = await Apis.get(endpoints['stats_rating'](id));
+            setRating(res.data || {}); // Kiểm tra res.data
+        } catch (error) { 
             console.error('Lỗi gọi API:', error);
         }
     };
 
-    
+    useEffect(() => {
+        loadEvents();
+    }, []); // Thêm event_id làm dependency
+
     useEffect(() => {
         loadRating();
     }, []);
-    
+
     return (
         <GestureHandlerRootView style={styles.container}>
             <StatusBar barStyle="light-content" />
             <ScrollView>
                 <View style={styles.imageContainer}>
-                    <Image source={{ uri: item.image }} style={styles.image} />
+                    <Image source={{ uri: events.image }} style={styles.image} />
                     <TouchableOpacity style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
@@ -46,19 +65,19 @@ const EventDetail = ({ route }) => {
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <View style={styles.eventTypeContainer}>
-                            <Text style={styles.eventType}>{item.category.name}</Text>
+                            <Text style={styles.eventType}>{events.category?.name}</Text>
                         </View>
                         <View style={styles.ratingContainer}>
                             <Ionicons name="star" size={18} color="#FFD700" />
-                            <Text style={styles.rating}>{rating.average_rating}</Text>
-                            <Text style={styles.reviewCount}>( {rating.review_count} reviewers )</Text>
+                            <Text style={styles.rating}>{rating.average_rating || 0}</Text>
+                            <Text style={styles.reviewCount}>({rating.review_count || 0} reviewers)</Text>
                         </View>
                     </View>
 
-                    <Text style={styles.title}>{item.title}</Text>
+                    <Text style={styles.title}>{events.title || 'No Title'}</Text>
                     <View style={styles.locationContainer}>
                         <Ionicons name="location" size={16} color={COLORS.primary} />
-                        <Text style={styles.location}>{item.location}</Text>
+                        <Text style={styles.location}>{events.location || 'Unknown Location'}</Text>
                     </View>
 
                     {/* 3 Tab */}
@@ -82,11 +101,11 @@ const EventDetail = ({ route }) => {
                             <Text style={[styles.tabText, tabItem === 3 && styles.activeTabText]}>Reviews</Text>
                         </TouchableOpacity>
                     </View>
-                     
+
                     {/* Tab About */}
                     {tabItem === 1 && (
                         <TabAbout
-                            description={item.description}
+                            description={events.description || 'No description available'}
                             manager={{
                                 image: 'https://play-lh.googleusercontent.com/VMPS_t-CGBp-NVqefuMvMOGEDfmovBcGiepmAAF1I9hkdjLOjsfVjEV5d41DTAy3qI_akNaJKTdmaNwMRIs=w240-h480-rw',
                                 name: 'Kieu Phuoc',
@@ -97,17 +116,15 @@ const EventDetail = ({ route }) => {
 
                     {/* Tab Location */}
                     {tabItem === 2 && (
-                        <TabLocation item={item} />
+                        <TabLocation item={events} />
                     )}
 
                     {/* Tab Reviews */}
                     {tabItem === 3 && (
-                        <TabReviews event_id={item.id} />
+                        <TabReviews event_id={events.id} />
                     )}
 
                     <Text style={styles.sectionTitle}>Popular Events</Text>
-                    
-                
                 </View>
             </ScrollView>
 
@@ -115,7 +132,7 @@ const EventDetail = ({ route }) => {
             <View style={styles.footer}>
                 <View style={styles.priceContainer}>
                     <Text style={styles.priceLabel}>Total price</Text>
-                    <Text style={styles.price}>${item.ticket_price}.000</Text>
+                    <Text style={styles.price}>${events.ticket_price || 0}.000</Text>
                 </View>
                 <TouchableOpacity style={styles.bookButton}>
                     <Ionicons name="cart" size={20} color="#fff" />
@@ -124,16 +141,12 @@ const EventDetail = ({ route }) => {
             </View>
         </GestureHandlerRootView>
     );
-}
-
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-    },
-    scrollView: {
-        flex: 1,
     },
     imageContainer: {
         position: 'relative',
@@ -243,9 +256,6 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 15,
     },
-    eventsList: {
-        paddingBottom: 20,
-    },
     footer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -281,6 +291,5 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 });
-
 
 export default EventDetail;

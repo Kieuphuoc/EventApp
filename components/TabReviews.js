@@ -68,6 +68,7 @@ const TabReviews = ({ event_id }) => {
                     <ReviewItem review={item} />
                 )}
                 showsHorizontalScrollIndicator={false}
+                scrollEnabled={false}
             />
 
             {/* Chỉ hiển thị nút "Load More Reviews" nếu có nhiều hơn 3 review */}

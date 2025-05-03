@@ -6,6 +6,7 @@ export const endpoints = {
    'category': '/category/',
    'review': (event_id) => `/event/${event_id}/reviews/`,
    'stats_rating' : (event_id) => `/event/${event_id}/reviews/stats/`,
+   'eventDetail': (id) => `/event/${id}/`
 }
 
 export default axios.create({

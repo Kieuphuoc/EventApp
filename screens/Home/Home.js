@@ -84,7 +84,7 @@ const Home = () => {
           renderItem={({ item }) => (
             <EventCard 
               item={item}
-              onPress={() => navigation.navigate('eventDetail', { item })}
+              onPress={() => navigation.navigate('eventDetail', { id: item.id })}
             />
           )}
           // horizontal
