@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Apis, { endpoints } from '../../configs/Apis';
 
 const EventDetail = ({ route }) => {
-    const {id} = route.params;
+    const { id } = route.params;
     // console.log(title);
 
     const [tabItem, moveTab] = useState(1);
@@ -35,7 +35,7 @@ const EventDetail = ({ route }) => {
         try {
             let res = await Apis.get(endpoints['stats_rating'](id));
             setRating(res.data || {}); // Kiểm tra res.data
-        } catch (error) { 
+        } catch (error) {
             console.error('Lỗi gọi API:', error);
         }
     };
@@ -69,8 +69,12 @@ const EventDetail = ({ route }) => {
                         </View>
                         <View style={styles.ratingContainer}>
                             <Ionicons name="star" size={18} color="#FFD700" />
-                            <Text style={styles.rating}>{rating.average_rating || 0}</Text>
-                            <Text style={styles.reviewCount}>({rating.review_count || 0} reviewers)</Text>
+                            <Text style={styles.rating}>
+                                {rating.average_rating ? `${rating.average_rating.toFixed(1)}` : ""}
+                            </Text>
+                            <Text style={styles.reviewCount}>
+                                {rating.review_count ? `(${rating.review_count} reviews)` : "No review"}
+                            </Text>
                         </View>
                     </View>
 
