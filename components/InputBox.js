@@ -20,13 +20,7 @@ const InputBox = ({ placeholder, value, onChangeText, iconName, style, multiline
 }
 
 const styles = StyleSheet.create({
-    header: {
-        backgroundColor: COLORS.primary,
-        padding: 20,
-        paddingTop: 50,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-    },
+
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',

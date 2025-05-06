@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import RenderHTML from 'react-native-render-html';
 
 const ReviewItem = ({ review }) => {
+
+    const { width } = useWindowDimensions(); // Để không bị Warning khi sử dụng RenderHTML
 
     const fullName = `${review.participant.first_name} ${review.participant.last_name}`; //Lấy đầy đủ tên
     const d = new Date(review.created_date);
@@ -32,7 +35,16 @@ const ReviewItem = ({ review }) => {
                     </View>
                 </View>
             </View>
-            <Text style={styles.reviewText}>{review.comment}</Text>
+            <RenderHTML 
+                  contentWidth={width}
+                  source={{ html: review.comment }} tagsStyles={{
+                p: {
+                    color: '#666',
+                    fontSize: 14,
+                    lineHeight: 20,
+                    marginBottom: 10,
+                }
+            }} />
             <View style={styles.reviewActions}>
                 <TouchableOpacity style={styles.reviewActionButton}>
                     <Ionicons name="thumbs-up" size={16} color="#666" />
@@ -56,7 +68,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#f0f0f0',
-        marginBottom:10,
+        marginBottom: 10,
     },
     reviewerInfo: {
         flexDirection: 'row',

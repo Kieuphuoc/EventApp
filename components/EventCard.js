@@ -1,28 +1,95 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Pressable } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../constants/colors";
+import React, { useState, useRef } from 'react';
 
 const EventCard = ({ item, onPress }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const heartPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const heartOpacity = useRef(new Animated.Value(0)).current;
+  const lastTap = useRef(0);
 
   const date = new Date(item.start_time);
   const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300;
+    if (now - lastTap.current < DOUBLE_PRESS_DELAY) {
+      setIsFavorite(!isFavorite);
+      
+      // Reset heart position to center
+      heartPosition.setValue({ x: 0, y: 0 });
+      heartOpacity.setValue(1);
+
+      // Animate heart to top right
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartPosition, {
+          toValue: { x: 120, y: -80 },
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        scaleAnim.setValue(1);
+      });
+    }
+    lastTap.current = now;
+  };
+
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress} >
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: item.image }}
-          style={styles.image}
-        />
-        <View style={styles.overlay}>
-          <View style={styles.category}>
-            <Text style={styles.categoryText}>{item.category.name}</Text>
+    <View style={styles.card}>
+      <Pressable onPress={handleDoubleTap}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: item.image }}
+            style={styles.image}
+          />
+          <Animated.View 
+            style={[
+              styles.heartContainer,
+              { 
+                transform: [
+                  { scale: scaleAnim },
+                  { translateX: heartPosition.x },
+                  { translateY: heartPosition.y }
+                ],
+                opacity: heartOpacity
+              }
+            ]}
+          >
+            <Ionicons 
+              name="heart" 
+              size={50} 
+              color={COLORS.secondary} 
+              style={styles.heartIcon}
+            />
+          </Animated.View>
+          <View style={styles.overlay}>
+            <View style={styles.category}>
+              <Text style={styles.categoryText}>{item.category.name}</Text>
+            </View>
+            <TouchableOpacity style={styles.favoriteButton}>
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={22} 
+                color={isFavorite ? COLORS.secondary : "#fff"} 
+              />
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </Pressable>
 
       <View style={styles.content}>
         <View style={styles.header}>
@@ -52,32 +119,41 @@ const EventCard = ({ item, onPress }) => {
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.bookmarkButton}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.bookmarkButton]}
+            onPress={() => {}}
+          >
             <Ionicons name="bookmark-outline" size={18} color={COLORS.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.joinButton}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.shareButton]}
+            onPress={() => {}}
+          >
+            <Ionicons name="share-social-outline" size={18} color={COLORS.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.joinButton}
+            onPress={onPress}
+          >
             <Text style={styles.joinButtonText}>Join Now</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: COLORS.accentLight,
+    borderRadius: 20,
     marginBottom: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    shadowColor: '#000', // Màu của bóng
-    shadowOffset: { width: 0, height: 2 }, // Độ lệch của bóng (ngang, dọc)
-    shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
-    shadowRadius: 4, // Độ lan tỏa của bóng
-    // Thêm elevation cho Android
-    elevation: 3,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   imageContainer: {
     position: 'relative',
@@ -87,21 +163,46 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  heartContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginLeft: -25,
+    marginTop: -25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heartIcon: {
+    opacity: 0.9,
+  },
   overlay: {
     position: 'absolute',
     top: 12,
     left: 12,
+    right: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   category: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
   },
   categoryText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  favoriteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     padding: 16,
@@ -117,17 +218,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.primary,
     lineHeight: 22,
   },
   priceContainer: {
-    backgroundColor: COLORS.primary + '10',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: COLORS.secondary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 15,
   },
   priceText: {
-    color: COLORS.primary,
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -141,15 +242,15 @@ const styles = StyleSheet.create({
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 12,
+    gap: 6,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 15,
   },
   detailText: {
-    color: '#666',
-    fontSize: 12,
+    color: COLORS.primary,
+    fontSize: 13,
     fontWeight: '500',
   },
   footer: {
@@ -158,19 +259,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  bookmarkButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f8f9fa',
+  actionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  bookmarkButton: {
+    backgroundColor: '#fff',
+  },
+  shareButton: {
+    backgroundColor: '#fff',
   },
   joinButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: COLORS.secondary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: COLORS.secondary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   joinButtonText: {
     color: '#fff',

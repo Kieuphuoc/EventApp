@@ -4,7 +4,7 @@ import COLORS from '../../constants/colors';
 export const userStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor:"white",
   },
   keyboardView: {
     flex: 1,
@@ -37,12 +37,13 @@ export const userStyles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    marginBottom: 15,
-    paddingHorizontal: 15,
+  alignItems: 'center',
+  backgroundColor: '#f8f8f8',
+  borderRadius: 12,
+  marginBottom: 15,
+  paddingHorizontal: 15,
   },
+  
   inputIcon: {
     marginRight: 10,
   },
@@ -83,7 +84,7 @@ export const userStyles = StyleSheet.create({
   loginButton: {
     backgroundColor: COLORS.primary,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
     marginBottom: 20,
     shadowColor: '#000',

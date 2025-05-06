@@ -136,7 +136,7 @@ const Register = () => {
         Alert.alert('Success', 'Registration successful! Please login.', [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('Login'),
+            onPress: () => navigation.navigate('login'),
           },
         ]);
       }

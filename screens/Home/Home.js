@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, FlatList } from 'react-native';
 import { styles } from './styles';
@@ -54,7 +55,7 @@ const Home = () => {
 
   useEffect(() => {
     loadEvents();
-  }, [q]);
+  }, [q]);  
 
 
   return (

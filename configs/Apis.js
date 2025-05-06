@@ -8,9 +8,20 @@ export const endpoints = {
    'stats_rating' : (event_id) => `/event/${event_id}/reviews/stats/`,
    'eventDetail': (id) => `/event/${id}/`,
    'register': '/user/',
-   'token': '/o/token/',
-   'userMe': '/user/me/',    
+   'login': '/o/token/',
+   'current-user':'/user/me/',
+   'favoriteEvent':'/favorite/event/'
 }
+
+export const authApis = (token) => {
+    return axios.create({
+        baseURL: BASE_URL,
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+}
+
 
 export default axios.create({
     baseURL: BASE_URL

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
 import { useNavigation } from "@react-navigation/native";
+import { MyDispatchContext, MyUserContext } from '../../configs/Context';
+import { Button } from 'react-native-paper';
 
 const menuItems = [
   { icon: 'person', label: 'Edit Profile', screen: 'editProfile' },
@@ -25,7 +27,16 @@ const menuItems = [
 ];
 
 const Profile= ()=> {
-  const navigation = useNavigation();
+  const user =useContext(MyUserContext);
+  const dispatch = useContext(MyDispatchContext);
+  console.info(user);
+
+  // return(<View>
+  //   <Text>
+  //     Chào {user.name}
+  //   </Text>
+  //   <Button onPress={()=> dispatch({"type":"logout"})} mode="contained" >Đăng xuất</Button>
+  // </View>)
  
   const handleLogout = () => {
     Alert.alert(
@@ -48,9 +59,10 @@ const Profile= ()=> {
       { cancelable: true }
     );
   };
+  const fullName = `${user.first_name} ${user.last_name}`; //Lấy đầy đủ tên
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
@@ -60,7 +72,7 @@ const Profile= ()=> {
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.name}>Kieu Phuoc</Text>
+              <Text style={styles.name}>Chào {fullName}</Text>
               <Text style={styles.email}>phuoc@example.com</Text>
             </View>
             <TouchableOpacity style={styles.editButton}>
@@ -107,7 +119,7 @@ const Profile= ()=> {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 const styles = StyleSheet.create({

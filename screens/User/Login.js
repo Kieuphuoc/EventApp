@@ -1,89 +1,93 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StatusBar,
-  SafeAreaView,
+  SafeAreaView, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../constants/colors';
 import { userStyles } from './UserStyles';
-import Apis, { endpoints } from '../../configs/Apis';
+import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { Alert } from 'react-native';
+import { MyDispatchContext } from '../../configs/Context';
 
 const Login = () => {
-  const [username, setUsername] = useState(''); // Sử dụng username thay vì email
-  const [password, setPassword] = useState('');
+  const [user, setUser] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const dispatch = useContext(MyDispatchContext);
   const navigation = useNavigation();
+  const [msg, setMsg] = useState(null);
+  const info = [{
+    label: 'username',
+    icon: "person",
+    secureTextEntry: false,
+    field: "username"
+  }, {
+    label: 'Mật khẩu',
+    icon: "lock-closed",
+    secureTextEntry: true,
+    field: "password"
+  }];
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert('Error', 'Please enter both username and password');
-      return;
+  const setState = (value, field) => {
+    setUser({ ...user, [field]: value });
+  }
+  const validate = () => {
+    if (!user?.username || !user?.password) {
+      setMsg("Vui lòng nhập tên đăng nhập và mật khẩu!");
+      return false;
     }
 
-    setLoading(true);
-    try {
-      // Tạo FormData để gửi yêu cầu POST /token/
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
-      formData.append('grant_type', 'password');
-      formData.append('client_id', '9J87vnUbou0fZ16oWdhNtd0pLsq7OhEVEvketSdt9D');
-      formData.append('client_secret', '9GPRZJTMK43XNAp5baSawsqEUt6rFEuA0VA...'); // Đảm bảo client_secret chính xác
+    setMsg(null);
 
-      const response = await Apis.post(endpoints['token'], formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+    return true;
+  }
 
-      if (response.status === 200) {
-        const { access_token: token } = response.data; // Giả định API trả về access_token
 
-        // Lưu token vào AsyncStorage
-        await AsyncStorage.setItem('authToken', token);
+  const login = async () => {
+    console.log("Login pressed"); // ✅ Kiểm tra nút có hoạt động không
+    if (validate() === true) {
+      try {
+        setLoading(true);
 
-        // Cấu hình token cho các yêu cầu API tiếp theo
-        Apis.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const formData = new FormData();
+        formData.append('username', user.username);
+        formData.append('password', user.password);
+        formData.append('grant_type', 'password');
+        formData.append('client_id', "9J87vnUboufZI6oWdhNtd0pLSq7OhEEvketSdt9D");
+        formData.append('client_secret', "9GPR7JTMlk43rXNAp5tbaSawqsEuT6rFEUaO4VAA0JJr3Qc5fSn6WLiZkwAxrmmvjJnIi3H3f4JkumSvjRDS0cyxcFyYJ0Ij5cbfxuDL7M81f8guKv1kWJkhLI7DQ26j");
 
-        // Gọi endpoint /user/me/ để lấy thông tin người dùng
-        const userResponse = await Apis.get(endpoints['userMe']);
-        if (userResponse.status === 200) {
-          const userData = userResponse.data;
-          Alert.alert(
-            'Success',
-            `Welcome back, ${userData.first_name || userData.username}!`,
-            [
-              {
-                text: 'OK',
-                onPress: () => navigation.navigate('Home'), // Điều hướng đến Home
-              },
-            ]
-          );
-        } else {
-          throw new Error('Failed to fetch user data');
-        }
+        let res = await Apis.post(endpoints['login'], formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        await AsyncStorage.setItem('token', res.data.access_token);
+
+        let u = await authApis(res.data.access_token).get(endpoints['current-user']);
+
+        console.info(u.data);
+        dispatch({
+          "type": "login",
+          "payload": u.data
+        });
+        navigation.navigate("index");
+
+      } catch (ex) {
+        console.error(ex);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.error_description ||
-        error.response?.data?.message ||
-        error.message ||
-        'Login failed. Please try again.';
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -97,7 +101,7 @@ const Login = () => {
         <ScrollView contentContainerStyle={userStyles.scrollContent}>
           <View style={userStyles.header}>
             <Image
-              source={require('../../assets/images/logo.png')}
+              source={require('../../assets/images/mini_logo.png')}
               style={userStyles.logo}
               resizeMode="contain"
             />
@@ -106,39 +110,28 @@ const Login = () => {
           </View>
 
           <View style={userStyles.form}>
-            <View style={userStyles.inputContainer}>
-              <Ionicons name="person" size={20} color={COLORS.primary} style={userStyles.inputIcon} />
+            {info.map((i, index) => 
+            <View key={index} style={userStyles.inputContainer}> 
+              <Ionicons name={i.icon} size={20} color={COLORS.primary} style={userStyles.inputIcon} />
               <TextInput
-                style={userStyles.input}
-                placeholder="Username"
-                placeholderTextColor="#666"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={userStyles.inputContainer}>
-              <Ionicons name="lock-closed" size={20} color={COLORS.primary} style={userStyles.inputIcon} />
-              <TextInput
-                style={userStyles.input}
-                placeholder="Password"
-                placeholderTextColor="#666"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
+              value={user[i.field]}
+              onChangeText={t => setState(t, i.field)}
+              key={i.field} label={i.label}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              style={userStyles.input} />
+              {i.field.includes('password') && <TouchableOpacity
                 style={userStyles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
               >
                 <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
+                  name={showPassword ? 'eye' : 'eye-off'}
                   size={20}
                   color="#666"
                 />
-              </TouchableOpacity>
+              </TouchableOpacity>}
             </View>
+            )}
 
             <TouchableOpacity style={userStyles.forgotPassword}>
               <Text style={userStyles.forgotPasswordText}>Forgot Password?</Text>
@@ -146,8 +139,9 @@ const Login = () => {
 
             <TouchableOpacity
               style={[userStyles.loginButton, loading && { opacity: 0.6 }]}
-              onPress={handleLogin}
               disabled={loading}
+              loading={loading}
+              onPress={login}
             >
               <Text style={userStyles.loginButtonText}>
                 {loading ? 'Signing In...' : 'Sign In'}
@@ -174,7 +168,7 @@ const Login = () => {
 
             <View style={userStyles.signupContainer}>
               <Text style={userStyles.signupText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <TouchableOpacity onPress={() => navigation.navigate('register')}>
                 <Text style={userStyles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>

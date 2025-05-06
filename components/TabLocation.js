@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: COLORS.primary,
         padding: 15,
-        borderRadius: 12,
+        borderRadius: 25,
         gap: 8,
     },
 });

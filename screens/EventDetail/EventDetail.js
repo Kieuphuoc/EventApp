@@ -7,16 +7,20 @@ import TabLocation from '../../components/TabLocation';
 import TabAbout from '../../components/TabAbout';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Apis, { endpoints } from '../../configs/Apis';
+import { ActivityIndicator } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 
 const EventDetail = ({ route }) => {
     const { id } = route.params;
     const eventId = parseInt(id, 10);
+    const navigation = useNavigation();
 
     const [tabItem, moveTab] = useState(1);
     const [rating, setRating] = useState({});
-    const [events, setEvents] = useState({});
+    const [events, setEvents] = useState(null);
     const [loading, setLoading] = useState(true); // Đã thêm loading state
 
+    const price = Number(events.ticket_price).toFixed(0);
 
     const loadEvents = async () => {
         try {
@@ -50,102 +54,105 @@ const EventDetail = ({ route }) => {
     }, []);
 
     return (
+        
+        
+        
         <GestureHandlerRootView style={styles.container}>
-            <StatusBar barStyle="light-content" />
-            <ScrollView>
-                <View style={styles.imageContainer}>
-                    <Image source={{ uri: events.image }} style={styles.image} />
-                    <TouchableOpacity style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.favoriteButton}>
-                        <Ionicons name="heart-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
+            {events === null ? <ActivityIndicator /> : <><StatusBar barStyle="light-content" />
+                <ScrollView>
+                    <View style={styles.imageContainer}>
+                        <Image source={{ uri: events.image }} style={styles.image} />
+                        <TouchableOpacity style={styles.backButton}>
+                            <Ionicons name="arrow-back" size={24} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.favoriteButton}>
+                            <Ionicons name="heart-outline" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
 
-                <View style={styles.content}>
-                    <View style={styles.header}>
-                        <View style={styles.eventTypeContainer}>
-                            <Text style={styles.eventType}>{events.category?.name}</Text>
+                    <View style={styles.content}>
+                        <View style={styles.header}>
+                            <View style={styles.eventTypeContainer}>
+                                <Text style={styles.eventType}>{events.category?.name}</Text>
+                            </View>
+                            <View style={styles.ratingContainer}>
+                                <Ionicons name="star" size={18} color="#FFD700" />
+                                <Text style={styles.rating}>
+                                    {rating.average_rating ? `${rating.average_rating.toFixed(1)}` : ""}
+                                </Text>
+                                <Text style={styles.reviewCount}>
+                                    {rating.review_count ? `(${rating.review_count} reviews)` : "No review"}
+                                </Text>
+                            </View>
                         </View>
-                        <View style={styles.ratingContainer}>
-                            <Ionicons name="star" size={18} color="#FFD700" />
-                            <Text style={styles.rating}>
-                                {rating.average_rating ? `${rating.average_rating.toFixed(1)}` : ""}
-                            </Text>
-                            <Text style={styles.reviewCount}>
-                                {rating.review_count ? `(${rating.review_count} reviews)` : "No review"}
-                            </Text>
+
+                        <Text style={styles.title}>{events.title || 'No Title'}</Text>
+                        <View style={styles.locationContainer}>
+                            <Ionicons name="location" size={16} color={COLORS.primary} />
+                            <Text style={styles.location}>{events.location || 'Unknown Location'}</Text>
                         </View>
+
+                        {/* 3 Tab */}
+                        <View style={styles.tabContainer}>
+                            <TouchableOpacity
+                                style={[styles.tab, tabItem === 1 && styles.activeTab]}
+                                onPress={() => moveTab(1)}
+                            >
+                                <Text style={[styles.tabText, tabItem === 1 && styles.activeTabText]}>About</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.tab, tabItem === 2 && styles.activeTab]}
+                                onPress={() => moveTab(2)}
+                            >
+                                <Text style={[styles.tabText, tabItem === 2 && styles.activeTabText]}>Location</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.tab, tabItem === 3 && styles.activeTab]}
+                                onPress={() => moveTab(3)}
+                            >
+                                <Text style={[styles.tabText, tabItem === 3 && styles.activeTabText]}>Reviews</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Tab About */}
+                        {tabItem === 1 && (
+                            <TabAbout
+                                description={events.description || 'No description available'}
+                                manager={{
+                                    image: 'https://play-lh.googleusercontent.com/VMPS_t-CGBp-NVqefuMvMOGEDfmovBcGiepmAAF1I9hkdjLOjsfVjEV5d41DTAy3qI_akNaJKTdmaNwMRIs=w240-h480-rw',
+                                    name: 'Kieu Phuoc',
+                                    role: 'Manager'
+                                }}
+                            />
+                        )}
+
+                        {/* Tab Location */}
+                        {tabItem === 2 && (
+                            <TabLocation item={events} />
+                        )}
+
+                        {/* Tab Reviews */}
+                        {tabItem === 3 && (
+
+                            <TabReviews event_id={events.id} />
+
+                        )}
+
+                        <Text style={styles.sectionTitle}>Popular Events</Text>
                     </View>
+                </ScrollView>
 
-                    <Text style={styles.title}>{events.title || 'No Title'}</Text>
-                    <View style={styles.locationContainer}>
-                        <Ionicons name="location" size={16} color={COLORS.primary} />
-                        <Text style={styles.location}>{events.location || 'Unknown Location'}</Text>
+                {/* Booking */}
+                <View style={styles.footer}>
+                    <View style={styles.priceContainer}>
+                        <Text style={styles.priceLabel}>Total price</Text>
+                        <Text style={styles.price}>${price || 0} $</Text>
                     </View>
-
-                    {/* 3 Tab */}
-                    <View style={styles.tabContainer}>
-                        <TouchableOpacity
-                            style={[styles.tab, tabItem === 1 && styles.activeTab]}
-                            onPress={() => moveTab(1)}
-                        >
-                            <Text style={[styles.tabText, tabItem === 1 && styles.activeTabText]}>About</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, tabItem === 2 && styles.activeTab]}
-                            onPress={() => moveTab(2)}
-                        >
-                            <Text style={[styles.tabText, tabItem === 2 && styles.activeTabText]}>Location</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, tabItem === 3 && styles.activeTab]}
-                            onPress={() => moveTab(3)}
-                        >
-                            <Text style={[styles.tabText, tabItem === 3 && styles.activeTabText]}>Reviews</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Tab About */}
-                    {tabItem === 1 && (
-                        <TabAbout
-                            description={events.description || 'No description available'}
-                            manager={{
-                                image: 'https://play-lh.googleusercontent.com/VMPS_t-CGBp-NVqefuMvMOGEDfmovBcGiepmAAF1I9hkdjLOjsfVjEV5d41DTAy3qI_akNaJKTdmaNwMRIs=w240-h480-rw',
-                                name: 'Kieu Phuoc',
-                                role: 'Manager'
-                            }}
-                        />
-                    )}
-
-                    {/* Tab Location */}
-                    {tabItem === 2 && (
-                        <TabLocation item={events} />
-                    )}
-
-                    {/* Tab Reviews */}
-                    {tabItem === 3 && (
-                        
-                        <TabReviews event_id={events.id} />
-
-                    )}
-
-                    <Text style={styles.sectionTitle}>Popular Events</Text>
-                </View>
-            </ScrollView>
-
-            {/* Booking */}
-            <View style={styles.footer}>
-                <View style={styles.priceContainer}>
-                    <Text style={styles.priceLabel}>Total price</Text>
-                    <Text style={styles.price}>${events.ticket_price || 0}.000</Text>
-                </View>
-                <TouchableOpacity style={styles.bookButton}>
-                    <Ionicons name="cart" size={20} color="#fff" />
-                    <Text style={styles.bookButtonText}>Book Now</Text>
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity style={styles.bookButton} onPress={() => navigation.navigate('booking', { event: events })}>
+                        <Ionicons name="cart" size={20} color="#fff" />
+                        <Text style={styles.bookButtonText}>Book Now</Text>
+                    </TouchableOpacity>
+                </View></>}
         </GestureHandlerRootView>
     );
 };

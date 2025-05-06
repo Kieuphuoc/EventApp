@@ -1,27 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
+import RenderHTML from 'react-native-render-html';
 
 const TabAbout = ({ description, manager }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const { width } = useWindowDimensions(); // 👈 Lấy chiều rộng màn hình
     const shortDescription = description.slice(0, 170);
     const fullDescription = description;
 
     return (
         <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>
-                {isExpanded ? fullDescription : shortDescription}
-                {description.length > 100 && (
-                    <Text
-                        onPress={() => setIsExpanded(!isExpanded)}
-                        style={styles.seeMore}
-                    >
-                        {isExpanded ? ' See less' : ' See more'}
-                    </Text>
-                )}
-            </Text>
+            <RenderHTML
+                contentWidth={width} // ✅ Bắt buộc để tránh warning
+                source={{ html: isExpanded ? fullDescription : shortDescription }}
+                tagsStyles={{
+                    p: {
+                        color: '#666',
+                        fontSize: 15,
+                        lineHeight: 22,
+                        marginBottom: 20,
+                    },
+                    span: {
+                        color: '#666',
+                        fontSize: 15,
+                        lineHeight: 22,
+                        marginBottom: 20,
+                    },
+                }}
+            />
 
             <Text style={styles.sectionTitle}>Project Manager</Text>
             <View style={styles.managerContainer}>
@@ -47,6 +56,7 @@ const TabAbout = ({ description, manager }) => {
 };
 
 export default TabAbout;
+
 
 const styles = StyleSheet.create({
     tabContent: {

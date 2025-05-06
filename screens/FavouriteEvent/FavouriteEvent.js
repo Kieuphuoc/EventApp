@@ -1,63 +1,78 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, StatusBar, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
+import { ActivityIndicator } from 'react-native-paper';
+import { authApis, endpoints } from '../../configs/Apis'; // Sử dụng authApis
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const favouriteEvent = [
-  {
-    id: '1',
-    title: 'Summer Music Fest',
-    location: 'Hà Nội',
-    date: '10/04/2025',
-    image: 'https://picsum.photos/300/200?random=1',
-    category: 'Music',
-    price: '$25',
-  },
-  {
-    id: '2',
-    title: 'Startup Talk & Workshop',
-    location: 'TP.HCM',
-    date: '15/05/2025',
-    image: 'https://picsum.photos/300/200?random=2',
-    category: 'Business',
-    price: '$15',
-  },
-];
-
-const FavouriteEvent = () => {
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
+// Component EventCard để hiển thị từng sự kiện
+const EventCard = ({ item }) => {
+  return (
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.categoryContainer}>
-          <Text style={styles.category}>{item.category}</Text>
+          <Text style={styles.category}>{item.event?.category?.name || 'No Category'}</Text>
         </View>
         <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart" size={20} color={COLORS.primary} />
+          <Ionicons name="heart" size={18} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
-      <Image source={{ uri: item.image }} style={styles.image} />
+      <Image source={{ uri: item.event?.image }} style={styles.image} />
       <View style={styles.cardContent}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.price}>{item.price}</Text>
+          <Text style={styles.title} numberOfLines={1}>{item.event?.title || 'No Title'}</Text>
+          <Text style={styles.price}>${item.event?.ticket_price || 0}</Text>
         </View>
         <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
-            <Ionicons name="location" size={16} color="#666" />
-            <Text style={styles.text}>{item.location}</Text>
+            <Ionicons name="calendar" size={16} color="#666" />
+            <Text style={styles.text}>{item.event?.start_time || 'Unknown Date'}</Text>
           </View>
           <View style={styles.infoItem}>
-            <Ionicons name="calendar" size={16} color="#666" />
-            <Text style={styles.text}>{item.date}</Text>
+            <Ionicons name="location" size={16} color="#666" />
+            <Text style={styles.text}>{item.event?.location || 'Unknown Location'}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.viewButton}>
-          <Text style={styles.viewButtonText}>View Details</Text>
-          <Ionicons name="arrow-forward" size={16} color="#fff" />
+          <Ionicons name="eye" size={16} color="#fff" />
+          <Text style={styles.viewButtonText}>View Event</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
+};
+
+const FavouriteEvent = () => {
+  const [loading, setLoading] = useState(false);
+  const [favouriteEvent, setFavoriteEvent] = useState([]);
+
+  const loadFavoriteEvent = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('userToken'); // Lấy token từ AsyncStorage
+      if (!token) {
+        console.error('No token found, please login first');
+        return;
+      }
+      const api = authApis(token); // Tạo instance Axios với token
+      let url = endpoints['favoriteEvent'];
+      let res = await api.get(url);
+      if (res.data) {
+        setFavoriteEvent(res.data);
+      }
+    } catch (ex) {
+      console.error("Error loading events:", ex);
+      console.log('Error details:', ex.response?.data);
+      setFavoriteEvent([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFavoriteEvent();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,14 +93,21 @@ const FavouriteEvent = () => {
       </View>
       <FlatList
         data={favouriteEvent}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <EventCard item={item} />}
         contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
+        ListFooterComponent={loading && <ActivityIndicator size={30} />}
+        ListEmptyComponent={
+          !loading && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No favourite events found.</Text>
+            </View>
+          )
+        }
       />
     </SafeAreaView>
   );
-}
+};
 
 export default FavouriteEvent;
 
@@ -138,6 +160,17 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    color: '#666',
+    fontSize: 16,
+    textAlign: 'center',
   },
   card: {
     backgroundColor: '#fff',
