@@ -9,22 +9,13 @@ import Apis, { endpoints } from '../configs/Apis';
 import { useRoute } from '@react-navigation/native';
 
 const TabReviews = ({ event_id }) => {
-    const route = useRoute();
     const [reviews, setReviews] = useState([]);
     const [showAll, setShowAll] = useState(false);  // Thêm state để kiểm soát việc hiển thị tất cả review
 
     const loadReviews = async () => {
         try {
-            let eventIdInt = parseInt(event_id, 10);
-
-            console.log(event_id);
-
-            if (isNaN(eventIdInt)) {
-                console.error('event_id phải là một số nguyên hợp lệ');
-                return;
-            }
-
-            let res = await Apis.get(endpoints['review'](eventIdInt));
+            // console.log(event_id);
+            let res = await Apis.get(endpoints['review'](event_id));
             setReviews(res.data);
         } catch (error) {
             console.error('Lỗi khi gọi API:', error);

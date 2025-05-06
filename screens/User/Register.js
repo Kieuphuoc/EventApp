@@ -17,101 +17,134 @@ import { Ionicons } from '@expo/vector-icons';
 import Apis, { endpoints } from '../../configs/Apis';
 import { useNavigation } from '@react-navigation/native';
 import COLORS from '../../constants/colors';
+import { userStyles } from './UserStyles';
+import * as ImagePicker from 'expo-image-picker';
+import { HelperText } from 'react-native-paper';
 
 const info = [
   {
-    label: 'Tên',
+    label: 'First Name',
     field: 'first_name',
-    secureTextEntry: false,
-    icon: 'person-outline',
+    icon: 'person',
   },
   {
-    label: 'Họ và tên lót',
+    label: 'Last Name',
     field: 'last_name',
-    secureTextEntry: false,
-    icon: 'person-outline',
+    icon: 'person',
   },
   {
-    label: 'Tên đăng nhập',
+    label: 'Username',
     field: 'username',
-    secureTextEntry: false,
     icon: 'at-outline',
   },
   {
     label: 'Email',
     field: 'email',
-    secureTextEntry: false,
-    icon: 'mail-outline',
+    icon: 'mail',
   },
   {
-    label: 'Mật khẩu',
+    label: 'Password',
     field: 'password',
-    secureTextEntry: true,
-    icon: 'lock-closed-outline',
+    icon: 'lock-closed',
   },
   {
-    label: 'Nhập lại mật khẩu',
+    label: 'Confirm Password',
     field: 'confirmPassword',
-    secureTextEntry: true,
-    icon: 'lock-closed-outline',
+    icon: 'lock-closed',
   },
 ];
 
 const Register = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    email: '',
-    first_name: '',
-    last_name: '',
-  });
+  const [user, setUser] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [msg, setMsg] = useState('');
 
-  const handleChange = (name, value) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const setState = (value, field) => {
+    setUser({ ...user, [field]: value });
   };
 
-  const handleRegister = async () => {
-    if (!formData.username || !formData.password || !formData.email) {
-      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ các trường bắt buộc');
+  const pickImage = async () => {
+    let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissions denied!', 'Please allow access to the photo library.');
       return;
     }
-    if (formData.password !== formData.confirmPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu không khớp');
-      return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setState(result.assets[0], 'avatar');
     }
+  };
+
+  const validate = () => {
+    if (Object.keys(user).length === 0) {
+      setMsg('Please fill in all fields!');
+      return false;
+    }
+
+    for (let i of info) {
+      if (!user[i.field]) {
+        setMsg(`Please enter ${i.label}`);
+        return false;
+      }
+    }
+
+    if (user.password !== user.confirmPassword) {
+      setMsg('Passwords do not match');
+      return false;
+    }
+
+    return true;
+  };
+
+  const register = async () => {
+    if (!validate()) return;
+
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await Apis.post(endpoints['register'], {
-        username: formData.username,
-        password: formData.password,
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
+      let form = new FormData();
+      for (let key in user) {
+        if (key !== 'confirmPassword') { // Loại bỏ trường "Ktra mật khẩu", không lưu nó vào backend
+          if (key === 'avatar') { // Xử lí đặc biệt cho trường avt
+            form.append('avatar', { //form.append(key, value) => Thêm một cặp khóa giá trị vào form
+              uri: user.avatar.uri,
+              name: user.avatar.fileName || 'avatar.jpg',
+              type: user.avatar.type || 'image/jpeg',
+            });
+          } else {
+            form.append(key, user[key]);
+          }
+        }
+      }
+
+      let res = await Apis.post(endpoints['register'], form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      if (response.status === 201) {
-        Alert.alert(
-          'Thành công',
-          'Đăng ký thành công! Vui lòng đăng nhập.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('Login'),
-            },
-          ]
-        );
+
+      if (res.status === 201) {
+        Alert.alert('Success', 'Registration successful! Please login.', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ]);
       }
     } catch (error) {
+      console.error(error);
       Alert.alert(
-        'Lỗi',
-        error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+        'Error',
+        error.response?.data?.message || 'Registration failed. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -119,53 +152,67 @@ const Register = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+    <SafeAreaView style={userStyles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.primary} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={userStyles.keyboardView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            {/* Nếu có logo thì bỏ vào đây */}
-            {/* <Image source={require('../../assets/images/logo.png')} style={styles.logo} resizeMode="contain" /> */}
-            <Text style={styles.title}>Tạo tài khoản mới</Text>
-            <Text style={styles.subtitle}>Đăng ký để tham gia sự kiện</Text>
+        <ScrollView contentContainerStyle={userStyles.scrollContent}>
+          {/* Header & Logo */}
+          <View style={userStyles.header}>
+            <Image
+              source={require('../../assets/images/mini_logo.png')}
+              style={userStyles.logo}
+              resizeMode="contain"
+            />
+            <Text style={userStyles.title}>Create Account</Text>
+            <Text style={userStyles.subtitle}>Let’s join with us!</Text>
           </View>
-          <View style={styles.form}>
-            {info.map((item, idx) => (
-              <View style={styles.inputContainer} key={item.field}>
-                <Ionicons name={item.icon} size={20} color={COLORS.primary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder={item.label}
-                  placeholderTextColor="#666"
-                  value={formData[item.field]}
-                  onChangeText={(text) => handleChange(item.field, text)}
-                  secureTextEntry={
-                    item.field === 'password'
-                      ? !showPassword
-                      : item.field === 'confirmPassword'
-                      ? !showConfirmPassword
-                      : false
-                  }
-                  keyboardType={item.field === 'email' ? 'email-address' : 'default'}
-                  autoCapitalize={item.field === 'email' ? 'none' : 'sentences'}
+
+          <HelperText type="error" visible={!!msg}>
+            {msg}
+          </HelperText>
+          <View style={userStyles.form}>
+            {info.map((i, index) => (
+              <View key={index} style={userStyles.inputContainer}>
+                <Ionicons
+                  name={i.icon}
+                  size={20}
+                  color={COLORS.primary}
+                  style={userStyles.inputIcon}
                 />
-                {(item.field === 'password' || item.field === 'confirmPassword') && (
+                <TextInput
+                  style={userStyles.input}
+                  placeholder={i.label}
+                  secureTextEntry={
+                    i.field === 'password'
+                      ? !showPassword // Tại vì secureTextEntry = True ngược lại với ShowPassword, lúc này ShowPassword = false
+                      : i.field === 'confirmPassword'
+                        ? !showConfirmPassword
+                        : false
+                  }
+                  placeholderTextColor="#999"
+                  value={user[i.field] || ''}
+                  onChangeText={(t) => setState(t, i.field)}
+                  autoCapitalize="none"
+                />
+                {i.label.includes('Password') && (
                   <TouchableOpacity
-                    style={styles.eyeIcon}
+                    style={userStyles.eyeIcon}
                     onPress={() =>
-                      item.field === 'password'
-                        ? setShowPassword((prev) => !prev)
-                        : setShowConfirmPassword((prev) => !prev)
-                    }
-                  >
+                      i.field === 'password'
+                        ? setShowPassword(!showPassword)
+                        : setShowConfirmPassword(!showConfirmPassword) }>
                     <Ionicons
                       name={
-                        (item.field === 'password' ? showPassword : showConfirmPassword)
-                          ? 'eye-off'
-                          : 'eye'
+                        i.field === 'password'
+                          ? showPassword
+                            ? 'eye'
+                            : 'eye-off'
+                          : showConfirmPassword
+                          ? 'eye'
+                          : 'eye-off'
                       }
                       size={20}
                       color="#666"
@@ -174,17 +221,65 @@ const Register = () => {
                 )}
               </View>
             ))}
+
+            <TouchableOpacity onPress={pickImage} style={userStyles.imagePicker}>
+              {user.avatar ? (
+                <Image
+                  source={{ uri: user.avatar.uri }}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              ) : (
+                <View
+                  style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+                >
+                  <Ionicons name="image" size={40} color={COLORS.primary} />
+                  <Text
+                    style={{
+                      color: COLORS.primary,
+                      marginTop: 10,
+                      fontSize: 16,
+                    }}
+                  >
+                    Upload Image
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.loginButton, loading && { opacity: 0.7 }]}
-              onPress={handleRegister}
+              style={[userStyles.loginButton, loading && { opacity: 0.6 }]}
+              onPress={register}
               disabled={loading}
             >
-              <Text style={styles.loginButtonText}>{loading ? 'Đang đăng ký...' : 'Đăng ký'}</Text>
+              <Text style={userStyles.loginButtonText}>
+                {loading ? 'Registering...' : 'Sign Up'}
+              </Text>
             </TouchableOpacity>
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Đã có tài khoản? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.signupLink}>Đăng nhập</Text>
+
+            <View style={userStyles.divider}>
+              <View style={userStyles.dividerLine} />
+              <Text style={userStyles.dividerText}>OR</Text>
+              <View style={userStyles.dividerLine} />
+            </View>
+
+            <View style={userStyles.socialButtons}>
+              <TouchableOpacity style={userStyles.socialButton}>
+                <Ionicons name="logo-google" size={24} color="#DB4437" />
+              </TouchableOpacity>
+              <TouchableOpacity style={userStyles.socialButton}>
+                <Ionicons name="logo-facebook" size={24} color="#4267B2" />
+              </TouchableOpacity>
+              <TouchableOpacity style={userStyles.socialButton}>
+                <Ionicons name="logo-apple" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={userStyles.signupContainer}>
+              <Text style={userStyles.signupText}>
+                Already have an account?{' '}
+              </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('login')}>
+                <Text style={userStyles.signupLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -194,91 +289,4 @@ const Register = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  form: {
-    padding: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 15,
-    color: '#333',
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 5,
-  },
-  loginButton: {
-    backgroundColor: COLORS.primary,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  signupText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  signupLink: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
-
-export default Register; 
+export default Register;

@@ -10,16 +10,17 @@ import Apis, { endpoints } from '../../configs/Apis';
 
 const EventDetail = ({ route }) => {
     const { id } = route.params;
-    // console.log(title);
+    const eventId = parseInt(id, 10);
 
     const [tabItem, moveTab] = useState(1);
     const [rating, setRating] = useState({});
     const [events, setEvents] = useState({});
     const [loading, setLoading] = useState(true); // Đã thêm loading state
 
+
     const loadEvents = async () => {
         try {
-            let res = await Apis.get(endpoints['eventDetail'](id));
+            let res = await Apis.get(endpoints['eventDetail'](eventId));
             if (res.data) {
                 setEvents(res.data);
             }
@@ -33,7 +34,7 @@ const EventDetail = ({ route }) => {
 
     const loadRating = async () => {
         try {
-            let res = await Apis.get(endpoints['stats_rating'](id));
+            let res = await Apis.get(endpoints['stats_rating'](eventId));
             setRating(res.data || {}); // Kiểm tra res.data
         } catch (error) {
             console.error('Lỗi gọi API:', error);
@@ -42,7 +43,7 @@ const EventDetail = ({ route }) => {
 
     useEffect(() => {
         loadEvents();
-    }, []); // Thêm event_id làm dependency
+    }, [eventId]); // Thêm event_id làm dependency
 
     useEffect(() => {
         loadRating();
@@ -125,7 +126,9 @@ const EventDetail = ({ route }) => {
 
                     {/* Tab Reviews */}
                     {tabItem === 3 && (
+                        
                         <TabReviews event_id={events.id} />
+
                     )}
 
                     <Text style={styles.sectionTitle}>Popular Events</Text>

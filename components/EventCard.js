@@ -5,16 +5,16 @@ import COLORS from "../constants/colors";
 const EventCard = ({ item, onPress }) => {
 
   const date = new Date(item.start_time);
-  const dayMonth= `${date.getDate()}/${date.getMonth() + 1}`;
-  const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+  const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
+  const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.card}
       onPress={onPress} >
       <View style={styles.imageContainer}>
-        <Image 
-          source={{ uri: item.image }} 
+        <Image
+          source={{ uri: item.image }}
           style={styles.image}
         />
         <View style={styles.overlay}>
@@ -40,7 +40,7 @@ const EventCard = ({ item, onPress }) => {
               <Ionicons name="calendar" size={14} color={COLORS.primary} />
               <Text style={styles.detailText}>{dayMonth}</Text>
             </View>
-            <View style={styles.detailItem}>  
+            <View style={styles.detailItem}>
               <Ionicons name="time" size={14} color={COLORS.primary} />
               <Text style={styles.detailText}>{time}</Text>
             </View>
@@ -72,6 +72,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#f0f0f0',
+    shadowColor: '#000', // Màu của bóng
+    shadowOffset: { width: 0, height: 2 }, // Độ lệch của bóng (ngang, dọc)
+    shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
+    shadowRadius: 4, // Độ lan tỏa của bóng
+    // Thêm elevation cho Android
+    elevation: 3,
   },
   imageContainer: {
     position: 'relative',

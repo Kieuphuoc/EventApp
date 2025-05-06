@@ -26,9 +26,9 @@ const TabLocation = ({ item }) => {
             Linking.canOpenURL(iosMapsUrl)
                 .then((supported) => {
                     if (supported) {
-                        Linking.openURL(iosMapsUrl); // Mở Google Maps trên Android
+                        Linking.openURL(iosMapsUrl); 
                     } else {
-                        Linking.openURL(googleMapsUrl); // Nếu không có Google Maps, mở trên trình duyệt
+                        Linking.openURL(googleMapsUrl); 
                     }
                 })
                 .catch((err) => console.error('Error opening Google Maps on Android', err));

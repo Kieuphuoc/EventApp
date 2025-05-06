@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -13,65 +12,124 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../constants/colors';
+import { userStyles } from './UserStyles';
+import Apis, { endpoints } from '../../configs/Apis';
+import { Alert } from 'react-native';
 
-const Login = ()=> {
-  const [email, setEmail] = useState('');
+const Login = () => {
+  const [username, setUsername] = useState(''); // Sử dụng username thay vì email
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
-    const [user, setUser] = useState({});
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Please enter both username and password');
+      return;
+    }
 
+    setLoading(true);
+    try {
+      // Tạo FormData để gửi yêu cầu POST /token/
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
+      formData.append('grant_type', 'password');
+      formData.append('client_id', '9J87vnUbou0fZ16oWdhNtd0pLsq7OhEVEvketSdt9D');
+      formData.append('client_secret', '9GPRZJTMK43XNAp5baSawsqEUt6rFEuA0VA...'); // Đảm bảo client_secret chính xác
 
-  const handleLogin = () => {
-    // TODO: Implement login logic
-    console.log('Login pressed');
+      const response = await Apis.post(endpoints['token'], formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
+        const { access_token: token } = response.data; // Giả định API trả về access_token
+
+        // Lưu token vào AsyncStorage
+        await AsyncStorage.setItem('authToken', token);
+
+        // Cấu hình token cho các yêu cầu API tiếp theo
+        Apis.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        // Gọi endpoint /user/me/ để lấy thông tin người dùng
+        const userResponse = await Apis.get(endpoints['userMe']);
+        if (userResponse.status === 200) {
+          const userData = userResponse.data;
+          Alert.alert(
+            'Success',
+            `Welcome back, ${userData.first_name || userData.username}!`,
+            [
+              {
+                text: 'OK',
+                onPress: () => navigation.navigate('Home'), // Điều hướng đến Home
+              },
+            ]
+          );
+        } else {
+          throw new Error('Failed to fetch user data');
+        }
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error_description ||
+        error.response?.data?.message ||
+        error.message ||
+        'Login failed. Please try again.';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+    <SafeAreaView style={userStyles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.primary} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={userStyles.keyboardView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
+        <ScrollView contentContainerStyle={userStyles.scrollContent}>
+          <View style={userStyles.header}>
             <Image
               source={require('../../assets/images/logo.png')}
-              style={styles.logo}
+              style={userStyles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
+            <Text style={userStyles.title}>Welcome Back</Text>
+            <Text style={userStyles.subtitle}>Sign in to continue</Text>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail" size={20} color={COLORS.primary} style={styles.inputIcon} />
+          <View style={userStyles.form}>
+            <View style={userStyles.inputContainer}>
+              <Ionicons name="person" size={20} color={COLORS.primary} style={userStyles.inputIcon} />
               <TextInput
-                style={styles.input}
-                placeholder="Email"
+                style={userStyles.input}
+                placeholder="Username"
                 placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
+                value={username}
+                onChangeText={setUsername}
                 autoCapitalize="none"
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed" size={20} color={COLORS.primary} style={styles.inputIcon} />
+            <View style={userStyles.inputContainer}>
+              <Ionicons name="lock-closed" size={20} color={COLORS.primary} style={userStyles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={userStyles.input}
                 placeholder="Password"
                 placeholderTextColor="#666"
-                value="p"
+                value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity
-                style={styles.eyeIcon}
+                style={userStyles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
               >
                 <Ionicons
@@ -82,36 +140,42 @@ const Login = ()=> {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <TouchableOpacity style={userStyles.forgotPassword}>
+              <Text style={userStyles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Sign In</Text>
+            <TouchableOpacity
+              style={[userStyles.loginButton, loading && { opacity: 0.6 }]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={userStyles.loginButtonText}>
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Text>
             </TouchableOpacity>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+            <View style={userStyles.divider}>
+              <View style={userStyles.dividerLine} />
+              <Text style={userStyles.dividerText}>OR</Text>
+              <View style={userStyles.dividerLine} />
             </View>
 
-            <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialButton}>
+            <View style={userStyles.socialButtons}>
+              <TouchableOpacity style={userStyles.socialButton}>
                 <Ionicons name="logo-google" size={24} color="#DB4437" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
+              <TouchableOpacity style={userStyles.socialButton}>
                 <Ionicons name="logo-facebook" size={24} color="#4267B2" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
+              <TouchableOpacity style={userStyles.socialButton}>
                 <Ionicons name="logo-apple" size={24} color="#000" />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/signup')}>
-                <Text style={styles.signupLink}>Sign Up</Text>
+            <View style={userStyles.signupContainer}>
+              <Text style={userStyles.signupText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={userStyles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -119,134 +183,6 @@ const Login = ()=> {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  form: {
-    padding: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 15,
-    color: '#333',
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 5,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: COLORS.primary,
-    fontSize: 14,
-  },
-  loginButton: {
-    backgroundColor: COLORS.primary,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e0e0e0',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#666',
-    fontSize: 14,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 20,
-  },
-  socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f8f8f8',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  signupText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  signupLink: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-}); 
 export default Login;
