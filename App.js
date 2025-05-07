@@ -15,6 +15,7 @@ import { MyDispatchContext, MyUserContext } from "./configs/Context";
 import { useContext, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
+import PaymentSuccess from "./screens/PaymentSuccess";
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,7 @@ const StackNavigator = () => {
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
       <Stack.Screen name="booking" component={Booking} />
+      <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
     </Stack.Navigator>
   );
 }
@@ -40,31 +42,34 @@ const StackNavigator = () => {
 
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
-  const user = useContext(MyUserContext);
+const user = useContext(MyUserContext);
 
   return (
     <Tab.Navigator screenOptions={{
       tabBarActiveTintColor: COLORS.primary,
       tabBarStyle: {
         borderTopWidth: 0,
-        backgroundColor: COLORS.background,
+        borderRadius:30,
+        backgroundColor: 'white',
         height: 60,
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 0,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
       },
       headerShown: false,
     }}>
       <Tab.Screen name="index" options={{
         title: 'Home',
-        tabBarIcon: ({ color, focused }) => (
-          <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={COLORS.primary} size={24} />
-        ),
+        tabBarIcon: ({ color, focused }) => (<Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={COLORS.primary} size={24} />),
       }} component={StackNavigator} />
       {user === null ? <>
         <Tab.Screen name="login"
-          options={{
-            title: 'Login',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
-            ),
+          options={{title: 'Login', tabBarIcon: ({ color, focused }) => (<Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />),
           }} component={Login} />
         <Tab.Screen name="register"
           options={{

@@ -18,7 +18,6 @@ const Category = ({ type, iconName }) => {
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        marginBottom: 30,
     },
     icon: {
         backgroundColor: COLORS.accentLight,

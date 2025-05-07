@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Apis, { endpoints } from '../../configs/Apis';
 import { ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import globalStyles from '../../constants/globalStyles';
 
 const EventDetail = ({ route }) => {
     const { id } = route.params;
@@ -86,7 +87,7 @@ const EventDetail = ({ route }) => {
                             </View>
                         </View>
 
-                        <Text style={styles.title}>{events.title || 'No Title'}</Text>
+                        <Text style={globalStyles.header}>{events.title || 'No Title'}</Text>
                         <View style={styles.locationContainer}>
                             <Ionicons name="location" size={16} color={COLORS.primary} />
                             <Text style={styles.location}>{events.location || 'Unknown Location'}</Text>
@@ -137,8 +138,6 @@ const EventDetail = ({ route }) => {
                             <TabReviews event_id={events.id} />
 
                         )}
-
-                        <Text style={styles.sectionTitle}>Popular Events</Text>
                     </View>
                 </ScrollView>
 

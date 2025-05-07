@@ -3,14 +3,15 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } 
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import RenderHTML from 'react-native-render-html';
+import globalStyles from '../constants/globalStyles';
 
 const TabAbout = ({ description, manager }) => {
     const [isExpanded, setIsExpanded] = useState(false); //Chưa xử lí được
     const { width } = useWindowDimensions(); // 👈 Lấy chiều rộng màn hình
     
     return (
-        <View style={styles.tabContent}>
-            <Text style={styles.sectionTitle}>Description</Text>
+        <View style={{}}>
+            <Text style={globalStyles.title}>Description</Text>
             <RenderHTML
                 contentWidth={width}
                 source={{
@@ -22,14 +23,14 @@ const TabAbout = ({ description, manager }) => {
                         fontSize: 15,
                         lineHeight: 22,
                         marginBottom: 20,
-                    },
+                    }
                 }}
             />
 
             {/* <TouchableOpacity><Text>see more</Text></TouchableOpacity> */}
 
-            <Text style={styles.sectionTitle}>Project Manager</Text>
-            <View style={styles.managerContainer}>
+            <Text style={globalStyles.title}>Project Manager</Text>
+            <View style={[globalStyles.box, globalStyles.container]}>
                 <Image
                     source={{ uri: manager.image }}
                     style={styles.managerImage}
@@ -55,15 +56,6 @@ export default TabAbout;
 
 
 const styles = StyleSheet.create({
-    tabContent: {
-        marginBottom: 30,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 15,
-    },
     description: {
         color: '#666',
         fontSize: 15,

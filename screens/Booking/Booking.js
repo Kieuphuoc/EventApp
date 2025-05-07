@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
+import Apis, { authApis, endpoints } from '../../configs/Apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import globalStyles from '../../constants/globalStyles';
 
 const PROMO_CODES = [
   { code: 'SUMMER10', discount: 10, description: 'Giảm 10% cho mùa hè' },
@@ -28,19 +31,22 @@ const PAYMENT_METHODS = [
 const Booking = ({ route, navigation }) => {
   const { event } = route.params;
   const [quantity, setQuantity] = useState(1);
-  const [promoCode, setPromoCode] = useState('');
-  const [isPromoApplied, setIsPromoApplied] = useState(false);
-  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [appliedVoucher, setAppliedVoucher] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [discount, setDiscount] = useState([]);
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showVoucher, setShowVoucher] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+
+  const [percentDiscount, setPercentDiscount]= useState('');
 
 
-  const basePrice = event.price || 0;
+  const basePrice = event.ticket_price || 0;
   const totalPrice = basePrice * quantity;
-  const discountt = isPromoApplied ? totalPrice * 0.1 : 0;
-  const finalPrice = totalPrice - discountt;
+  const finalPrice = totalPrice - (appliedVoucher ? totalPrice * (percentDiscount/100) : 0);
+
+  // console.log(event.);
 
   const date = new Date(event.start_time);
   const day = new Intl.DateTimeFormat('en-GB', {
@@ -50,23 +56,36 @@ const Booking = ({ route, navigation }) => {
   }).format(date).replace(/\//g, '/');
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
-  const loadDiscount = async () => {
-      try {
-        setLoading(true);
-  
-        let url = `${endpoints['my-discount']}`;
+const loadDiscount = async () => {
+  try {
+    setLoading(true);
 
-        let res = await Apis.get(url); 
-        if (res.data) {
-          setDiscount(res.data);
-        }
-      } catch (ex) {
-        console.error("Error loading events:", ex);
-        setEvents([]); // Set empty array on error
-      } finally {
-        setLoading(false);
-      }
+    // Lấy token từ AsyncStorage
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
     }
+
+    // Gọi API lấy danh sách giảm giá
+    const res = await authApis(token).get(endpoints['my-discount']);
+
+    if (res.data) {
+      setDiscount(res.data);
+    } else {
+      setDiscount([]); 
+    }
+  } catch (error) {
+    console.error('Error loading discounts:', {
+      message: error.message,
+      response: error.response,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    setDiscount([]); // Set mảng rỗng khi lỗi
+  } finally {
+    setLoading(false);
+  }
+};
   
     useEffect(() => {
       loadDiscount();
@@ -75,8 +94,8 @@ const Booking = ({ route, navigation }) => {
 
   const handlePromoApply = (code) => {
     setPromoCode(code);
-    setIsPromoApplied(true);
-    setShowPromoModal(false);
+    setAppliedVoucher(true);
+    setShowVoucher(false);
   };
 
   const handlePaymentSelect = (method) => {
@@ -137,16 +156,16 @@ const Booking = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Voucher Discount</Text>
             <TouchableOpacity
               style={styles.promoInputContainer}
-              onPress={() => setShowPromoModal(true)}
+              onPress={() => setShowVoucher(true)}
             >
               <View style={styles.promoInput}>
-                <Text style={styles.promoText}>
-                  {promoCode || 'Select voucher'}
+                <Text style={promoCode ? styles.promoCode : styles.paymentPlaceholder} >
+                  { promoCode || 'Select voucher'}
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.applyButton}
-                onPress={() => setShowPromoModal(true)}
+                onPress={() => setShowVoucher(true)}
               >
                 <Text style={styles.applyButtonText}>Apply</Text>
               </TouchableOpacity>
@@ -165,7 +184,7 @@ const Booking = ({ route, navigation }) => {
                   <Text style={styles.paymentText}>{selectedPayment.name}</Text>
                 </View>
               ) : (
-                <Text style={styles.paymentPlaceholder}>Chọn phương thức thanh toán</Text>
+                <Text style={styles.paymentPlaceholder}>Select payment method</Text>
               )}
               <Ionicons name="chevron-forward" size={24} color={COLORS.primary} />
             </TouchableOpacity>
@@ -175,22 +194,22 @@ const Booking = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Invoice</Text>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Base Price</Text>
-              <Text style={styles.priceValue}>${basePrice.toFixed(2)}</Text>
+              <Text style={styles.priceValue}>{Number(event.ticket_price).toFixed(0)}₫</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Quantity</Text>
-              <Text style={styles.priceValue}>x{quantity}</Text>
-            </View>
+              <Text style={styles.priceValue}>x {quantity}</Text>
+            </View>   
 
-            {isPromoApplied && (
+            {appliedVoucher && (
               <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>Discount (10%)</Text>
-                <Text style={[styles.priceValue, styles.discountText]}>-${discount.toFixed(2)}</Text>
+                <Text style={styles.priceLabel}>Discount</Text>
+                <Text style={[styles.priceValue, styles.discountText]}>- {Number(percentDiscount)}</Text>
               </View>
             )}
             <View style={[styles.priceRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>${finalPrice.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>{finalPrice}₫</Text>
             </View>
           </View>
         </View>
@@ -199,13 +218,13 @@ const Booking = ({ route, navigation }) => {
       <View style={styles.footer}>
         <View style={styles.totalContainer}>
           <Text style={styles.footerTotalLabel}>Total Amount</Text>
-          <Text style={styles.footerTotalValue}>${finalPrice.toFixed(2)}</Text>
+          <Text style={styles.footerTotalValue}>{finalPrice}₫</Text>
         </View>
         <TouchableOpacity
           style={[styles.payButton, !selectedPayment && styles.payButtonDisabled]}
           onPress={() => {
             if (selectedPayment) {
-              navigation.navigate('PaymentSuccess');
+              navigation.navigate('paymentSuccess');
             }
           }}
           disabled={!selectedPayment}
@@ -218,32 +237,32 @@ const Booking = ({ route, navigation }) => {
 
       {/* Promo Code Modal */}
       <Modal
-        visible={showPromoModal}
+        visible={showVoucher}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowPromoModal(false)}
+        onRequestClose={() => setVoucher(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select voucher</Text>
-              <TouchableOpacity onPress={() => setShowPromoModal(false)}>
+              <TouchableOpacity onPress={() => setShowVoucher(false)}>
                 <Ionicons name="close" size={24} color={COLORS.primary} />
               </TouchableOpacity>
             </View>
             <FlatList
-              data={PROMO_CODES}
-              keyExtractor={(item) => item.code}
+              data={discount}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.promoItem}
-                  onPress={() => handlePromoApply(item.code)}
+                  onPress={() => {handlePromoApply(item.discount_code); setPercentDiscount(item.discount_percent);}}
                 >
                   <View>
-                    <Text style={styles.promoCode}>{item.code}</Text>
-                    <Text style={styles.promoDescription}>{item.description}</Text>
+                    <Text style={styles.promoCode}>{item.discount_code}</Text>
+                    <Text style={styles.promoDescription}>{}description</Text>
                   </View>
-                  <Text style={styles.promoDiscount}>-{item.discount}%</Text>
+                  <Text style={styles.promoDiscount}>-{item.discount_percent}%</Text>
                 </TouchableOpacity>
               )}
             />
@@ -445,10 +464,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.accentLight,
   },
-  promoText: {
-    fontSize: 16,
-    color: COLORS.primaryDark,
-  },
+
   applyButton: {
     backgroundColor: COLORS.secondary,
     paddingHorizontal: 25,
@@ -642,7 +658,7 @@ const styles = StyleSheet.create({
   promoCode: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primaryDark,
+    color: COLORS.primary,
   },
   promoDescription: {
     fontSize: 14,

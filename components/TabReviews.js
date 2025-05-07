@@ -7,6 +7,7 @@ import ReviewItem from './ReviewItem';
 import { FlatList } from 'react-native-gesture-handler';
 import Apis, { endpoints } from '../configs/Apis';
 import { useRoute } from '@react-navigation/native';
+import globalStyles from '../constants/globalStyles';
 
 const TabReviews = ({ event_id }) => {
     const [reviews, setReviews] = useState([]);
@@ -48,7 +49,7 @@ const TabReviews = ({ event_id }) => {
                 </View>
                 <TouchableOpacity style={styles.writeReviewButton}>
                     <Ionicons name="create-outline" size={20} color="#fff" />
-                    <Text style={styles.writeReviewText}>Write a Review</Text>
+                    <Text style={globalStyles.buttonText}>Write a Review</Text>
                 </TouchableOpacity>
             </View>
 

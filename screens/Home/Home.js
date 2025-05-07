@@ -11,6 +11,7 @@ import { COLORS } from '../../constants/colors';
 import Apis, { endpoints } from '../../configs/Apis';
 import { ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
+import globalStyles from "../../constants/globalStyles";
 
 const Home = () => {
   const navigation = useNavigation();
@@ -63,11 +64,9 @@ const Home = () => {
       <View style={styles.container}>
         <Header />
         <SearchBox q={q} setQ={setQ}/>
+        <Text style={globalStyles.title}>Categories</Text>
 
-        {/* <Searchbar value={q} onChangeText={setQ}  /> */}
-        <Text style={styles.sectionTitle}>Categories</Text>
-
-        <View style={styles.categoryRow}>
+        <View style={[globalStyles.container, globalStyles.mb]}>
           {categories.map((c) => {
             let icon = "alert"; // mặc định
             if (c.name.includes("Sport")) icon = "football";
@@ -77,7 +76,7 @@ const Home = () => {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Upcoming Events</Text>
+        <Text style={globalStyles.title}>Upcoming Events</Text>
 
         <FlatList
           data={events}
@@ -101,7 +100,7 @@ const Home = () => {
 
         <View style={{ flex: 1 }} />
 
-        <Text style={styles.featuredTitle}>🔥 Bài đăng nổi bật</Text>
+        <Text style={globalStyles.title}>🔥 Bài đăng nổi bật</Text>
       </View>
 
       <FeaturedPosts />

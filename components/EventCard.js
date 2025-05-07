@@ -9,41 +9,104 @@ const EventCard = ({ item, onPress }) => {
   const heartPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const heartOpacity = useRef(new Animated.Value(0)).current;
   const lastTap = useRef(0);
+  const smallHearts = useRef([]).current;
+  const touchPosition = useRef({ x: 0, y: 0 }).current;
 
   const date = new Date(item.start_time);
   const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
-  const handleDoubleTap = () => {
+  const getRandomOffset = () => {
+    return (Math.random() - 0.5) * 200; // Random value between -100 and 100
+  };
+
+  const createSmallHearts = () => {
+    const hearts = [];
+    for (let i = 0; i < 8; i++) {
+      hearts.push({
+        position: new Animated.ValueXY({ x: 0, y: 0 }),
+        opacity: new Animated.Value(1),
+        scale: new Animated.Value(0.5),
+      });
+    }
+    return hearts;
+  };
+
+  const animateSmallHearts = () => {
+    const hearts = createSmallHearts();
+    smallHearts.push(...hearts);
+
+    hearts.forEach((heart) => {
+      const randomX = getRandomOffset();
+      const randomY = getRandomOffset();
+
+      Animated.parallel([
+        Animated.timing(heart.position, {
+          toValue: { x: randomX, y: randomY },
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heart.opacity, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heart.scale, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        const index = smallHearts.indexOf(heart);
+        if (index > -1) {
+          smallHearts.splice(index, 1);
+        }
+      });
+    });
+  };
+
+  const handleDoubleTap = (event) => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
     if (now - lastTap.current < DOUBLE_PRESS_DELAY) {
       setIsFavorite(!isFavorite);
       
-      // Reset heart position to center
+      // Get touch position relative to the image container
+      const { locationX, locationY } = event.nativeEvent;
+      touchPosition.x = locationX;
+      touchPosition.y = locationY;
+      
+      // Reset heart position to touch position
       heartPosition.setValue({ x: 0, y: 0 });
       heartOpacity.setValue(1);
 
-      // Animate heart to top right
+      // Calculate the position of the favorite button (top right corner)
+      const targetX = 50; // Approximate position of favorite button
+      const targetY = -50; // Approximate position of favorite button
+
+      // Animate main heart towards the favorite button
       Animated.parallel([
         Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 200,
+          toValue: 3,
+          duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(heartPosition, {
-          toValue: { x: 120, y: -80 },
-          duration: 500,
+          toValue: { x: targetX, y: targetY },
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(heartOpacity, {
           toValue: 0,
-          duration: 500,
+          duration: 800,
           useNativeDriver: true,
         }),
       ]).start(() => {
         scaleAnim.setValue(1);
       });
+
+      // Animate small hearts
+      animateSmallHearts();
     }
     lastTap.current = now;
   };
@@ -65,7 +128,9 @@ const EventCard = ({ item, onPress }) => {
                   { translateX: heartPosition.x },
                   { translateY: heartPosition.y }
                 ],
-                opacity: heartOpacity
+                opacity: heartOpacity,
+                left: touchPosition.x,
+                top: touchPosition.y
               }
             ]}
           >
@@ -76,6 +141,30 @@ const EventCard = ({ item, onPress }) => {
               style={{}}
             />
           </Animated.View>
+          {smallHearts.map((heart, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                styles.smallHeartContainer,
+                {
+                  transform: [
+                    { translateX: heart.position.x },
+                    { translateY: heart.position.y },
+                    { scale: heart.scale }
+                  ],
+                  opacity: heart.opacity,
+                  left: touchPosition.x,
+                  top: touchPosition.y
+                }
+              ]}
+            >
+              <Ionicons 
+                name="heart" 
+                size={20} 
+                color={COLORS.error} 
+              />
+            </Animated.View>
+          ))}
           <View style={styles.overlay}>
             <View style={styles.category}>
               <Text style={styles.categoryText}>{item.category.name}</Text>
@@ -89,56 +178,56 @@ const EventCard = ({ item, onPress }) => {
             </TouchableOpacity>
           </View>
         </View>
+
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceText}>${item.ticket_price}</Text>
+            </View>
+          </View>
+
+          <View style={styles.details}>
+            <View style={styles.detailRow}>
+              <View style={styles.detailItem}>
+                <Ionicons name="calendar" size={14} color={COLORS.primary} />
+                <Text style={styles.detailText}>{dayMonth}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Ionicons name="time" size={14} color={COLORS.primary} />
+                <Text style={styles.detailText}>{time}</Text>
+              </View>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="location" size={14} color={COLORS.primary} />
+              <Text style={styles.detailText}>{item.location}</Text>
+            </View>
+          </View>
+
+          <View style={styles.footer}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.bookmarkButton]}
+              onPress={() => {}}
+            >
+              <Ionicons name="bookmark-outline" size={18} color={COLORS.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.shareButton]}
+              onPress={() => {}}
+            >
+              <Ionicons name="share-social-outline" size={18} color={COLORS.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.joinButton}
+              onPress={onPress}
+            >
+              <Text style={styles.joinButtonText}>Join Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Pressable>
-
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>${item.ticket_price}</Text>
-          </View>
-        </View>
-
-        <View style={styles.details}>
-          <View style={styles.detailRow}>
-            <View style={styles.detailItem}>
-              <Ionicons name="calendar" size={14} color={COLORS.primary} />
-              <Text style={styles.detailText}>{dayMonth}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Ionicons name="time" size={14} color={COLORS.primary} />
-              <Text style={styles.detailText}>{time}</Text>
-            </View>
-          </View>
-          <View style={styles.detailItem}>
-            <Ionicons name="location" size={14} color={COLORS.primary} />
-            <Text style={styles.detailText}>{item.location}</Text>
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.bookmarkButton]}
-            onPress={() => {}}
-          >
-            <Ionicons name="bookmark-outline" size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.shareButton]}
-            onPress={() => {}}
-          >
-            <Ionicons name="share-social-outline" size={18} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.joinButton}
-            onPress={onPress}
-          >
-            <Text style={styles.joinButtonText}>Join Now</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </View>
   );
 };
@@ -279,6 +368,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  heartContainer: {
+    position: 'absolute',
+    transform: [
+      { translateX: -25 },
+      { translateY: -25 }
+    ],
+  },
+  smallHeartContainer: {
+    position: 'absolute',
+    transform: [
+      { translateX: -10 },
+      { translateY: -10 }
+    ],
   },
 });
 
