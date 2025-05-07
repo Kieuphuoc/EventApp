@@ -10,7 +10,9 @@ export const endpoints = {
    'register': '/user/',
    'login': '/o/token/',
    'current-user':'/user/me/',
-   'favoriteEvent':'/favorite/event/'
+   'favoriteEvent':'/favorite/event/',
+   'invoice' : '/invoice/',
+   'my-discount' : '/discount/my_discount/',
 }
 
 export const authApis = (token) => {

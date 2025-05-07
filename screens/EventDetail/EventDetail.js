@@ -20,7 +20,7 @@ const EventDetail = ({ route }) => {
     const [events, setEvents] = useState(null);
     const [loading, setLoading] = useState(true); // Đã thêm loading state
 
-    const price = Number(events.ticket_price).toFixed(0);
+    const price = Number(events?.ticket_price)?.toFixed(0);
 
     const loadEvents = async () => {
         try {
@@ -54,9 +54,9 @@ const EventDetail = ({ route }) => {
     }, []);
 
     return (
-        
-        
-        
+
+
+
         <GestureHandlerRootView style={styles.container}>
             {events === null ? <ActivityIndicator /> : <><StatusBar barStyle="light-content" />
                 <ScrollView>
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     eventTypeContainer: {
-        backgroundColor: COLORS.primary + '10',
+        backgroundColor: COLORS.primary + '20',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     eventType: {
         color: COLORS.primary,
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 17,
     },
     ratingContainer: {
         flexDirection: 'row',
@@ -226,9 +226,10 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#333',
+        color: COLORS.primary,
+        marginLeft: 5,
         marginBottom: 8,
     },
     locationContainer: {
@@ -286,9 +287,9 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     price: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
+        color: COLORS.secondaryDark,
     },
     bookButton: {
         flexDirection: 'row',
@@ -298,6 +299,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         borderRadius: 30,
         gap: 8,
+        shadowColor: COLORS.primary,
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.4,
+        shadowRadius: 4,
+        elevation: 3,
     },
     bookButtonText: {
         color: '#fff',

@@ -9,7 +9,7 @@ const TabLocation = ({ item }) => {
         // Tạo URL mở Google Maps trực tiếp (cho cả trình duyệt và ứng dụng)
         const googleMapsUrl = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
         const iosMapsUrl = `comgooglemaps://?q=${item.latitude},${item.longitude}`;
-        
+
         // Kiểm tra xem thiết bị có phải là iOS và có ứng dụng Google Maps không
         if (Platform.OS === 'ios') {
             Linking.canOpenURL(iosMapsUrl)
@@ -26,9 +26,9 @@ const TabLocation = ({ item }) => {
             Linking.canOpenURL(iosMapsUrl)
                 .then((supported) => {
                     if (supported) {
-                        Linking.openURL(iosMapsUrl); 
+                        Linking.openURL(iosMapsUrl);
                     } else {
-                        Linking.openURL(googleMapsUrl); 
+                        Linking.openURL(googleMapsUrl);
                     }
                 })
                 .catch((err) => console.error('Error opening Google Maps on Android', err));
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     locationInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: COLORS.primary + '15',
         padding: 15,
         borderRadius: 12,
         marginBottom: 15,
@@ -95,5 +95,14 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 25,
         gap: 8,
+        backgroundColor: COLORS.secondaryDark,
+        shadowColor: COLORS.secondaryDark,
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.4,
+        shadowRadius: 4,
+        elevation: 3,
     },
 });

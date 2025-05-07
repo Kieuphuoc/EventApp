@@ -72,8 +72,8 @@ const EventCard = ({ item, onPress }) => {
             <Ionicons 
               name="heart" 
               size={50} 
-              color={COLORS.secondary} 
-              style={styles.heartIcon}
+              color={COLORS.error} 
+              style={{}}
             />
           </Animated.View>
           <View style={styles.overlay}>
@@ -84,7 +84,7 @@ const EventCard = ({ item, onPress }) => {
               <Ionicons 
                 name={isFavorite ? "heart" : "heart-outline"} 
                 size={22} 
-                color={isFavorite ? COLORS.secondary : "#fff"} 
+                color={isFavorite ? COLORS.error : "#fff"} 
               />
             </TouchableOpacity>
           </View>
@@ -145,15 +145,18 @@ const EventCard = ({ item, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.accentLight,
-    borderRadius: 20,
+    backgroundColor: '#fff',
+    borderRadius: 16,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000', // Màu của bóng
+    shadowOffset: { width: 0, height: 2 }, // Độ lệch của bóng (ngang, dọc)
+    shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
+    shadowRadius: 4, // Độ lan tỏa của bóng
+    // Thêm elevation cho Android
+    elevation: 3,
   },
   imageContainer: {
     position: 'relative',
@@ -163,46 +166,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  heartContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginLeft: -25,
-    marginTop: -25,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  heartIcon: {
-    opacity: 0.9,
-  },
   overlay: {
     position: 'absolute',
     top: 12,
     left: 12,
-    right: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  category: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
   },
   categoryText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  favoriteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   content: {
     padding: 16,
@@ -214,21 +186,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
   },
-  title: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.primary,
-    lineHeight: 22,
-  },
+
   priceContainer: {
-    backgroundColor: COLORS.secondary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
+    backgroundColor: COLORS.primary + '10',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   priceText: {
-    color: '#fff',
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -242,15 +208,15 @@ const styles = StyleSheet.create({
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 15,
+    gap: 4,
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   detailText: {
-    color: COLORS.primary,
-    fontSize: 13,
+    color: '#666',
+    fontSize: 12,
     fontWeight: '500',
   },
   footer: {
@@ -259,39 +225,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  actionButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  bookmarkButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  bookmarkButton: {
-    backgroundColor: '#fff',
+  overlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  shareButton: {
-    backgroundColor: '#fff',
+  category: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  
+  favoriteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.primary,
+    lineHeight: 22,
   },
   joinButton: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    shadowColor: COLORS.secondary,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 3,
   },
   joinButtonText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

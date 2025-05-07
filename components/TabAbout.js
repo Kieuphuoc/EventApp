@@ -5,17 +5,17 @@ import COLORS from '../constants/colors';
 import RenderHTML from 'react-native-render-html';
 
 const TabAbout = ({ description, manager }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false); //Chưa xử lí được
     const { width } = useWindowDimensions(); // 👈 Lấy chiều rộng màn hình
-    const shortDescription = description.slice(0, 170);
-    const fullDescription = description;
-
+    
     return (
         <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Description</Text>
             <RenderHTML
-                contentWidth={width} // ✅ Bắt buộc để tránh warning
-                source={{ html: isExpanded ? fullDescription : shortDescription }}
+                contentWidth={width}
+                source={{
+                    html: description,
+                }}
                 tagsStyles={{
                     p: {
                         color: '#666',
@@ -23,14 +23,10 @@ const TabAbout = ({ description, manager }) => {
                         lineHeight: 22,
                         marginBottom: 20,
                     },
-                    span: {
-                        color: '#666',
-                        fontSize: 15,
-                        lineHeight: 22,
-                        marginBottom: 20,
-                    },
                 }}
             />
+
+            {/* <TouchableOpacity><Text>see more</Text></TouchableOpacity> */}
 
             <Text style={styles.sectionTitle}>Project Manager</Text>
             <View style={styles.managerContainer}>
@@ -63,7 +59,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#333',
         marginBottom: 15,

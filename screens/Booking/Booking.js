@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -21,8 +21,8 @@ const PROMO_CODES = [
 ];
 
 const PAYMENT_METHODS = [
-  { id: 'cash', name: 'Tiền mặt', icon: 'cash-outline' },
-  { id: 'momo', name: 'Ví MoMo', icon: 'wallet-outline' },
+  { id: 'cash', name: 'Cash', icon: 'cash-outline' },
+  { id: 'momo', name: 'MoMo', icon: 'wallet-outline' },
 ];
 
 const Booking = ({ route, navigation }) => {
@@ -33,11 +33,45 @@ const Booking = ({ route, navigation }) => {
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [discount, setDiscount] = useState([]);
+    const [loading, setLoading] = useState(false);
+
 
   const basePrice = event.price || 0;
   const totalPrice = basePrice * quantity;
-  const discount = isPromoApplied ? totalPrice * 0.1 : 0;
-  const finalPrice = totalPrice - discount;
+  const discountt = isPromoApplied ? totalPrice * 0.1 : 0;
+  const finalPrice = totalPrice - discountt;
+
+  const date = new Date(event.start_time);
+  const day = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date).replace(/\//g, '/');
+  const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+  const loadDiscount = async () => {
+      try {
+        setLoading(true);
+  
+        let url = `${endpoints['my-discount']}`;
+
+        let res = await Apis.get(url); 
+        if (res.data) {
+          setDiscount(res.data);
+        }
+      } catch (ex) {
+        console.error("Error loading events:", ex);
+        setEvents([]); // Set empty array on error
+      } finally {
+        setLoading(false);
+      }
+    }
+  
+    useEffect(() => {
+      loadDiscount();
+    }, []);
+  
 
   const handlePromoApply = (code) => {
     setPromoCode(code);
@@ -54,16 +88,16 @@ const Booking = ({ route, navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
       <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Booking Details</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Bill of Payment</Text>
+      </View>
       <ScrollView style={styles.scrollView}>
-        
+
 
         <View style={styles.content}>
           <View style={styles.eventInfo}>
@@ -71,7 +105,7 @@ const Booking = ({ route, navigation }) => {
             <View style={styles.eventDetails}>
               <View style={styles.detailRow}>
                 <Ionicons name="calendar" size={20} color={COLORS.primary} />
-                <Text style={styles.detailText}>{event.date}</Text>
+                <Text style={styles.detailText}>{day} {time}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Ionicons name="location" size={20} color={COLORS.primary} />
@@ -83,16 +117,16 @@ const Booking = ({ route, navigation }) => {
           <View style={styles.quantitySection}>
             <Text style={styles.sectionTitle}>Number of Tickets</Text>
             <View style={styles.quantitySelector}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.quantityButton}
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
               >
                 <Ionicons name="remove" size={24} color={COLORS.primary} />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.quantityButton}
-                onPress={() => setQuantity(quantity + 1)}
+                onPress={() => setQuantity(Math.min(quantity + 1, event.ticket_quantity))}
               >
                 <Ionicons name="add" size={24} color={COLORS.primary} />
               </TouchableOpacity>
@@ -100,28 +134,28 @@ const Booking = ({ route, navigation }) => {
           </View>
 
           <View style={styles.promoSection}>
-            <Text style={styles.sectionTitle}>Promo Code</Text>
-            <TouchableOpacity 
+            <Text style={styles.sectionTitle}>Voucher Discount</Text>
+            <TouchableOpacity
               style={styles.promoInputContainer}
               onPress={() => setShowPromoModal(true)}
             >
               <View style={styles.promoInput}>
                 <Text style={styles.promoText}>
-                  {promoCode || 'Chọn mã khuyến mãi'}
+                  {promoCode || 'Select voucher'}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.applyButton}
                 onPress={() => setShowPromoModal(true)}
               >
-                <Text style={styles.applyButtonText}>Chọn</Text>
+                <Text style={styles.applyButtonText}>Apply</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           </View>
 
           <View style={styles.paymentSection}>
-            <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-            <TouchableOpacity 
+            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <TouchableOpacity
               style={styles.paymentSelector}
               onPress={() => setShowPaymentModal(true)}
             >
@@ -138,7 +172,7 @@ const Booking = ({ route, navigation }) => {
           </View>
 
           <View style={styles.priceBreakdown}>
-            <Text style={styles.sectionTitle}>Price Breakdown</Text>
+            <Text style={styles.sectionTitle}>Invoice</Text>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Base Price</Text>
               <Text style={styles.priceValue}>${basePrice.toFixed(2)}</Text>
@@ -167,7 +201,7 @@ const Booking = ({ route, navigation }) => {
           <Text style={styles.footerTotalLabel}>Total Amount</Text>
           <Text style={styles.footerTotalValue}>${finalPrice.toFixed(2)}</Text>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.payButton, !selectedPayment && styles.payButtonDisabled]}
           onPress={() => {
             if (selectedPayment) {
@@ -177,7 +211,7 @@ const Booking = ({ route, navigation }) => {
           disabled={!selectedPayment}
         >
           <Text style={styles.payButtonText}>
-            {selectedPayment ? 'Thanh toán' : 'Vui lòng chọn phương thức thanh toán'}
+            {selectedPayment ? 'Pay' : 'Please select payment method'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -192,7 +226,7 @@ const Booking = ({ route, navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chọn mã khuyến mãi</Text>
+              <Text style={styles.modalTitle}>Select voucher</Text>
               <TouchableOpacity onPress={() => setShowPromoModal(false)}>
                 <Ionicons name="close" size={24} color={COLORS.primary} />
               </TouchableOpacity>
@@ -227,7 +261,7 @@ const Booking = ({ route, navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chọn phương thức thanh toán</Text>
+              <Text style={styles.modalTitle}>Payment method</Text>
               <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
                 <Ionicons name="close" size={24} color={COLORS.primary} />
               </TouchableOpacity>
@@ -256,36 +290,36 @@ const Booking = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.accentLight,
-      },
-      scrollView: {
-        flex: 1,
-      },
-      header: {
-        backgroundColor: COLORS.primary,
-        padding: 20,
-        paddingTop: 40,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 4,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 8,
-      },
-      backButton: {
-        marginRight: 15,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        padding: 8,
-        borderRadius: 12,
-      },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    backgroundColor: COLORS.primary,
+    padding: 20,
+    paddingTop: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  backButton: {
+    marginRight: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 8,
+    borderRadius: 12,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -320,6 +354,7 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
     gap: 10,
     backgroundColor: COLORS.accentLight,
     padding: 12,
@@ -373,7 +408,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.4,
     shadowRadius: 4,
     elevation: 3,
   },
