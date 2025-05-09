@@ -146,4 +146,23 @@ export const userStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  dropdown: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom:20,
+  },
+  dropdownItem: {
+    paddingVertical: 8,
+    fontSize: 16,
+    color: '#333',
+  },
 }); 

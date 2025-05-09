@@ -145,7 +145,7 @@ const EventDetail = ({ route }) => {
                 <View style={styles.footer}>
                     <View style={styles.priceContainer}>
                         <Text style={styles.priceLabel}>Total price</Text>
-                        <Text style={styles.price}>${price || 0} $</Text>
+                        <Text style={styles.price}>{price || 0} ₫</Text>
                     </View>
                     <TouchableOpacity style={styles.bookButton} onPress={() => navigation.navigate('booking', { event: events })}>
                         <Ionicons name="cart" size={20} color="#fff" />
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.secondaryDark,
+        color: COLORS.primary,
     },
     bookButton: {
         flexDirection: 'row',

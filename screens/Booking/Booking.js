@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,15 @@ import {
   StatusBar,
   Modal,
   FlatList,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
 import Apis, { authApis, endpoints } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import globalStyles from '../../constants/globalStyles';
+import { MyDispatchContext, MyUserContext } from '../../configs/Context';
+import { ActivityIndicator } from 'react-native-paper';
 
 const PROMO_CODES = [
   { code: 'SUMMER10', discount: 10, description: 'Giảm 10% cho mùa hè' },
@@ -38,13 +41,14 @@ const Booking = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showVoucher, setShowVoucher] = useState(false);
   const [promoCode, setPromoCode] = useState('');
+  const [discount_id, setDiscount_id] = useState();
 
-  const [percentDiscount, setPercentDiscount]= useState('');
+  const [percentDiscount, setPercentDiscount] = useState('');
 
 
   const basePrice = event.ticket_price || 0;
   const totalPrice = basePrice * quantity;
-  const finalPrice = totalPrice - (appliedVoucher ? totalPrice * (percentDiscount/100) : 0);
+  const finalPrice = totalPrice - (appliedVoucher ? totalPrice * (percentDiscount / 100) : 0);
 
   // console.log(event.);
 
@@ -56,41 +60,88 @@ const Booking = ({ route, navigation }) => {
   }).format(date).replace(/\//g, '/');
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
-const loadDiscount = async () => {
-  try {
-    setLoading(true);
+  const loadDiscount = async () => {
+    try {
+      setLoading(true);
 
-    // Lấy token từ AsyncStorage
-    const token = await AsyncStorage.getItem('token');
-    if (!token) {
-      throw new Error('No token found');
+      // Lấy token từ AsyncStorage
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      // Gọi API lấy danh sách giảm giá
+      const res = await authApis(token).get(endpoints['my-discount']);
+
+      if (res.data) {
+        setDiscount(res.data);
+      } else {
+        setDiscount([]);
+      }
+    } catch (error) {
+      console.error('Error loading discounts:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      setDiscount([]); // Set mảng rỗng khi lỗi
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Gọi API lấy danh sách giảm giá
-    const res = await authApis(token).get(endpoints['my-discount']);
+  const user = useContext(MyUserContext);
+  const dispatch = useContext(MyDispatchContext);
 
-    if (res.data) {
-      setDiscount(res.data);
-    } else {
-      setDiscount([]); 
+
+  const booking = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      console.log('Token:', token);
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      let form = new FormData();
+      form.append('event_id', event.id);
+      form.append('discount_id', discount_id || 0);
+      form.append('ticket_count', 1000);
+
+      let res = await authApis(token).post(endpoints['invoice'], form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Invoice Response:', res.data);
+
+      if (res.status === 201) {
+        Alert.alert('Success', 'Booking event successfully', [{ text: 'OK' }]);
+      }
+    } catch (error) {
+      console.error('Booking Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Booking failed. Please try again.'
+      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error loading discounts:', {
-      message: error.message,
-      response: error.response,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-    setDiscount([]); // Set mảng rỗng khi lỗi
-  } finally {
-    setLoading(false);
-  }
-};
-  
-    useEffect(() => {
-      loadDiscount();
-    }, []);
-  
+  };
+
+  useEffect(() => {
+    loadDiscount();
+  }, []);
+
+
+
 
   const handlePromoApply = (code) => {
     setPromoCode(code);
@@ -160,7 +211,7 @@ const loadDiscount = async () => {
             >
               <View style={styles.promoInput}>
                 <Text style={promoCode ? styles.promoCode : styles.paymentPlaceholder} >
-                  { promoCode || 'Select voucher'}
+                  {promoCode || 'Select voucher'}
                 </Text>
               </View>
               <TouchableOpacity
@@ -199,7 +250,7 @@ const loadDiscount = async () => {
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Quantity</Text>
               <Text style={styles.priceValue}>x {quantity}</Text>
-            </View>   
+            </View>
 
             {appliedVoucher && (
               <View style={styles.priceRow}>
@@ -224,13 +275,22 @@ const loadDiscount = async () => {
           style={[styles.payButton, !selectedPayment && styles.payButtonDisabled]}
           onPress={() => {
             if (selectedPayment) {
-              navigation.navigate('paymentSuccess');
+              // navigation.navigate('paymentSuccess');
+              setLoading(true);  // <- Đặt loading ngay lập tức
+              booking();
             }
           }}
           disabled={!selectedPayment}
+
+
         >
-          <Text style={styles.payButtonText}>
-            {selectedPayment ? 'Pay' : 'Please select payment method'}
+
+          <Text style={[styles.payButtonText, loading && { opacity: 0.6 }]}>
+            {selectedPayment
+              ? loading
+                ? "Paying..."
+                : "Pay"
+              : 'Please select payment method'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -256,11 +316,11 @@ const loadDiscount = async () => {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.promoItem}
-                  onPress={() => {handlePromoApply(item.discount_code); setPercentDiscount(item.discount_percent);}}
+                  onPress={() => { handlePromoApply(item.discount_code); setPercentDiscount(item.discount_percent); setDiscount_id(item.id); }}
                 >
                   <View>
                     <Text style={styles.promoCode}>{item.discount_code}</Text>
-                    <Text style={styles.promoDescription}>{}description</Text>
+                    <Text style={styles.promoDescription}>{ }description</Text>
                   </View>
                   <Text style={styles.promoDiscount}>-{item.discount_percent}%</Text>
                 </TouchableOpacity>

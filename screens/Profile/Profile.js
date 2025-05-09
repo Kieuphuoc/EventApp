@@ -59,7 +59,8 @@ const Profile= ()=> {
       { cancelable: true }
     );
   };
-  const fullName = `${user.first_name} ${user.last_name}`; //Lấy đầy đủ tên
+  const fullName = `${user._j.first_name} ${user._j.last_name}`; //Lấy đầy đủ tên
+  console.log(user._j.id);
 
   return (
     <View style={styles.container}>

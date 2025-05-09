@@ -60,7 +60,11 @@ const Register = () => {
   const [user, setUser] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showChoice, setShowChoice] = useState(false);
+  const [role, setRole] = useState('');
   const [msg, setMsg] = useState('');
+  console.log(role);
+
 
   const setState = (value, field) => {
     setUser({ ...user, [field]: value });
@@ -113,13 +117,16 @@ const Register = () => {
     try {
       let form = new FormData();
       for (let key in user) {
-        if (key !== 'confirmPassword') { // Loại bỏ trường "Ktra mật khẩu", không lưu nó vào backend
-          if (key === 'avatar') { // Xử lí đặc biệt cho trường avt
-            form.append('avatar', { //form.append(key, value) => Thêm một cặp khóa giá trị vào form
+        if (key !== 'confirmPassword') { 
+          if (key === 'avatar') { 
+            form.append('avatar', { 
               uri: user.avatar.uri,
               name: user.avatar.fileName || 'avatar.jpg',
               type: user.avatar.type || 'image/jpeg',
             });
+          }
+          if (key === 'role') {
+            form.append('role', role);
           } else {
             form.append(key, user[key]);
           }
@@ -203,7 +210,7 @@ const Register = () => {
                     onPress={() =>
                       i.field === 'password'
                         ? setShowPassword(!showPassword)
-                        : setShowConfirmPassword(!showConfirmPassword) }>
+                        : setShowConfirmPassword(!showConfirmPassword)}>
                     <Ionicons
                       name={
                         i.field === 'password'
@@ -211,8 +218,8 @@ const Register = () => {
                             ? 'eye'
                             : 'eye-off'
                           : showConfirmPassword
-                          ? 'eye'
-                          : 'eye-off'
+                            ? 'eye'
+                            : 'eye-off'
                       }
                       size={20}
                       color="#666"
@@ -221,6 +228,33 @@ const Register = () => {
                 )}
               </View>
             ))}
+
+            <TouchableOpacity style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: '#f8f8f8',
+              borderRadius: 12,
+              paddingHorizontal: 15, height: 50
+            }} onPress={() => setShowChoice(!showChoice)}>
+              <Ionicons
+                name='filter'
+                size={20}
+                color={COLORS.primary}
+                style={userStyles.inputIcon}
+              />
+              <Text style={[
+                userStyles.input,
+                role !== '' && { color: '#999' }
+              ]}>{role}</Text>
+            </TouchableOpacity>
+            {showChoice && (
+              <View style={userStyles.dropdown}>
+                <TouchableOpacity style={userStyles.dropdownItem} onPress={() => setRole('organizer')}><Text>Organizer</Text></TouchableOpacity>
+                <TouchableOpacity style={userStyles.dropdownItem} onPress={() => setRole('participant')}><Text>Participant</Text></TouchableOpacity>
+              </View>
+
+            )}
+
 
             <TouchableOpacity onPress={pickImage} style={userStyles.imagePicker}>
               {user.avatar ? (
