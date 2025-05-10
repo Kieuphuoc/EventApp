@@ -31,11 +31,11 @@ export default function MyTicket() {
         </View>
         <View style={styles.ticketDetails}>
           <View style={styles.detailRow}>
-            <Ionicons name="calendar" size={16} color="#666" style={styles.detailIcon} />
+            <Ionicons name="calendar" size={16} color={COLORS.primary} style={styles.detailIcon} />
             <Text style={styles.ticketInfo}>{item.date}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Ionicons name="location" size={16} color="#666" style={styles.detailIcon} />
+            <Ionicons name="location" size={16} color={COLORS.primary} style={styles.detailIcon} />
             <Text style={styles.ticketInfo}>{item.location}</Text>
           </View>
         </View>
@@ -53,11 +53,11 @@ export default function MyTicket() {
       
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color={COLORS.primary} style={styles.searchIcon} />
           <TextInput
             style={styles.input}
             placeholder="Search tickets..."
-            placeholderTextColor="#666"
+            placeholderTextColor={COLORS.text}
             value={searchText}
             onChangeText={handleSearch}
           />
@@ -87,23 +87,28 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   searchContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
   },
   searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 20,
     paddingHorizontal: 15,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -111,26 +116,27 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 10,
+    color: COLORS.primary,
   },
   input: {
     flex: 1,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#333",
+    color: COLORS.text,
   },
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
   ticketCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 20,
     marginBottom: 15,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -141,51 +147,52 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   ticketHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
   },
   ticketName: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: 'bold',
+    color: COLORS.text,
     flex: 1,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     marginLeft: 10,
   },
   upcomingBadge: {
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    backgroundColor: COLORS.accentLight,
   },
   usedBadge: {
-    backgroundColor: "rgba(244, 67, 54, 0.1)",
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
   },
   statusText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   upcoming: {
-    color: "#4CAF50",
+    color: COLORS.primary,
   },
   used: {
-    color: "#F44336",
+    color: '#F44336',
   },
   ticketDetails: {
     gap: 8,
   },
   detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   detailIcon: {
     marginRight: 8,
+    color: COLORS.primary,
   },
   ticketInfo: {
-    color: "#666",
+    color: COLORS.textLight,
     fontSize: 14,
   },
 });

@@ -117,210 +117,211 @@ const Register = () => {
     try {
       let form = new FormData();
       for (let key in user) {
-        if (key !== 'confirmPassword') { 
-          if (key === 'avatar') { 
-            form.append('avatar', { 
+        if (key !== 'confirmPassword') {
+          if (key === 'avatar') {
+            form.append('avatar', {
               uri: user.avatar.uri,
               name: user.avatar.fileName || 'avatar.jpg',
               type: user.avatar.type || 'image/jpeg',
             });
           }
-          if (key === 'role') {
-            form.append('role', role);
-          } else {
+          else {
             form.append(key, user[key]);
           }
-        }
+        } 
       }
+      form.append('role', role);
 
+     
+    
       let res = await Apis.post(endpoints['register'], form, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (res.status === 201) {
+      Alert.alert('Success', 'Registration successful! Please login.', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('login'),
         },
-      });
-
-      if (res.status === 201) {
-        Alert.alert('Success', 'Registration successful! Please login.', [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('login'),
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Registration failed. Please try again.'
-      );
-    } finally {
-      setLoading(false);
+      ]);
     }
-  };
+  } catch (error) {
+    console.error(error);
+    Alert.alert(
+      'Error',
+      error.response?.data?.message || 'Registration failed. Please try again.'
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
-  return (
-    <SafeAreaView style={userStyles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.primary} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={userStyles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={userStyles.scrollContent}>
-          {/* Header & Logo */}
-          <View style={userStyles.header}>
-            <Image
-              source={require('../../assets/images/mini_logo.png')}
-              style={userStyles.logo}
-              resizeMode="contain"
-            />
-            <Text style={userStyles.title}>Create Account</Text>
-            <Text style={userStyles.subtitle}>Let’s join with us!</Text>
-          </View>
+return (
+  <SafeAreaView style={userStyles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor={COLORS.primary} />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={userStyles.keyboardView}
+    >
+      <ScrollView contentContainerStyle={userStyles.scrollContent}>
+        {/* Header & Logo */}
+        <View style={userStyles.header}>
+          <Image
+            source={require('../../assets/images/mini_logo.png')}
+            style={userStyles.logo}
+            resizeMode="contain"
+          />
+          <Text style={userStyles.title}>Create Account</Text>
+          <Text style={userStyles.subtitle}>Let’s join with us!</Text>
+        </View>
 
-          <HelperText type="error" visible={!!msg}>
-            {msg}
-          </HelperText>
-          <View style={userStyles.form}>
-            {info.map((i, index) => (
-              <View key={index} style={userStyles.inputContainer}>
-                <Ionicons
-                  name={i.icon}
-                  size={20}
-                  color={COLORS.primary}
-                  style={userStyles.inputIcon}
-                />
-                <TextInput
-                  style={userStyles.input}
-                  placeholder={i.label}
-                  secureTextEntry={
-                    i.field === 'password'
-                      ? !showPassword // Tại vì secureTextEntry = True ngược lại với ShowPassword, lúc này ShowPassword = false
-                      : i.field === 'confirmPassword'
-                        ? !showConfirmPassword
-                        : false
-                  }
-                  placeholderTextColor="#999"
-                  value={user[i.field] || ''}
-                  onChangeText={(t) => setState(t, i.field)}
-                  autoCapitalize="none"
-                />
-                {i.label.includes('Password') && (
-                  <TouchableOpacity
-                    style={userStyles.eyeIcon}
-                    onPress={() =>
-                      i.field === 'password'
-                        ? setShowPassword(!showPassword)
-                        : setShowConfirmPassword(!showConfirmPassword)}>
-                    <Ionicons
-                      name={
-                        i.field === 'password'
-                          ? showPassword
-                            ? 'eye'
-                            : 'eye-off'
-                          : showConfirmPassword
-                            ? 'eye'
-                            : 'eye-off'
-                      }
-                      size={20}
-                      color="#666"
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-
-            <TouchableOpacity style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: '#f8f8f8',
-              borderRadius: 12,
-              paddingHorizontal: 15, height: 50
-            }} onPress={() => setShowChoice(!showChoice)}>
+        <HelperText type="error" visible={!!msg}>
+          {msg}
+        </HelperText>
+        <View style={userStyles.form}>
+          {info.map((i, index) => (
+            <View key={index} style={userStyles.inputContainer}>
               <Ionicons
-                name='filter'
+                name={i.icon}
                 size={20}
                 color={COLORS.primary}
                 style={userStyles.inputIcon}
               />
-              <Text style={[
-                userStyles.input,
-                role !== '' && { color: '#999' }
-              ]}>{role}</Text>
-            </TouchableOpacity>
-            {showChoice && (
-              <View style={userStyles.dropdown}>
-                <TouchableOpacity style={userStyles.dropdownItem} onPress={() => setRole('organizer')}><Text>Organizer</Text></TouchableOpacity>
-                <TouchableOpacity style={userStyles.dropdownItem} onPress={() => setRole('participant')}><Text>Participant</Text></TouchableOpacity>
-              </View>
-
-            )}
-
-
-            <TouchableOpacity onPress={pickImage} style={userStyles.imagePicker}>
-              {user.avatar ? (
-                <Image
-                  source={{ uri: user.avatar.uri }}
-                  style={{ width: '100%', height: '100%' }}
-                />
-              ) : (
-                <View
-                  style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-                >
-                  <Ionicons name="image" size={40} color={COLORS.primary} />
-                  <Text
-                    style={{
-                      color: COLORS.primary,
-                      marginTop: 10,
-                      fontSize: 16,
-                    }}
-                  >
-                    Upload Image
-                  </Text>
-                </View>
+              <TextInput
+                style={userStyles.input}
+                placeholder={i.label}
+                secureTextEntry={
+                  i.field === 'password'
+                    ? !showPassword // Tại vì secureTextEntry = True ngược lại với ShowPassword, lúc này ShowPassword = false
+                    : i.field === 'confirmPassword'
+                      ? !showConfirmPassword
+                      : false
+                }
+                placeholderTextColor="#999"
+                value={user[i.field] || ''}
+                onChangeText={(t) => setState(t, i.field)}
+                autoCapitalize="none"
+              />
+              {i.label.includes('Password') && (
+                <TouchableOpacity
+                  style={userStyles.eyeIcon}
+                  onPress={() =>
+                    i.field === 'password'
+                      ? setShowPassword(!showPassword)
+                      : setShowConfirmPassword(!showConfirmPassword)}>
+                  <Ionicons
+                    name={
+                      i.field === 'password'
+                        ? showPassword
+                          ? 'eye'
+                          : 'eye-off'
+                        : showConfirmPassword
+                          ? 'eye'
+                          : 'eye-off'
+                    }
+                    size={20}
+                    color="#666"
+                  />
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
+            </View>
+          ))}
 
-            <TouchableOpacity
-              style={[userStyles.loginButton, loading && { opacity: 0.6 }]}
-              onPress={register}
-              disabled={loading}
-            >
-              <Text style={userStyles.loginButtonText}>
-                {loading ? 'Registering...' : 'Sign Up'}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={userStyles.divider}>
-              <View style={userStyles.dividerLine} />
-              <Text style={userStyles.dividerText}>OR</Text>
-              <View style={userStyles.dividerLine} />
+          <TouchableOpacity style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#f8f8f8',
+            borderRadius: 12,
+            paddingHorizontal: 15, height: 50
+          }} onPress={() => setShowChoice(!showChoice)}>
+            <Ionicons
+              name='filter'
+              size={20}
+              color={COLORS.primary}
+              style={userStyles.inputIcon}
+            />
+            <Text style={[
+              userStyles.input,
+              role !== '' && { color: '#999' }
+            ]}>{role}</Text>
+          </TouchableOpacity>
+          {showChoice && (
+            <View style={userStyles.dropdown}>
+              <TouchableOpacity style={userStyles.dropdownItem} onPress={() => setRole('organizer')}><Text>Organizer</Text></TouchableOpacity>
+              <TouchableOpacity style={userStyles.dropdownItem} onPress={() => setRole('participant')}><Text>Participant</Text></TouchableOpacity>
             </View>
 
-            <View style={userStyles.socialButtons}>
-              <TouchableOpacity style={userStyles.socialButton}>
-                <Ionicons name="logo-google" size={24} color="#DB4437" />
-              </TouchableOpacity>
-              <TouchableOpacity style={userStyles.socialButton}>
-                <Ionicons name="logo-facebook" size={24} color="#4267B2" />
-              </TouchableOpacity>
-              <TouchableOpacity style={userStyles.socialButton}>
-                <Ionicons name="logo-apple" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
+          )}
 
-            <View style={userStyles.signupContainer}>
-              <Text style={userStyles.signupText}>
-                Already have an account?{' '}
-              </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('login')}>
-                <Text style={userStyles.signupLink}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
+
+          <TouchableOpacity onPress={pickImage} style={userStyles.imagePicker}>
+            {user.avatar ? (
+              <Image
+                source={{ uri: user.avatar.uri }}
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : (
+              <View
+                style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+              >
+                <Ionicons name="image" size={40} color={COLORS.primary} />
+                <Text
+                  style={{
+                    color: COLORS.primary,
+                    marginTop: 10,
+                    fontSize: 16,
+                  }}
+                >
+                  Upload Image
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[userStyles.loginButton, loading && { opacity: 0.6 }]}
+            onPress={register}
+            disabled={loading}
+          >
+            <Text style={userStyles.loginButtonText}>
+              {loading ? 'Registering...' : 'Sign Up'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={userStyles.divider}>
+            <View style={userStyles.dividerLine} />
+            <Text style={userStyles.dividerText}>OR</Text>
+            <View style={userStyles.dividerLine} />
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+
+          <View style={userStyles.socialButtons}>
+            <TouchableOpacity style={userStyles.socialButton}>
+              <Ionicons name="logo-google" size={24} color="#DB4437" />
+            </TouchableOpacity>
+            <TouchableOpacity style={userStyles.socialButton}>
+              <Ionicons name="logo-facebook" size={24} color="#4267B2" />
+            </TouchableOpacity>
+            <TouchableOpacity style={userStyles.socialButton}>
+              <Ionicons name="logo-apple" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={userStyles.signupContainer}>
+            <Text style={userStyles.signupText}>
+              Already have an account?{' '}
+            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('login')}>
+              <Text style={userStyles.signupLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+);
 };
 
 export default Register;

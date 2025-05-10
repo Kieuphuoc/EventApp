@@ -106,7 +106,7 @@ const Booking = ({ route, navigation }) => {
 
       let form = new FormData();
       form.append('event_id', event.id);
-      form.append('discount_id', discount_id || 0);
+      form.append('discount_id', discount_id ?? "");
       form.append('ticket_count', 1000);
 
       let res = await authApis(token).post(endpoints['invoice'], form, {
@@ -118,7 +118,7 @@ const Booking = ({ route, navigation }) => {
       console.log('Invoice Response:', res.data);
 
       if (res.status === 201) {
-        Alert.alert('Success', 'Booking event successfully', [{ text: 'OK' }]);
+        navigation.navigate('paymentConfirmation')
       }
     } catch (error) {
       console.error('Booking Error:', {

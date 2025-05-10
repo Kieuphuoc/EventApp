@@ -16,6 +16,7 @@ import { useContext, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
+import PaymentConfirmation from "./screens/PaymentConfirmation";
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,7 @@ const StackNavigator = () => {
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
       <Stack.Screen name="booking" component={Booking} />
+      <Stack.Screen name="paymentConfirmation" component={PaymentConfirmation} />
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
     </Stack.Navigator>
   );
@@ -42,14 +44,14 @@ const StackNavigator = () => {
 
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
-const user = useContext(MyUserContext);
+  const user = useContext(MyUserContext);
 
   return (
     <Tab.Navigator screenOptions={{
       tabBarActiveTintColor: COLORS.primary,
       tabBarStyle: {
         borderTopWidth: 0,
-        borderRadius:30,
+        borderRadius: 30,
         backgroundColor: 'white',
         height: 60,
         shadowColor: '#000',
@@ -69,7 +71,8 @@ const user = useContext(MyUserContext);
       }} component={StackNavigator} />
       {user === null ? <>
         <Tab.Screen name="login"
-          options={{title: 'Login', tabBarIcon: ({ color, focused }) => (<Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />),
+          options={{
+            title: 'Login', tabBarIcon: ({ color, focused }) => (<Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />),
           }} component={Login} />
         <Tab.Screen name="register"
           options={{
@@ -80,7 +83,7 @@ const user = useContext(MyUserContext);
           }} component={Register}
         />
       </> : <>
-      <Tab.Screen name="myTicket"
+        <Tab.Screen name="myTicket"
           options={{
             title: 'My Ticket',
             tabBarIcon: ({ color, focused }) => (
