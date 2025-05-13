@@ -117,7 +117,7 @@ const Login = () => {
               value={user[i.field]}
               onChangeText={t => setState(t, i.field)}
               key={i.field} label={i.label}
-              secureTextEntry={!showPassword}
+              secureTextEntry={i.field.includes("password") ? !showPassword : i.secureTextEntry}
               autoCapitalize="none"
               style={userStyles.input} />
               {i.field.includes('password') && <TouchableOpacity

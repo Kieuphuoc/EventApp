@@ -1,63 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, StatusBar, SafeAreaView, Alert, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
 import { ActivityIndicator } from 'react-native-paper';
-import { authApis, endpoints } from '../../configs/Apis'; // Sử dụng authApis
+import { authApis, endpoints } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import EventCardMini from '../../components/EventCardMini';
 
-// Component EventCard để hiển thị từng sự kiện
-const EventCard = ({ item }) => {
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.categoryContainer}>
-          <Text style={styles.category}>{item.event?.category?.name || 'No Category'}</Text>
-        </View>
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart" size={18} color={COLORS.primary} />
-        </TouchableOpacity>
-      </View>
-      <Image source={{ uri: item.event?.image }} style={styles.image} />
-      <View style={styles.cardContent}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>{item.event?.title || 'No Title'}</Text>
-          <Text style={styles.price}>${item.event?.ticket_price || 0}</Text>
-        </View>
-        <View style={styles.infoContainer}>
-          <View style={styles.infoItem}>
-            <Ionicons name="calendar" size={16} color="#666" />
-            <Text style={styles.text}>{item.event?.start_time || 'Unknown Date'}</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Ionicons name="location" size={16} color="#666" />
-            <Text style={styles.text}>{item.event?.location || 'Unknown Location'}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.viewButton}>
-          <Ionicons name="eye" size={16} color="#fff" />
-          <Text style={styles.viewButtonText}>View Event</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
+const ITEMS_PER_PAGE = 6;
 
-const FavouriteEvent = () => {
+const FavouriteEvent = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [favouriteEvent, setFavoriteEvent] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const scrollY = new Animated.Value(0);
 
   const loadFavoriteEvent = async () => {
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('userToken'); // Lấy token từ AsyncStorage
+      const token = await AsyncStorage.getItem('token');
       if (!token) {
-        console.error('No token found, please login first');
-        return;
+        throw new Error('No token found');
       }
-      const api = authApis(token); // Tạo instance Axios với token
-      let url = endpoints['favoriteEvent'];
-      let res = await api.get(url);
+
+      let res = await authApis(token).get(endpoints['favoriteEvent']);
       if (res.data) {
         setFavoriteEvent(res.data);
       }
@@ -65,6 +31,7 @@ const FavouriteEvent = () => {
       console.error("Error loading events:", ex);
       console.log('Error details:', ex.response?.data);
       setFavoriteEvent([]);
+      Alert.alert('Error', 'Failed to load favorite events. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -74,10 +41,56 @@ const FavouriteEvent = () => {
     loadFavoriteEvent();
   }, []);
 
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [200, 100],
+    extrapolate: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0.9],
+    extrapolate: 'clamp',
+  });
+
+  const totalPages = Math.ceil(favouriteEvent.length / ITEMS_PER_PAGE);
+  const paginatedData = favouriteEvent.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <View style={styles.pagination}>
+        <TouchableOpacity
+          style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+          onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? COLORS.grey : COLORS.primary} />
+        </TouchableOpacity>
+        
+        <Text style={styles.pageText}>
+          Page {currentPage} of {totalPages}
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+          onPress={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? COLORS.grey : COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <Animated.View style={[styles.header, {paddingTop:40}]}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Favourite Events</Text>
           <Text style={styles.headerSubtitle}>Your saved events</Text>
@@ -90,22 +103,38 @@ const FavouriteEvent = () => {
             <Ionicons name="options" size={24} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
       <FlatList
-        data={favouriteEvent}
+        data={paginatedData}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <EventCard item={item} />}
+        renderItem={({ item, index }) => (
+          <EventCardMini 
+            item={item.event || item}
+            onPress={() => navigation.navigate('eventDetail', { id: item.event?.id || item.id })}
+            index={index}
+          />
+        )}
         contentContainerStyle={styles.list}
-        ListFooterComponent={loading && <ActivityIndicator size={30} />}
-        ListEmptyComponent={
-          !loading && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No favourite events found.</Text>
-            </View>
-          )
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        scrollEnabled={true}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No events found</Text>
+          </View>
+        )}
+        ListFooterComponent={
+          <>
+            {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
+            {renderPagination()}
+          </>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -114,52 +143,62 @@ export default FavouriteEvent;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   header: {
+    backgroundColor: COLORS.primary,
     padding: 20,
-    paddingTop: 10,
+    // paddingTop: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 8,
   },
   headerContent: {
     flex: 1,
   },
   headerTitle: {
-    color: '#333',
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 4,
+    color: '#fff',
   },
   headerSubtitle: {
-    color: '#666',
     fontSize: 14,
+    color: '#fff',
+    opacity: 0.8,
+    marginTop: 4,
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 15,
   },
   searchButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   filterButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   list: {
-    padding: 20,
+    padding: 16,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
   },
   emptyContainer: {
     flex: 1,
@@ -168,95 +207,32 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: '#666',
     fontSize: 16,
+    color: COLORS.primaryDark,
+    opacity: 0.6,
     textAlign: 'center',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    overflow: 'hidden',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  cardHeader: {
+  pagination: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    paddingBottom: 0,
-  },
-  categoryContainer: {
-    backgroundColor: COLORS.primary + '10',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  category: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  favoriteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  image: {
-    height: 180,
-    width: '100%',
-  },
-  cardContent: {
-    padding: 15,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  title: {
-    color: '#333',
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  price: {
-    color: COLORS.primary,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  infoContainer: {
-    flexDirection: 'row',
+    paddingVertical: 20,
     gap: 15,
-    marginBottom: 15,
   },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  text: {
-    color: '#666',
-    marginLeft: 5,
-    fontSize: 14,
-  },
-  viewButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    flexDirection: 'row',
+  pageButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.accentLight,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
-  viewButtonText: {
-    color: '#fff',
+  pageButtonDisabled: {
+    opacity: 0.5,
+  },
+  pageText: {
     fontSize: 14,
+    color: COLORS.primaryDark,
     fontWeight: '600',
   },
 });

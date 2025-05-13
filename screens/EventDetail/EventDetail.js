@@ -63,7 +63,7 @@ const EventDetail = ({ route }) => {
                 <ScrollView>
                     <View style={styles.imageContainer}>
                         <Image source={{ uri: events.image }} style={styles.image} />
-                        <TouchableOpacity style={styles.backButton}>
+                        <TouchableOpacity style={styles.backButton} onPress={()=>navigation.goBack()}>
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.favoriteButton}>

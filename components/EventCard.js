@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../constants/colors";
 import React, { useState, useRef } from 'react';
 
-const EventCard = ({ item, onPress }) => {
+const EventCard = ({ item, onPress, cardWidth }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const heartPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
@@ -112,7 +112,7 @@ const EventCard = ({ item, onPress }) => {
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { width: cardWidth }]}>
       <Pressable onPress={handleDoubleTap}>
         <View style={styles.imageContainer}>
           <Image

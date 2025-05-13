@@ -29,7 +29,14 @@ const menuItems = [
 const Profile= ()=> {
   const user =useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
+  const navigation= useNavigation();
   console.info(user);
+  const logout =()=>{
+    dispatch({
+      'type' : 'logout'
+    });
+    navigation.navigate('index');
+  }
 
   // return(<View>
   //   <Text>
@@ -38,29 +45,29 @@ const Profile= ()=> {
   //   <Button onPress={()=> dispatch({"type":"logout"})} mode="contained" >Đăng xuất</Button>
   // </View>)
  
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => {
-            // Here you would typically clear user data, tokens, etc.
-            router.replace('/login');
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-  const fullName = `${user._j.first_name} ${user._j.last_name}`; //Lấy đầy đủ tên
-  console.log(user._j.id);
+  // const handleLogout = () => {
+  //   Alert.alert(
+  //     'Logout',
+  //     'Are you sure you want to logout?',
+  //     [
+  //       {
+  //         text: 'Cancel',
+  //         style: 'cancel',
+  //       },
+  //       {
+  //         text: 'Logout',
+  //         style: 'destructive',
+  //         onPress: () => {
+  //           // Here you would typically clear user data, tokens, etc.
+  //           router.replace('/login');
+  //         },
+  //       },
+  //     ],
+  //     { cancelable: true }
+  //   );
+  // };
+  // const fullName = `${user._j.first_name} ${user._j.last_name}`; //Lấy đầy đủ tên
+  // console.log(user._j.id);
 
   return (
     <View style={styles.container}>
@@ -73,7 +80,7 @@ const Profile= ()=> {
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.name}>Chào {fullName}</Text>
+              {/* <Text style={styles.name}>Chào {fullName}</Text> */}
               <Text style={styles.email}>phuoc@example.com</Text>
             </View>
             <TouchableOpacity style={styles.editButton}>
@@ -82,40 +89,8 @@ const Profile= ()=> {
           </View>
         </View>
 
-        <View style={styles.statsContainer}>
-          <TouchableOpacity style={styles.statItem} onPress={()=> navigation.navigate('login')}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Events</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity style={styles.statItem} onPress={()=> navigation.navigate('register')}>
-            <Text style={styles.statNumber}>8</Text>
-            <Text style={styles.statLabel}>Tickets</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>Favorites</Text>
-          </View>
-        </View>
 
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(item.screen)}
-            >
-              <View style={styles.menuItemLeft}>
-                <Ionicons name={item.icon} size={24} color={COLORS.primary} />
-                <Text style={styles.menuItemText}>{item.label}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Ionicons name="log-out" size={24} color="#FF3B30" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>

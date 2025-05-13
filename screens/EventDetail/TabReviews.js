@@ -1,31 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
-import Apis, { authApis, endpoints } from '../configs/Apis';
+import COLORS from '../../constants/colors';
+import { authApis, endpoints } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ReviewModal from './ReviewModal';
-import ReviewItem from './ReviewItem';
+import ReviewModal from '../../components/ReviewModal';
 
-const TabReviews = ({ event_id }) => {
+const TabReviews = ({ eventId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
   const loadReviews = async () => {
-        try {
-            // console.log(event_id);
-            let res = await Apis.get(endpoints['review'](event_id));
-            setReviews(res.data);
-        } catch (error) {
-            console.error('Lỗi khi gọi API:', error);
-        }
-    };
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
 
-   useEffect(() => {
+      let res = await authApis(token).get(endpoints['event-reviews'](eventId));
+      if (res.data) {
+        setReviews(res.data);
+      }
+    } catch (ex) {
+      console.error("Error loading reviews:", ex);
+      console.log('Error details:', ex.response?.data);
+      setReviews([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async (reviewData) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await authApis(token).post(endpoints['add-review'], {
+        event: eventId,
+        rating: reviewData.rating,
+        comment: reviewData.comment
+      });
+
+      if (response.data) {
+        // Reload reviews after adding new one
         loadReviews();
-    }, []);
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      alert('Failed to submit review. Please try again.');
+    }
+  };
 
+  useEffect(() => {
+    loadReviews();
+  }, [eventId]);
 
   const renderStars = (rating) => {
     return (
@@ -42,8 +74,30 @@ const TabReviews = ({ event_id }) => {
     );
   };
 
+  const ReviewItem = ({ item }) => (
+    <View style={styles.reviewItem}>
+      <View style={styles.reviewHeader}>
+        <View style={styles.userInfo}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {item.user?.username?.charAt(0).toUpperCase() || 'U'}
+            </Text>
+          </View>
+          <View>
+            <Text style={styles.username}>{item.user?.username || 'Anonymous'}</Text>
+            <Text style={styles.date}>
+              {new Date(item.created_at).toLocaleDateString()}
+            </Text>
+          </View>
+        </View>
+        {renderStars(item.rating)}
+      </View>
+      <Text style={styles.comment}>{item.comment}</Text>
+    </View>
+  );
+
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Reviews</Text>
         <TouchableOpacity
@@ -55,15 +109,13 @@ const TabReviews = ({ event_id }) => {
         </TouchableOpacity>
       </View>
 
-      {/* {loading ? (
+      {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
-      ) : ( */}
+      ) : (
         <FlatList
           data={reviews}
           keyExtractor={(item) => item.id.toString()}
-renderItem={({ item }) => (
-                    <ReviewItem review={item} />
-                )}          scrollEnabled={false}
+          renderItem={ReviewItem}
           contentContainerStyle={styles.list}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
@@ -71,12 +123,12 @@ renderItem={({ item }) => (
             </View>
           )}
         />
-      {/* )} */}
+      )}
 
-      <ReviewModal event_id={event_id}
+      <ReviewModal
         visible={showReviewModal}
         onClose={() => setShowReviewModal(false)}
-        // onSubmit={handleSubmitReview}
+        onSubmit={handleSubmitReview}
       />
     </View>
   );
@@ -91,7 +143,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // padding: 16,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.accentLight,
   },
@@ -115,7 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   list: {
-    paddingBlock: 16,
+    padding: 16,
   },
   reviewItem: {
     backgroundColor: COLORS.white,

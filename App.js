@@ -16,7 +16,8 @@ import { useContext, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
-import PaymentConfirmation from "./screens/PaymentConfirmation";
+// import PaymentConfirmation from "./screens/PaymentConfirmation";
+import CheckIn from "./screens/CheckIn/CheckIn";
 
 const Stack = createNativeStackNavigator();
 
@@ -26,7 +27,7 @@ const StackNavigator = () => {
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
       <Stack.Screen name="booking" component={Booking} />
-      <Stack.Screen name="paymentConfirmation" component={PaymentConfirmation} />
+      {/* <Stack.Screen name="paymentConfirmation" component={PaymentConfirmation} /> */}
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
     </Stack.Navigator>
   );
@@ -51,17 +52,10 @@ const TabNavigator = () => {
       tabBarActiveTintColor: COLORS.primary,
       tabBarStyle: {
         borderTopWidth: 0,
-        borderRadius: 30,
+        // borderRadius: 30,
         backgroundColor: 'white',
-        height: 60,
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 0,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
+        height: 80,
+        borderTopWidth:1,
       },
       headerShown: false,
     }}>
@@ -82,7 +76,23 @@ const TabNavigator = () => {
             ),
           }} component={Register}
         />
+        
+         
       </> : <>
+       <Tab.Screen name="checkIn"
+          options={{
+            title: 'Check In',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'checkbox' : 'checkbox-outline'} color={COLORS.primary} size={24} />
+            ),
+          }} component={CheckIn} />
+       <Tab.Screen name="createEvent"
+          options={{
+            title: 'Create Event',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} color={COLORS.primary} size={24} />
+            ),
+          }} component={CreateEvent} />
         <Tab.Screen name="myTicket"
           options={{
             title: 'My Ticket',
@@ -90,13 +100,7 @@ const TabNavigator = () => {
               <Ionicons name={focused ? 'ticket' : 'ticket-outline'} color={COLORS.primary} size={24} />
             ),
           }} component={MyTicket} />
-        <Tab.Screen name="createEvent"
-          options={{
-            title: 'Create Event',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={CreateEvent} />
+       
         <Tab.Screen name="favouriteEvent"
           options={{
             title: 'Favourite Event',

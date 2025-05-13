@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Text,
   View,
@@ -8,82 +8,216 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  Platform
+  Platform,
+  Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../constants/colors';
+import { Chip } from 'react-native-paper';
+import Apis, { authApis, endpoints } from '../../configs/Apis';
 
 export default function CreateEvent({ navigation }) {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [event, setEvent] = useState({
     title: '',
-    category: '',
+    category_id: '',
     description: '',
     start_time: new Date(),
     end_time: new Date(),
     location: '',
     ticket_quantity: '',
-    ticket_price: ''
+    ticket_price: '',
   });
-  const [showStartDate, setShowStartDate] = useState(false);
-  const [showEndDate, setShowEndDate] = useState(false);
+  const [cates, setCates] = useState([]);
+  const [showCates, setShowCates] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
-  const categories = [
-    { id: 'music', name: 'Music' },
-    { id: 'sports', name: 'Sports' },
-    { id: 'arts', name: 'Arts & Theater' },
-    { id: 'food', name: 'Food & Drink' },
-    { id: 'business', name: 'Business' },
-    { id: 'other', name: 'Other' }
-  ];
+  // Tải danh mục
+  const loadCates = async () => {
+    try {
+      let res = await Apis.get(endpoints['category']);
+      setCates(res.data);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      Alert.alert('Error', 'Failed to load categories.');
+    }
+  };
 
+  // Chọn ảnh
   const pickImage = async () => {
+    let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissions denied!', 'Please allow access to the photo library.');
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
+      allowsEditing: true,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setImage(result.assets[0].uri);
     }
   };
 
-  const onStartDateChange = (event, selectedDate) => {
-    setShowStartDate(false);
-    if (selectedDate) {
-      setEvent({ ...event, start_time: selectedDate });
+  // Xử lý chọn ngày giờ
+  const onStartTimeChange = (_, selectedDate) => {
+    setShowStartPicker(Platform.OS === 'ios'); // Giữ hiển thị trên iOS
+    if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
+      setEvent((prev) => ({ ...prev, start_time: selectedDate }));
     }
   };
 
-  const onEndDateChange = (event, selectedDate) => {
-    setShowEndDate(false);
-    if (selectedDate) {
-      setEvent({ ...event, end_time: selectedDate });
+  const onEndTimeChange = (_, selectedDate) => {
+    setShowEndPicker(Platform.OS === 'ios'); // Giữ hiển thị trên iOS
+    if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
+      setEvent((prev) => ({ ...prev, end_time: selectedDate }));
     }
   };
 
-  const formatDate = (date) => {
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Hàm định dạng ngày giờ
+  const formatDateTime = (date) => {
+    if (!(date instanceof Date) || isNaN(date)) {
+      return 'Select date and time';
+    }
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
+
+  const validate = (eventData) => {
+    // Kiểm tra các trường bắt buộc
+    if (!eventData.title.trim()) {
+      throw new Error('Event title is required.');
+    }
+    if (!eventData.category_id) {
+      throw new Error('Please select a category.');
+    }
+    if (!eventData.ticket_quantity.trim()) {
+      throw new Error('Ticket quantity is required.');
+    }
+    if (!eventData.ticket_price.trim()) {
+      throw new Error('Ticket price is required.');
+    }
+
+    // Kiểm tra ticket_quantity và ticket_price
+    const quantity = parseInt(eventData.ticket_quantity);
+    const price = parseFloat(eventData.ticket_price);
+    if (isNaN(quantity) || quantity <= 0) {
+      throw new Error('Ticket quantity must be a positive number.');
+    }
+    if (isNaN(price) || price <= 0) {
+      throw new Error('Ticket price must be a positive number.');
+    }
+
+    // Kiểm tra start_time và end_time
+    if (!(eventData.start_time instanceof Date) || isNaN(eventData.start_time)) {
+      throw new Error('Invalid start time.');
+    }
+    if (!(eventData.end_time instanceof Date) || isNaN(eventData.end_time)) {
+      throw new Error('Invalid end time.');
+    }
+    if (eventData.start_time > eventData.end_time) {
+      throw new Error('End time must be after start time.');
+    }
+  };
+
+  // Hàm tạo sự kiện
+  const create = async () => {
+    if(!validate(event)) return;
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      // validate(event);
+
+      // // Kiểm tra dữ liệu đầu vào
+      // if (!event.title || !event.category_id || !event.ticket_quantity || !event.ticket_price) {
+      //   throw new Error('Please fill in all required fields (title, category, ticket quantity, ticket price)');
+      // }
+
+      // // Kiểm tra ticket_quantity và ticket_price
+      // const quantity = parseInt(event.ticket_quantity);
+      // const price = parseFloat(event.ticket_price);
+      // if (isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
+      //   throw new Error('Invalid ticket quantity or price');
+      // }
+
+      // Tạo FormData
+      let form = new FormData();
+      form.append('title', event.title);
+      form.append('category_id', event.category_id);
+      form.append('description', event.description || '');
+      form.append('start_time', event.start_time.toISOString());
+      form.append('end_time', event.end_time.toISOString());
+      form.append('location', event.location || '');
+      form.append('ticket_quantity', event.ticket_quantity);
+      form.append('ticket_price', event.ticket_price);
+
+      // for (let [key, value] of form.entries()) {
+      //   console.log(`${key}: ${value}`);
+      // }
+
+      // Gửi yêu cầu API
+      let res = await authApis(token).post(endpoints['event'], form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // console.log('Event Creation Response:', res.data);
+
+      if (res.status === 201) {
+        // const selectedCategory = cates.find((cat) => cat.id === event.category_id);
+        // const eventData = {
+        //   title: event.title,
+        //   date: event.start_time.toISOString().split('T')[0],
+        //   time: event.start_time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        //   venue: event.location,
+        //   ticketType: selectedCategory ? selectedCategory.name : event.category_id,
+        //   pricePerTicket: parseFloat(event.ticket_price),
+        //   totalAmount: parseFloat(event.ticket_price) * parseInt(event.ticket_quantity),
+        // };
+        // const quantity = parseInt(event.ticket_quantity);
+
+        Alert.alert('Success', 'Event created successfully!');
+      }
+    } catch (error) {
+      console.error('Create Event Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert('Error', error.message || 'Failed to create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCates();
+  }, []);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Create New Event</Text>
@@ -109,21 +243,31 @@ export default function CreateEvent({ navigation }) {
           {/* Category Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Category</Text>
-            <View style={styles.pickerWrapper} >
+            <TouchableOpacity
+              style={styles.pickerWrapper}
+              onPress={() => setShowCates(!showCates)}
+            >
               <Ionicons name="list" size={24} color={COLORS.primary} style={styles.inputIcon} />
-              
-              {/* <Picker
-                selectedValue={event.category}
-                style={styles.picker}
-                onValueChange={(value) => setEvent({ ...event, category: value })}
-              >
-                <Picker.Item label="Select a category" value="" />
-                {categories.map((category) => (
-                  <Picker.Item key={category.id} label={category.name} value={category.id} />
+              <Text style={styles.dateTimeText}>
+                {cates.find((c) => c.id === event.category_id)?.name || 'Select category'}
+              </Text>
+            </TouchableOpacity>
+            {showCates && (
+              <View style={styles.chipContainer}>
+                {cates.map((item) => (
+                  <Chip
+                    key={item.id}
+                    style={styles.chip}
+                    onPress={() => {
+                      setEvent({ ...event, category_id: item.id });
+                      setShowCates(false);
+                    }}
+                  >
+                    {item.name}
+                  </Chip>
                 ))}
-              </Picker> */}
-
-            </View>
+              </View>
+            )}
           </View>
 
           {/* Description Section */}
@@ -150,23 +294,41 @@ export default function CreateEvent({ navigation }) {
             <View style={styles.dateTimeContainer}>
               <TouchableOpacity
                 style={styles.dateTimeButton}
-                onPress={() => setShowStartDate(true)}
+                onPress={() => setShowStartPicker(true)}
               >
                 <Ionicons name="calendar" size={24} color={COLORS.primary} style={styles.inputIcon} />
                 <Text style={styles.dateTimeText}>
-                  Start: {formatDate(event.start_time)}
+                  {formatDateTime(event.start_time)}
                 </Text>
               </TouchableOpacity>
+              {showStartPicker && (
+                <DateTimePicker
+                  value={event.start_time || new Date()}
+                  mode="datetime"
+                  display="default"
+                  onChange={onStartTimeChange}
+                  accentColor={COLORS.primary}
+                />
+              )}
 
               <TouchableOpacity
                 style={styles.dateTimeButton}
-                onPress={() => setShowEndDate(true)}
+                onPress={() => setShowEndPicker(true)}
               >
                 <Ionicons name="time" size={24} color={COLORS.primary} style={styles.inputIcon} />
                 <Text style={styles.dateTimeText}>
-                  End: {formatDate(event.end_time)}
+                  {formatDateTime(event.end_time)}
                 </Text>
               </TouchableOpacity>
+              {showEndPicker && (
+                <DateTimePicker
+                  value={event.end_time || new Date()}
+                  mode="datetime"
+                  display="default"
+                  onChange={onEndTimeChange}
+                  accentColor={COLORS.primary}
+                />
+              )}
             </View>
           </View>
 
@@ -215,9 +377,9 @@ export default function CreateEvent({ navigation }) {
             </View>
           </View>
 
-          {/* Image Upload Section */}
+          {/* Image Upload */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cover Image</Text>
+            <Text style={styles.sectionTitle}>Event Photos</Text>
             <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
               {image ? (
                 <Image source={{ uri: image }} style={styles.image} />
@@ -233,35 +395,15 @@ export default function CreateEvent({ navigation }) {
           {/* Create Button */}
           <TouchableOpacity
             style={[styles.createButton, loading && styles.createButtonDisabled]}
-            onPress={() => { }}
+            onPress={create}
             disabled={loading}
           >
             <Text style={styles.createButtonText}>
-              {loading ? "Creating..." : "Create Event"}
+              {loading ? 'Creating...' : 'Create Event'}
             </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Date Pickers */}
-      {showStartDate && (
-        <DateTimePicker
-          value={event.start_time}
-          mode="datetime"
-          is24Hour={true}
-          display="default"
-          onChange={onStartDateChange}
-        />
-      )}
-      {showEndDate && (
-        <DateTimePicker
-          value={event.end_time}
-          mode="datetime"
-          is24Hour={true}
-          display="default"
-          onChange={onEndDateChange}
-        />
-      )}
     </View>
   );
 }
@@ -352,9 +494,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  picker: {
-    flex: 1,
-    color: COLORS.primaryDark,
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10,
+  },
+  chip: {
+    backgroundColor: COLORS.accentLight,
   },
   dateTimeContainer: {
     gap: 10,
