@@ -32,42 +32,30 @@ const Profile = () => {
   const navigation = useNavigation();
   console.info(user);
   const logout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            router.replace('/login');
+          },
+        },
+      ],
+      { cancelable: true }
+    );
     dispatch({
-      'type': 'logout'
+      'type': 'logout',
+      
     });
     navigation.navigate('index');
   }
-
-  // return(<View>
-  //   <Text>
-  //     Chào {user.name}
-  //   </Text>
-  //   <Button onPress={()=> dispatch({"type":"logout"})} mode="contained" >Đăng xuất</Button>
-  // </View>)
-
-  // const handleLogout = () => {
-  //   Alert.alert(
-  //     'Logout',
-  //     'Are you sure you want to logout?',
-  //     [
-  //       {
-  //         text: 'Cancel',
-  //         style: 'cancel',
-  //       },
-  //       {
-  //         text: 'Logout',
-  //         style: 'destructive',
-  //         onPress: () => {
-  //           // Here you would typically clear user data, tokens, etc.
-  //           router.replace('/login');
-  //         },
-  //       },
-  //     ],
-  //     { cancelable: true }
-  //   );
-  // };
-  // const fullName = `${user._j.first_name} ${user._j.last_name}`; //Lấy đầy đủ tên
-  // console.log(user._j.id);
 
   return (
     <View style={styles.container}>

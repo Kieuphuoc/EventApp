@@ -19,7 +19,6 @@ import { userStyles } from './UserStyles';
 import Apis, { authApis, endpoints } from '../../configs/Apis';
 import { Alert } from 'react-native';
 import { MyDispatchContext } from '../../configs/Context';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 const Login = () => {
   const [user, setUser] = useState({});
@@ -44,14 +43,6 @@ const Login = () => {
     },
   ];
 
-  // Cấu hình Google Sign-In
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Thay bằng Web Client ID từ Google Cloud Console
-      offlineAccess: true,
-      iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com', // Optional, nếu hỗ trợ iOS
-    });
-  }, []);
 
   const setState = (value, field) => {
     setUser({ ...user, [field]: value });
@@ -101,50 +92,6 @@ const Login = () => {
     }
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      setLoading(true);
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.idToken;
-
-      if (!idToken) {
-        throw new Error('Không nhận được ID token từ Google.');
-      }
-
-      const formData = new FormData();
-      formData.append('id_token', idToken);
-      formData.append('provider', 'google');
-
-      let res = await Apis.post(endpoints['social-login'] || '/social-login/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      await AsyncStorage.setItem('token', res.data.access_token);
-      let u = await authApis(res.data.access_token).get(endpoints['current-user']);
-      console.info(u.data);
-      dispatch({
-        type: 'login',
-        payload: u.data,
-      });
-      navigation.navigate('index');
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        Alert.alert('Đã hủy', 'Bạn đã hủy đăng nhập bằng Google.');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        Alert.alert('Đang xử lý', 'Đăng nhập đang được thực hiện, vui lòng đợi.');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('Lỗi', 'Google Play Services không khả dụng trên thiết bị này.');
-      } else {
-        Alert.alert('Lỗi', 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <SafeAreaView style={userStyles.container}>
@@ -218,7 +165,6 @@ const Login = () => {
             <View style={userStyles.socialButtons}>
               <TouchableOpacity
                 style={userStyles.socialButton}
-                onPress={signInWithGoogle}
                 disabled={loading}
               >
                 <Ionicons name="logo-google" size={24} color="#DB4437" />
