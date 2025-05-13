@@ -18,10 +18,12 @@ import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
 import CheckIn from "./screens/CheckIn/CheckIn";
-
+import Statistics from "./screens/Statistics/Statistics";
+import MyEvent from "./screens/MyEvent/MyEvent";
+import EditEvent from "./screens/CreateEvent/EditEvent";
 const Stack = createNativeStackNavigator();
 
-const StackNavigator = () => {
+const StackNavigator = () => {  
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="home" component={Home} />
@@ -42,6 +44,16 @@ const StackNavigator = () => {
 //     </Stack.Navigator>
 //   )
 // }
+
+const StackMyEvent = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="myEvent" component={MyEvent} />
+      <Stack.Screen name="createEvent" component={CreateEvent} />
+      <Stack.Screen name="editEvent" component={EditEvent} />
+    </Stack.Navigator>
+  )
+}
 
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
@@ -86,13 +98,21 @@ const TabNavigator = () => {
               <Ionicons name={focused ? 'checkbox' : 'checkbox-outline'} color={COLORS.primary} size={24} />
             ),
           }} component={CheckIn} />
-       <Tab.Screen name="createEvent"
+          
+           <Tab.Screen name="statistics"
+          options={{
+            title: 'Statistics',
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} color={COLORS.primary} size={24} />
+            ),
+          }} component={Statistics} />
+       <Tab.Screen name="stackMyEvent"
           options={{
             title: 'Create Event',
             tabBarIcon: ({ color, focused }) => (
               <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} color={COLORS.primary} size={24} />
             ),
-          }} component={CreateEvent} />
+          }} component={StackMyEvent} />
         <Tab.Screen name="myTicket"
           options={{
             title: 'My Ticket',

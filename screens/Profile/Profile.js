@@ -26,14 +26,14 @@ const menuItems = [
   { icon: 'information-circle', label: 'About', screen: 'about' },
 ];
 
-const Profile= ()=> {
-  const user =useContext(MyUserContext);
+const Profile = () => {
+  const user = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
-  const navigation= useNavigation();
+  const navigation = useNavigation();
   console.info(user);
-  const logout =()=>{
+  const logout = () => {
     dispatch({
-      'type' : 'logout'
+      'type': 'logout'
     });
     navigation.navigate('index');
   }
@@ -44,7 +44,7 @@ const Profile= ()=> {
   //   </Text>
   //   <Button onPress={()=> dispatch({"type":"logout"})} mode="contained" >Đăng xuất</Button>
   // </View>)
- 
+
   // const handleLogout = () => {
   //   Alert.alert(
   //     'Logout',
@@ -93,6 +93,7 @@ const Profile= ()=> {
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Ionicons name="log-out" size={24} color="#FF3B30" />
           <Text style={styles.logoutText}>Log Out</Text>
+          
         </TouchableOpacity>
       </ScrollView>
     </View>

@@ -17,20 +17,21 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../constants/colors';
 import { Chip } from 'react-native-paper';
-import Apis, { authApis, endpoints } from '../../configs/Apis';
+import { authApis, endpoints } from '../../configs/Apis';
 
-export default function CreateEvent({ navigation }) {
-  const [image, setImage] = useState(null);
+export default function EditEvent({ navigation, route }) {
+  const { event: eventData } = route.params; // Lấy dữ liệu sự kiện từ params
+  const [image, setImage] = useState(eventData.image || null);
   const [loading, setLoading] = useState(false);
   const [event, setEvent] = useState({
-    title: '',
-    category_id: '',
-    description: '',
-    start_time: new Date(),
-    end_time: new Date(),
-    location: '',
-    ticket_quantity: '',
-    ticket_price: '',
+    title: eventData.title || '',
+    category_id: eventData.category_id || '',
+    description: eventData.description || '',
+    start_time: eventData.start_time ? new Date(eventData.start_time) : new Date(),
+    end_time: eventData.end_time ? new Date(eventData.end_time) : new Date(),
+    location: eventData.location || '',
+    ticket_quantity: eventData.ticket_quantity ? String(eventData.ticket_quantity) : '',
+    ticket_price: eventData.ticket_price ? String(eventData.ticket_price) : '',
   });
   const [cates, setCates] = useState([]);
   const [showCates, setShowCates] = useState(false);
@@ -40,7 +41,7 @@ export default function CreateEvent({ navigation }) {
   // Tải danh mục
   const loadCates = async () => {
     try {
-      let res = await Apis.get(endpoints['category']);
+      let res = await authApis().get(endpoints['category']);
       setCates(res.data);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -69,14 +70,14 @@ export default function CreateEvent({ navigation }) {
 
   // Xử lý chọn ngày giờ
   const onStartTimeChange = (_, selectedDate) => {
-    setShowStartPicker(Platform.OS === 'ios'); // Giữ hiển thị trên iOS
+    setShowStartPicker(Platform.OS === 'ios');
     if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
       setEvent((prev) => ({ ...prev, start_time: selectedDate }));
     }
   };
 
   const onEndTimeChange = (_, selectedDate) => {
-    setShowEndPicker(Platform.OS === 'ios'); // Giữ hiển thị trên iOS
+    setShowEndPicker(Platform.OS === 'ios');
     if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
       setEvent((prev) => ({ ...prev, end_time: selectedDate }));
     }
@@ -96,8 +97,8 @@ export default function CreateEvent({ navigation }) {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
+  // Hàm validate
   const validate = (eventData) => {
-    // Kiểm tra các trường bắt buộc
     if (!eventData.title.trim()) {
       throw new Error('Event title is required.');
     }
@@ -111,7 +112,6 @@ export default function CreateEvent({ navigation }) {
       throw new Error('Ticket price is required.');
     }
 
-    // Kiểm tra ticket_quantity và ticket_price
     const quantity = parseInt(eventData.ticket_quantity);
     const price = parseFloat(eventData.ticket_price);
     if (isNaN(quantity) || quantity <= 0) {
@@ -121,7 +121,6 @@ export default function CreateEvent({ navigation }) {
       throw new Error('Ticket price must be a positive number.');
     }
 
-    // Kiểm tra start_time và end_time
     if (!(eventData.start_time instanceof Date) || isNaN(eventData.start_time)) {
       throw new Error('Invalid start time.');
     }
@@ -133,87 +132,77 @@ export default function CreateEvent({ navigation }) {
     }
   };
 
-  const create = async () => {
-  Alert.alert(
-    'Confirm',
-    'Are you sure you want to create this event?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Create',
-        onPress: async () => {
-          try {
-            setLoading(true);
-            validate(event);
-            const token = await AsyncStorage.getItem('token');
-            if (!token) {
-              throw new Error('No token found');
-            }
+  // Hàm cập nhật sự kiện
+  const update = async () => {
+    Alert.alert(
+      'Confirm',
+      'Are you sure you want to update this event?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Update',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              validate(event);
+              const token = await AsyncStorage.getItem('token');
+              if (!token) {
+                throw new Error('No token found');
+              }
 
-            let form = new FormData();
-            form.append('title', event.title);
-            form.append('category_id', event.category_id);
-            form.append('description', event.description || '');
-            form.append('start_time', event.start_time.toISOString());
-            form.append('end_time', event.end_time.toISOString());
-            form.append('location', event.location || '');
-            form.append('ticket_quantity', event.ticket_quantity);
-            form.append('ticket_price', event.ticket_price);
+              let form = new FormData();
+              form.append('title', event.title);
+              form.append('category_id', event.category_id);
+              form.append('description', event.description || '');
+              form.append('start_time', event.start_time.toISOString());
+              form.append('end_time', event.end_time.toISOString());
+              form.append('location', event.location || '');
+              form.append('ticket_quantity', event.ticket_quantity);
+              form.append('ticket_price', event.ticket_price);
 
-            if (image) {
-              const filename = image.split('/').pop();
-              const match = /\.(\w+)$/.exec(filename);
-              const type = match ? `image/${match[1]}` : `image`;
-              form.append('image', {
-                uri: image,
-                name: filename,
-                type,
+              if (image && image !== eventData.image) {
+                const filename = image.split('/').pop();
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : `image`;
+                form.append('image', {
+                  uri: image,
+                  name: filename,
+                  type,
+                });
+              }
+
+              let res = await authApis(token).patch(endpoints['eventDetail'](eventData.id), form, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
               });
-            }
 
-            let res = await authApis(token).post(endpoints['event'], form, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            });
-
-            if (res.status === 201) {
-              Alert.alert('Success', 'Event created successfully!');
-              setEvent({
-                title: '',
-                category_id: '',
-                description: '',
-                start_time: new Date(),
-                end_time: new Date(),
-                location: '',
-                ticket_quantity: '',
-                ticket_price: '',
+              if (res.status === 200) {
+                Alert.alert('Success', 'Event updated successfully!');
+                navigation.goBack();
+              }
+            } catch (error) {
+              console.error('Update Event Error:', {
+                message: error.message,
+                response: error.response,
+                status: error.response?.status,
+                data: error.response?.data,
               });
-              setImage(null);
-              navigation.goBack();
+              if (error.response?.status === 401) {
+                Alert.alert('Session Expired', 'Please log in again.', [
+                  { text: 'OK', onPress: () => navigation.navigate('Login') },
+                ]);
+              } else {
+                Alert.alert('Error', error.message || 'Failed to update event.');
+              }
+            } finally {
+              setLoading(false);
             }
-          } catch (error) {
-            console.error('Create Event Error:', {
-              message: error.message,
-              response: error.response,
-              status: error.response?.status,
-              data: error.response?.data,
-            });
-            if (error.response?.status === 401) {
-              Alert.alert('Session Expired', 'Please log in again.', [
-                { text: 'OK', onPress: () => navigation.navigate('Login') },
-              ]);
-            } else {
-              Alert.alert('Error', error.message || 'Failed to create event.');
-            }
-          } finally {
-            setLoading(false);
-          }
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
   useEffect(() => {
     loadCates();
@@ -226,7 +215,7 @@ export default function CreateEvent({ navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create New Event</Text>
+        <Text style={styles.headerTitle}>Edit Event</Text>
       </View>
 
       <ScrollView style={styles.scrollView}>
@@ -398,14 +387,14 @@ export default function CreateEvent({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Create Button */}
+          {/* Update Button */}
           <TouchableOpacity
             style={[styles.createButton, loading && styles.createButtonDisabled]}
-            onPress={create}
+            onPress={update}
             disabled={loading}
           >
             <Text style={styles.createButtonText}>
-              {loading ? 'Creating...' : 'Create Event'}
+              {loading ? 'Updating...' : 'Update Event'}
             </Text>
           </TouchableOpacity>
         </View>
