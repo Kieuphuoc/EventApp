@@ -196,7 +196,7 @@ const MyEvent = () => {
         <Text style={styles.headerTitle}>My Events</Text>
         <TouchableOpacity
           style={styles.createButton}
-          onPress={() => navigation.navigate('CreateEvent')}
+          onPress={() => navigation.navigate('createEvent')}
         >
           <Ionicons name="add-circle-outline" size={28} color={COLORS.white} />
         </TouchableOpacity>
@@ -212,7 +212,7 @@ const MyEvent = () => {
           <Text style={styles.noEventsSubText}>Tap the '+' button to create your first event.</Text>
           <TouchableOpacity
             style={styles.createLargeButton}
-            onPress={() => navigation.navigate('CreateEvent')}
+            onPress={() => navigation.navigate('createEvent')}
           >
             <Ionicons name="add" size={20} color={COLORS.white} />
             <Text style={styles.createLargeButtonText}>Create New Event</Text>

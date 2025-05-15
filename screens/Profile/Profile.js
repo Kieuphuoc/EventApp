@@ -44,7 +44,7 @@ const Profile = () => {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
-            router.replace('/login');
+            navigation.navigate('index');
           },
         },
       ],
@@ -56,6 +56,8 @@ const Profile = () => {
     });
     navigation.navigate('index');
   }
+  // console.log(user._j.role);
+
 
   return (
     <View style={styles.container}>

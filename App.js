@@ -21,9 +21,10 @@ import CheckIn from "./screens/CheckIn/CheckIn";
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
 import EditEvent from "./screens/CreateEvent/EditEvent";
+import CatesSelection from "./screens/User/CatesSelection";
 const Stack = createNativeStackNavigator();
 
-const StackNavigator = () => {  
+const StackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="home" component={Home} />
@@ -35,15 +36,16 @@ const StackNavigator = () => {
   );
 }
 
-// const StackNavigatorProfile = () => {
-//   return (
-//     <Stack.Navigator screenOptions={{ headerShown: false }}>
-//       <Stack.Screen name="profile" component={Profile} />
-//       <Stack.Screen name="login" component={Login} />
-//       <Stack.Screen name="register" component={Register} />
-//     </Stack.Navigator>
-//   )
-// }
+const StackProfile = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="profile" component={Profile} />
+      <Stack.Screen name="login" component={Login} />
+      <Stack.Screen name="register" component={Register} />      
+      <Stack.Screen name="catesSelection" component={CatesSelection} />
+    </Stack.Navigator>
+  )
+}
 
 const StackMyEvent = () => {
   return (
@@ -55,92 +57,125 @@ const StackMyEvent = () => {
   )
 }
 
+const StackRegister = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="register" component={Register} />
+      <Stack.Screen name="catesSelection" component={CatesSelection} />
+    </Stack.Navigator>
+  )
+}
+
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
   const user = useContext(MyUserContext);
+  // const dispatch = useContext(MyDispatchContext);
+
 
   return (
-    <Tab.Navigator screenOptions={{
-      tabBarActiveTintColor: COLORS.primary,
-      tabBarStyle: {
-        borderTopWidth: 0,
-        // borderRadius: 30,
-        backgroundColor: 'white',
-        height: 80,
-        borderTopWidth:1,
-      },
-      headerShown: false,
-    }}>
-      <Tab.Screen name="index" options={{
-        title: 'Home',
-        tabBarIcon: ({ color, focused }) => (<Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={COLORS.primary} size={24} />),
-      }} component={StackNavigator} />
-      {user === null ? <>
-        <Tab.Screen name="login"
-          options={{
-            title: 'Login', tabBarIcon: ({ color, focused }) => (<Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />),
-          }} component={Login} />
-        <Tab.Screen name="register"
-          options={{
-            title: 'Register',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={Register}
-        />
-        
-         
-      </> : <>
-       <Tab.Screen name="checkIn"
-          options={{
-            title: 'Check In',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'checkbox' : 'checkbox-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={CheckIn} />
-          
-           <Tab.Screen name="statistics"
-          options={{
-            title: 'Statistics',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={Statistics} />
-       <Tab.Screen name="stackMyEvent"
-          options={{
-            title: 'Create Event',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={StackMyEvent} />
-        <Tab.Screen name="myTicket"
-          options={{
-            title: 'My Ticket',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'ticket' : 'ticket-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={MyTicket} />
-       
-        <Tab.Screen name="favouriteEvent"
-          options={{
-            title: 'Favourite Event',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={FavouriteEvent} />
-        <Tab.Screen name="profile"
-          options={{
-            title: 'My Profile',
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
-            ),
-          }} component={Profile} />
-      </>}
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarStyle: {
+          borderTopWidth: 1,
+          backgroundColor: 'white',
+          height: 80,
+        },
+        headerShown: false,
+      }}
+    >
+      {/* Home tab - visible to all users */}
+      <Tab.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={COLORS.primary} size={24} />
+          ),
+        }}
+        component={StackNavigator}
+      />
 
+      {user === null ? (
+        <>
+          <Tab.Screen
+            name="login"
+            options={{
+              title: 'Login',
+              tabBarIcon: ({ color, focused }) => (
+                <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
+              ),
+            }}
+            component={Login}
+          />
+          <Tab.Screen
+            name="register"
+            options={{
+              title: 'Register',
+              tabBarIcon: ({ color, focused }) => (
+                <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
+              ),
+            }}
+            component={Register}
+          />
+        </>
+      ) : (
+        <>
+          {/* Organizer only */}
+          {user?._j?.role === 'organizer' && (
+            <Tab.Screen
+              name="stackMyEvent"
+              options={{
+                title: 'My Events',
+                tabBarIcon: ({ color, focused }) => (
+                  <Ionicons name={focused ? 'calendar' : 'calendar-outline'} color={COLORS.primary} size={24} />
+                ),
+              }}
+              component={StackMyEvent}
+            />
+          )}
 
+          {/* Participant only */}
+          {user?._j?.role === 'participant' && (
+            <>
+              <Tab.Screen
+                name="myTicket"
+                options={{
+                  title: 'My Tickets',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'ticket' : 'ticket-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={MyTicket}
+              />
+              <Tab.Screen
+                name="favouriteEvent"
+                options={{
+                  title: 'Favourites',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={FavouriteEvent}
+              />
+              <Tab.Screen
+                name="profile"
+                options={{
+                  title: 'Profile',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={StackProfile}
+              />
+            </>
+
+          )}
+        </>
+      )}
     </Tab.Navigator>
   );
-}
+};
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);

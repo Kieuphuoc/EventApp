@@ -33,88 +33,127 @@ const Statistics = () => {
     monthlyRevenue: [],
   });
 
-  const loadStatistics = async () => {
+  // const loadStatistics = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const token = await AsyncStorage.getItem('token');
+  //     if (!token) {
+  //       console.warn('No token found, using mock data.');
+  //       throw new Error('No token found');
+  //     }
+
+  //     const response = await authApis(token).get(endpoints['dashboard']);
+  //     if (response.data && typeof response.data === 'object') {
+  //       setStats({
+  //         totalEvents: response.data.events || 0,
+  //         totalTickets: response.data.total_tickets || 0,
+  //         totalRevenue: response.data.total_revenue || '0',
+  //         totalViews: response.data.total_views || 0,
+  //         categoryDistribution: Array.isArray(response.data.categoryDistribution) && response.data.categoryDistribution.length > 0
+  //           ? response.data.categoryDistribution
+  //           : [
+  //               { category: 'Music', count: 5 },
+  //               { category: 'Sports', count: 3 },
+  //             ],
+  //         monthlyRevenue: Array.isArray(response.data.monthlyRevenue) && response.data.monthlyRevenue.length > 0
+  //           ? response.data.monthlyRevenue
+  //           : [
+  //               { month: 'Jan', revenue: 1000 },
+  //               { month: 'Feb', revenue: 2000 },
+  //             ],
+  //       });
+  //     } else {
+  //       console.warn('API response data is not in expected format, using mock data.');
+  //       throw new Error('Invalid API response format');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading statistics:', error);
+  //     setStats({
+  //       totalEvents: 25,
+  //       totalTickets: 250,
+  //       totalRevenue: '$37,500.00',
+  //       totalViews: 1500,
+  //       categoryDistribution: [
+  //         { category: 'Concerts', count: 8 },
+  //         { category: 'Workshops', count: 5 },
+  //         { category: 'Festivals', count: 6 },
+  //         { category: 'Sports', count: 4 },
+  //         { category: 'Tech', count: 2 },
+  //       ],
+  //       monthlyRevenue: [
+  //         { month: 'Jan', revenue: 2500 },
+  //         { month: 'Feb', revenue: 4000 },
+  //         { month: 'Mar', revenue: 3200 },
+  //         { month: 'Apr', revenue: 5500 },
+  //         { month: 'May', revenue: 4800 },
+  //         { month: 'Jun', revenue: 6200 },
+  //       ],
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const loadStats = async () => {
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
       if (!token) {
-        console.warn('No token found, using mock data.');
         throw new Error('No token found');
       }
 
-      const response = await authApis(token).get(endpoints['dashboard']);
-      if (response.data && typeof response.data === 'object') {
-        setStats({
-          totalEvents: response.data.events || 0,
-          totalTickets: response.data.total_tickets || 0,
-          totalRevenue: response.data.total_revenue || '0',
-          totalViews: response.data.total_views || 0,
-          categoryDistribution: Array.isArray(response.data.categoryDistribution) && response.data.categoryDistribution.length > 0
-            ? response.data.categoryDistribution
-            : [
-                { category: 'Music', count: 5 },
-                { category: 'Sports', count: 3 },
-              ],
-          monthlyRevenue: Array.isArray(response.data.monthlyRevenue) && response.data.monthlyRevenue.length > 0
-            ? response.data.monthlyRevenue
-            : [
-                { month: 'Jan', revenue: 1000 },
-                { month: 'Feb', revenue: 2000 },
-              ],
-        });
-      } else {
-        console.warn('API response data is not in expected format, using mock data.');
-        throw new Error('Invalid API response format');
+      let res = await authApis(token).get(endpoints['dashboard']);
+      if (res.data) {
+        setStats(res.data);
       }
-    } catch (error) {
-      console.error('Error loading statistics:', error);
-      setStats({
-        totalEvents: 25,
-        totalTickets: 250,
-        totalRevenue: '$37,500.00',
-        totalViews: 1500,
-        categoryDistribution: [
-          { category: 'Concerts', count: 8 },
-          { category: 'Workshops', count: 5 },
-          { category: 'Festivals', count: 6 },
-          { category: 'Sports', count: 4 },
-          { category: 'Tech', count: 2 },
-        ],
-        monthlyRevenue: [
-          { month: 'Jan', revenue: 2500 },
-          { month: 'Feb', revenue: 4000 },
-          { month: 'Mar', revenue: 3200 },
-          { month: 'Apr', revenue: 5500 },
-          { month: 'May', revenue: 4800 },
-          { month: 'Jun', revenue: 6200 },
-        ],
-      });
+    } catch (ex) {
+      console.error("Error loading events:", ex);
+      setStats([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    loadStatistics();
+    loadStats();
   }, []);
 
-  const pieChartData = stats.categoryDistribution.map((item, index) => ({
-    name: item.category,
-    population: item.count,
-    color: CHART_COLORS[index % CHART_COLORS.length],
-    legendFontColor: COLORS.darkGrey || '#555',
-    legendFontSize: 13,
-  }));
+  // const pieChartData = stats.categoryDistribution.map((item, index) => ({
+  //   name: item.category,
+  //   population: item.count,
+  //   color: CHART_COLORS[index % CHART_COLORS.length],
+  //   legendFontColor: COLORS.darkGrey || '#555',
+  //   legendFontSize: 13,
+  // }));
 
-  const barChartData = {
-    labels: stats.monthlyRevenue.map((item) => item.month),
-    datasets: [
-      {
-        data: stats.monthlyRevenue.map((item) => item.revenue),
-        color: (opacity = 1) => COLORS.secondary,
-      },
-    ],
-  };
+  // const barChartData = {
+  //   labels: stats.monthlyRevenue.map((item) => item.month),
+  //   datasets: [
+  //     {
+  //       data: stats.monthlyRevenue.map((item) => item.revenue),
+  //       color: (opacity = 1) => COLORS.secondary,
+  //     },
+  //   ],
+  // };
+
+const eventTitles = Array.isArray(stats.event_title)
+  ? stats.event_title.map((item) => item.event_title)
+  : [];
+
+const viewData = Array.isArray(stats.views)
+  ? stats.views.map((item) => item.views)
+  : [];
+
+  // console.log(stats.events.event_title))
+const data = {
+  labels: stats.events.event_title,
+  datasets: [
+    {
+      data: viewData
+    }
+  ]
+};
+
 
   const renderStatCard = (title, value, icon, color) => (
     <View style={styles.statCard}>
@@ -148,7 +187,7 @@ const Statistics = () => {
         </View>
         <TouchableOpacity
           style={styles.refreshButton}
-          onPress={loadStatistics}
+          onPress={loadStats}
           disabled={loading}
         >
           <Ionicons name="refresh-circle-outline" size={28} color={COLORS.white} />
@@ -158,25 +197,54 @@ const Statistics = () => {
       <View style={styles.statsGrid}>
         {renderStatCard(
           'Total Tickets',
-          stats.totalTickets.toLocaleString(),
+          // stats.totalTickets.toLocaleString(),
+          stats.total_tickets,
           'ticket-outline',
           COLORS.primary
         )}
         {renderStatCard(
           'Total Revenue',
-          stats.totalRevenue,
+          stats.total_revenue,
           'wallet-outline',
           COLORS.secondary
         )}
         {renderStatCard(
           'Total Views',
-          stats.totalViews.toLocaleString(),
+          stats.total_views,
           'eye-outline',
           COLORS.success || '#2ECC71'
         )}
       </View>
 
-      {stats.categoryDistribution.length > 0 && (
+      <View style={styles.chartSection}>
+        <Text style={styles.sectionTitle}>Event Categories</Text>
+        <View style={styles.chartView}>
+          {/* <PieChart
+              data={pieChartData}
+              width={width - 40}
+              height={230}
+              chartConfig={{
+                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              }}
+              
+            /> */}
+          {/* <BarChart
+            // style={graphStyle}
+            data={data}
+            width={width - 40}
+            height={230}
+            chartConfig={{
+             color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`, // Màu xanh lá
+            }}
+            verticalLabelRotation={30}accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="20"
+              absolute
+          /> */}
+        </View>
+      </View>
+
+      {/* {stats.categoryDistribution.length > 0 && (
         <View style={styles.chartSection}>
           <Text style={styles.sectionTitle}>Event Categories</Text>
           <View style={styles.chartView}>
@@ -227,9 +295,9 @@ const Statistics = () => {
             />
           </View>
         </View>
-      )}
+      )} */}
 
-      {!stats.categoryDistribution.length && !stats.monthlyRevenue.length && !loading && (
+      {/* {!stats.categoryDistribution.length && !stats.monthlyRevenue.length && !loading && (
         <View style={styles.noDataContainer}>
           <Ionicons name="sad-outline" size={60} color={COLORS.grey} />
           <Text style={styles.noDataText}>No statistics to display yet.</Text>
@@ -237,7 +305,7 @@ const Statistics = () => {
             Start creating events to see your dashboard come alive!
           </Text>
         </View>
-      )}
+      )} */}
     </ScrollView>
   );
 };
