@@ -50,7 +50,7 @@ const Login = () => {
 
   const validate = () => {
     if (!user?.username || !user?.password) {
-      setMsg('Vui lòng nhập tên đăng nhập và mật khẩu!');
+      setMsg('Please enter username and password!');
       return false;
     }
     setMsg(null);
@@ -85,7 +85,11 @@ const Login = () => {
         navigation.navigate('index');
       } catch (ex) {
         console.error('Login Error:', ex);
-        Alert.alert('Error', 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
+        if (ex.response && ex.response.data && ex.response.data.error_description) {
+          setMsg(ex.response.data.error_description);
+        } else {
+          setMsg('Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
+        }
       } finally {
         setLoading(false);
       }

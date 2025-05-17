@@ -21,12 +21,11 @@ import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler
 
 export default function MyTicket({ navigation }) {
   const [searchText, setSearchText] = useState("");
-  const [filteredTickets, setFilteredTickets] = useState([]);
   const [ticket, setTicket] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [qr, setQr] = useState("");
-  const fadeAnim = useRef(new Animated.Value(0)).current; // Animation cho modal
+  // const fadeAnim = useRef(new Animated.Value(0)).current; // Animation cho modal
 
   const loadTicket = async () => {
     try {
@@ -40,25 +39,14 @@ export default function MyTicket({ navigation }) {
       console.log("Tickets:", res.data);
       if (res.data) {
         setTicket(res.data);
-        setFilteredTickets(res.data);
       }
     } catch (ex) {
       console.error("Error loading tickets:", ex);
       console.log("Error details:", ex.response?.data);
       setTicket([]);
-      setFilteredTickets([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = (text) => {
-    setSearchText(text);
-    setFilteredTickets(
-      ticket.filter((t) =>
-        t.invoice_id?.toString().toLowerCase().includes(text.toLowerCase())
-      )
-    );
   };
 
   useEffect(() => {
@@ -78,22 +66,14 @@ export default function MyTicket({ navigation }) {
     });
   };
 
-  // Animation cho modal
   const openModal = () => {
     setShowQr(true);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+
   };
 
   const closeModal = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => setShowQr(false));
+
+    setShowQr(false)
   };
 
   const Ticket = ({ item }) => (
@@ -104,55 +84,6 @@ export default function MyTicket({ navigation }) {
         openModal();
       }}
     >
-      {/* <View style={styles.ticketContent}>
-        <View style={styles.ticketHeader}>
-          <Text style={styles.ticketName} numberOfLines={1}>
-            {item?.event?.title || "No Title"}
-          </Text>
-          <View
-            style={[
-              styles.statusBadge,
-              item.status === "booked"
-                ? styles.bookedBadge
-                : styles.checkedInBadge,
-            ]}
-          >
-            <Text style={styles.statusText}>
-              {item.status === "booked" ? "Booked" : "Checked-in"}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.ticketDetails}>
-          <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.primary} />
-            <View style={styles.detailTextContainer}>
-              <Text style={styles.detailLabel}>Event</Text>
-              <Text style={styles.detailValue}>{item.event?.location || "N/A"}</Text>
-            </View>
-          </View>
-          <View style={{ flexDirection: "row" }}>
-            <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={24} color={COLORS.primary} />
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Date & Time</Text>
-                <Text style={styles.detailValue}>
-                  {formatDateTime(item?.event?.start_time)}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.qrContainer}>
-              <Image
-                style={styles.qrImage}
-                source={{
-                  uri: item.qr_code || "https://via.placeholder.com/80",
-                }}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color={COLORS.primary} /> */}
       <View style={styles.ticketDetailsContainer}>
         <View style={styles.ticketHeader}>
           <Text style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">
@@ -188,11 +119,11 @@ export default function MyTicket({ navigation }) {
 
         {item.checked_in_at && (
           <View style={styles.infoRow}>
-          <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
-          <Text style={styles.infoText}>
-            Checked in at:  {formatDateTime(item.checked_in_at) || "N/A"}
-          </Text>
-        </View>)}
+            <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
+            <Text style={styles.infoText}>
+              Checked in at:  {formatDateTime(item.checked_in_at) || "N/A"}
+            </Text>
+          </View>)}
 
       </View>
 
@@ -218,38 +149,18 @@ export default function MyTicket({ navigation }) {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>My Tickets</Text>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.searchButton} onPress={() => { }}>
-            <Ionicons name="search" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
       </View>
 
-
-      {/* <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={20} color={COLORS.primary} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by invoice ID..."
-            placeholderTextColor={COLORS.primaryDark}
-            value={searchText}
-            onChangeText={handleSearch}
-          />
-        </View>
-      </View> */}
-
       <ScrollView style={{ paddingInline: 15 }}>
-        {/* <SearchBox /> */}
 
         {loading ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
         ) : (
+
           <FlatList
-            data={filteredTickets}
-            keyExtractor={(item) => item.invoice_id?.toString() || Math.random().toString()}
-            renderItem={Ticket}
-            // contentContainerStyle={styles.listContent}
+            data={ticket}
+            renderItem={({ item, index }) => <Ticket key={index} item={item} />}
+            contentContainerStyle={styles.listContent}
             scrollEnabled={false}
             showsHorizontalScrollIndicator={false}
             ListEmptyComponent={
@@ -260,26 +171,27 @@ export default function MyTicket({ navigation }) {
           />
         )}
 
-        
+
       </ScrollView>
       {showQr && (
-          <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
-            <TouchableOpacity style={styles.backdrop} onPress={closeModal} activeOpacity={1} />
-            <View style={styles.modalContent}>
-              <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-                <Ionicons name="close-circle" size={40} color={COLORS.primary} />
-              </TouchableOpacity>
-              <Image
-                style={styles.modalQrImage}
-                source={{
-                  uri: qr || "https://via.placeholder.com/300",
-                }}
-                resizeMode="contain"
-              />
-              <Text style={styles.modalText}>Scan this QR code to check-in</Text>
-            </View>
-          </Animated.View>
-        )}
+        <Animated.View style={[styles.modalContainer,
+        ]}>
+          <TouchableOpacity style={styles.backdrop} onPress={closeModal} activeOpacity={1} />
+          <View style={styles.modalContent}>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Ionicons name="close-circle" size={40} color={COLORS.primary} />
+            </TouchableOpacity>
+            <Image
+              style={styles.modalQrImage}
+              source={{
+                uri: qr || "https://via.placeholder.com/300",
+              }}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>Scan this QR code to check-in</Text>
+          </View>
+        </Animated.View>
+      )}
     </GestureHandlerRootView>
   );
 }

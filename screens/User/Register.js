@@ -22,6 +22,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { HelperText } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MyDispatchContext, MyUserContext } from '../../configs/Context';
+import { Snackbar } from 'react-native-paper';
+
 
 const info = [
   {
@@ -32,12 +34,12 @@ const info = [
   {
     label: 'Last Name',
     field: 'last_name',
-    icon: 'person',
+    icon: 'person-add',
   },
   {
     label: 'Username',
     field: 'username',
-    icon: 'at-outline',
+    icon: 'person-circle',
   },
   {
     label: 'Email',
@@ -52,13 +54,13 @@ const info = [
   {
     label: 'Confirm Password',
     field: 'confirmPassword',
-    icon: 'lock-closed',
+    icon: 'shield-checkmark',
   },
 ];
 
+
 const Register = () => {
   const navigation = useNavigation();
-  const userContext = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState({});
@@ -67,7 +69,14 @@ const Register = () => {
   const [showChoice, setShowChoice] = useState(false);
   const [role, setRole] = useState('');
   const [msg, setMsg] = useState('');
+  const [visible, setVisible] = useState(false);
+
   console.log(role);
+
+  const showError = (message) => {
+    setMsg(message);
+    setVisible(true);
+  };
 
 
   const setState = (value, field) => {
@@ -101,13 +110,30 @@ const Register = () => {
 
     for (let i of info) {
       if (!user[i.field]) {
-        setMsg(`Please enter ${i.label}`);
+        showError(`Please enter ${i.label}`);
         return false;
       }
     }
 
     if (user.password !== user.confirmPassword) {
-      setMsg('Passwords do not match');
+      showError('Passwords do not match');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(user.email)) {
+      showError('Invalid email format.');
+      return false;
+    }
+
+    const usernameRegex = /^\S+$/;
+    if (!usernameRegex.test(user.username)) {
+      showError('Username must not contain whitespace.');
+      return false;
+    }
+
+    if (!role) {
+      showError('Please select a role.');
       return false;
     }
 
@@ -170,19 +196,22 @@ const Register = () => {
           type: 'login',
           payload: u.data,
         });
-        if (role === 'participant') 
-          { 
-            navigation.navigate('catesSelection'); 
-          }
-        else 
+        if (role === 'participant') {
+          navigation.navigate('catesSelection');
+        }
+        else
           navigation.navigate('index')
       }
     } catch (error) {
       console.error(error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Registration failed. Please try again.'
-      );
+      // Nếu server trả về lỗi rõ ràng
+      if (error.response?.data?.username?.length > 0) {
+        showError(error.response.data.username[0]); // ví dụ: "A user with that username already exists."
+      } else if (error.response?.data?.message) {
+        showError(error.response.data.message);
+      } else {
+        showError('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -207,9 +236,18 @@ const Register = () => {
             <Text style={userStyles.subtitle}>Let’s join with us!</Text>
           </View>
 
-          <HelperText type="error" visible={!!msg}>
+          {/* <HelperText type="error" visible={!!msg}>{msg}</HelperText> */}
+          <Snackbar
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            action={{
+              label: 'Close',
+              onPress: () => setVisible(false),
+            }}
+            duration={5000}
+          >
             {msg}
-          </HelperText>
+          </Snackbar>
           <View style={userStyles.form}>
             {info.map((i, index) => (
               <View key={index} style={userStyles.inputContainer}>
@@ -259,23 +297,17 @@ const Register = () => {
               </View>
             ))}
 
-            <TouchableOpacity style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: '#f8f8f8',
-              borderRadius: 12,
-              paddingHorizontal: 15, height: 50
-            }} onPress={() => setShowChoice(!showChoice)}>
+            <TouchableOpacity style={showChoice ? userStyles.comboBox : userStyles.hiddenBox} onPress={() => setShowChoice(!showChoice)}>
               <Ionicons
-                name='filter'
+                name='chevron-down'
                 size={20}
                 color={COLORS.primary}
                 style={userStyles.inputIcon}
               />
-              <Text style={[
-                userStyles.input,
-                role !== '' && { color: '#999' }
-              ]}>{role}</Text>
+              <Text style={[userStyles.input, { color: role ? '#333' : '#999' }]}>
+                {role ? role : "Choose role"}
+              </Text>
+
             </TouchableOpacity>
             {showChoice && (
               <View style={userStyles.dropdown}>
@@ -348,6 +380,17 @@ const Register = () => {
             </View>
           </View>
         </ScrollView>
+        <Snackbar
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            action={{
+              label: 'Close',
+              onPress: () => setVisible(false),
+            }}
+            duration={5000}
+          >
+            {msg}
+          </Snackbar>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

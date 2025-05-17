@@ -4,7 +4,7 @@ import COLORS from '../../constants/colors';
 export const userStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:"white",
+    backgroundColor: "white",
   },
   keyboardView: {
     flex: 1,
@@ -37,13 +37,19 @@ export const userStyles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#f8f8f8',
-  borderRadius: 12,
-  marginBottom: 15,
-  paddingHorizontal: 15,
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    marginBottom: 15,
+    paddingHorizontal: 15,
   },
-  
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
+    marginLeft: 10,
+  }
+  ,
   inputIcon: {
     marginRight: 10,
   },
@@ -158,11 +164,27 @@ export const userStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginBottom:20,
+    marginBottom: 20,
   },
   dropdownItem: {
     paddingVertical: 8,
     fontSize: 16,
     color: '#333',
   },
+  comboBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    paddingHorizontal: 15, height: 50,
+  },
+  hiddenBox:{
+     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    paddingHorizontal: 15, height: 50,
+        marginBottom: 15,
+
+  }
 }); 
