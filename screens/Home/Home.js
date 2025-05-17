@@ -50,6 +50,8 @@ const Home = () => {
     }
   }
 
+  
+
   useEffect(() => {
     loadCates();
   }, []);
@@ -87,8 +89,8 @@ const Home = () => {
               onPress={() => navigation.navigate('eventDetail', { id: item.id })}
             />
           )}
-          // horizontal
-          scrollEnabled={false}
+          horizontal
+          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
           ListEmptyComponent={() => (
             <View style={{ padding: 20, alignItems: 'center' }}>
               <Text>No events found</Text>

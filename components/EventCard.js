@@ -1,7 +1,9 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Pressable } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../constants/colors";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authApis, endpoints } from '../configs/Apis';
 
 const EventCard = ({ item, onPress, cardWidth }) => {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -15,6 +17,97 @@ const EventCard = ({ item, onPress, cardWidth }) => {
   const date = new Date(item.start_time);
   const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+
+  const loadFavor = async () => {
+    try {
+      // setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const res = await authApis(token).get(endpoints['favoriteEvent']);
+      if (res.data && Array.isArray(res.data)) {
+        const isFav = res.data.some(fav => fav.event_id === item.id || fav.id === item.id);
+        setIsFavorite(isFav);
+      } else {
+        setIsFavorite(false);
+      }
+    } catch (ex) {
+      console.error("Error loading favorite events:", ex);
+      console.log('Error details:', ex.response?.data);
+      setIsFavorite(false);
+      Alert.alert('Error', 'Failed to load favorite status. Please try again.');
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+   useEffect(() => {
+    loadFavor(); // Khởi tạo trạng thái yêu thích khi component mount
+  }, []);
+
+  const favor = async () => {
+  try {
+    // setLoading(true);
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+
+    const response = await authApis(token).post(endpoints['favoriteEvent'], {
+      event_id: item.id,
+    });
+
+    console.log('Favorite Response:', response.data);
+
+    if (response.status === 201 || response.status === 200) {
+      setIsFavorite(true);
+    };
+  } catch (error) {
+    console.error('Favorite Error:', {
+      message: error.message,
+      response: error.response,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    Alert.alert(
+      'Error',
+      error.response?.data?.message || 'Failed to add to favorites.'
+    );
+  } finally {
+    // setLoading(false);
+  }
+};
+  const delete_favor = async () => {
+    try {
+      // setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await authApis(token).delete(endpoints['delete-favor'](item.id));
+
+      if (response.status === 200 || response.status === 204) {
+        setIsFavorite(false);
+      }
+    } catch (error) {
+      console.error('Delete Favorite Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to remove from favorites.'
+      );
+    } finally {
+      // setLoading(false);
+    }
+  };
 
   const getRandomOffset = () => {
     return (Math.random() - 0.5) * 200; // Random value between -100 and 100
@@ -69,13 +162,20 @@ const EventCard = ({ item, onPress, cardWidth }) => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
     if (now - lastTap.current < DOUBLE_PRESS_DELAY) {
-      setIsFavorite(!isFavorite);
-      
+
+      if (isFavorite === true) {
+        delete_favor();
+        setIsFavorite(!isFavorite);
+
+      } else {
+        setIsFavorite(!isFavorite);
+        favor();
+      }
       // Get touch position relative to the image container
       const { locationX, locationY } = event.nativeEvent;
       touchPosition.x = locationX;
       touchPosition.y = locationY;
-      
+
       // Reset heart position to touch position
       heartPosition.setValue({ x: 0, y: 0 });
       heartOpacity.setValue(1);
@@ -113,16 +213,17 @@ const EventCard = ({ item, onPress, cardWidth }) => {
 
   return (
     <View style={[styles.card, { width: cardWidth }]}>
-      <Pressable onPress={handleDoubleTap}>
+      <Pressable onPress={
+        handleDoubleTap}>
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: item.image }}
             style={styles.image}
           />
-          <Animated.View 
+          <Animated.View
             style={[
               styles.heartContainer,
-              { 
+              {
                 transform: [
                   { scale: scaleAnim },
                   { translateX: heartPosition.x },
@@ -134,10 +235,10 @@ const EventCard = ({ item, onPress, cardWidth }) => {
               }
             ]}
           >
-            <Ionicons 
-              name="heart" 
-              size={50} 
-              color={COLORS.error} 
+            <Ionicons
+              name="heart"
+              size={50}
+              color={COLORS.error}
               style={{}}
             />
           </Animated.View>
@@ -158,10 +259,10 @@ const EventCard = ({ item, onPress, cardWidth }) => {
                 }
               ]}
             >
-              <Ionicons 
-                name="heart" 
-                size={20} 
-                color={COLORS.error} 
+              <Ionicons
+                name="heart"
+                size={20}
+                color={COLORS.error}
               />
             </Animated.View>
           ))}
@@ -169,11 +270,13 @@ const EventCard = ({ item, onPress, cardWidth }) => {
             <View style={styles.category}>
               <Text style={styles.categoryText}>{item.category.name}</Text>
             </View>
-            <TouchableOpacity style={styles.favoriteButton}>
-              <Ionicons 
-                name={isFavorite ? "heart" : "heart-outline"} 
-                size={22} 
-                color={isFavorite ? COLORS.error : "#fff"} 
+            <TouchableOpacity style={styles.favoriteButton}
+              onPress={() => (isFavorite ? delete_favor() : favor())}            >
+
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={22}
+                color={isFavorite ? COLORS.error : "#fff"}
               />
             </TouchableOpacity>
           </View>
@@ -207,19 +310,19 @@ const EventCard = ({ item, onPress, cardWidth }) => {
           </View>
 
           <View style={styles.footer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.actionButton, styles.bookmarkButton]}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               <Ionicons name="bookmark-outline" size={18} color={COLORS.primary} />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.actionButton, styles.shareButton]}
-              onPress={() => {}}
+              onPress={() => { }}
             >
               <Ionicons name="share-social-outline" size={18} color={COLORS.primary} />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.joinButton}
               onPress={onPress}
             >
@@ -337,7 +440,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 15,
   },
-  
+
   favoriteButton: {
     width: 36,
     height: 36,

@@ -1,30 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import Apis, { authApis, endpoints } from '../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReviewModal from './ReviewModal';
 import ReviewItem from './ReviewItem';
+import { MyUserContext } from '../configs/Context';
 
 const TabReviews = ({ event_id }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
-
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [reply, setReply] = useState([]);
   const loadReviews = async () => {
-        try {
-            // console.log(event_id);
-            let res = await Apis.get(endpoints['review'](event_id));
-            setReviews(res.data);
-        } catch (error) {
-            console.error('Lỗi khi gọi API:', error);
-        }
-    };
+    try {
+      setLoading(true);
+      let res = await Apis.get(endpoints['review'](event_id));
+      setReviews(res.data || []);
+    } catch (error) {
+      console.error('Lỗi khi gọi API:', error);
+      setReviews([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-   useEffect(() => {
+  const createReview = useCallback(async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      let form = new FormData();
+      form.append('rating', rating);
+      form.append('comment', comment);
+
+      let res = await authApis(token).post(endpoints['create-review'](event_id), form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Review Response:', res.data);
+
+      if (res.status === 201) {
+        Alert.alert('Success', 'Review submitted successfully');
+        setRating(0);
+        setComment('');
+        setShowReviewModal(false);
         loadReviews();
-    }, []);
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      Alert.alert('Error', 'Failed to submit review. Please try again.');
+    }
+  }, [event_id, rating, comment]);
+
+  const createReply = useCallback(
+    async (reviewId, content) => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
+        }
+
+        let form = new FormData();
+        form.append('response', content);
+
+        let res = await authApis(token).post(
+          endpoints['reply'](event_id, reviewId),
+          form,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        console.log('Reply Response:', res.data);
+
+        if (res.status === 201) {
+          Alert.alert('Success', 'Reply submitted successfully');
+          loadReviews(); // Reload reviews để cập nhật replies
+        }
+      } catch (error) {
+        console.error('Error submitting reply:', error);
+        Alert.alert('Error', error.response?.data?.message || 'Failed to submit reply.');
+      }
+    },
+    [event_id]
+  );
+
+  const deletePress = useCallback(
+    (reviewId) => {
+      Alert.alert(
+        'Delete Review',
+        'Are you sure you want to delete this review?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => delete_review(reviewId),
+          },
+        ]
+      );
+    },
+    []
+  );
+
+  const delete_review = useCallback(
+    async (reviewId) => {
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
+        }
+
+        const response = await authApis(token).delete(endpoints['delete-review'](event_id, reviewId));
+
+        if (response.status === 200 || response.status === 204) {
+          console.log('Delete review successfully!');
+          loadReviews();
+          Alert.alert('Success', 'Review deleted successfully.');
+        }
+      } catch (error) {
+        console.error('Delete Review Error:', {
+          message: error.message,
+          response: error.response,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert('Error', error.response?.data?.message || 'Failed to delete review.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [event_id]
+  );
+ 
+  useEffect(() => {
+    loadReviews();
+  }, []);
+
 
 
   const renderStars = (rating) => {
@@ -43,7 +166,7 @@ const TabReviews = ({ event_id }) => {
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Reviews</Text>
         <TouchableOpacity
@@ -55,15 +178,22 @@ const TabReviews = ({ event_id }) => {
         </TouchableOpacity>
       </View>
 
-      {/* {loading ? (
+      {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
-      ) : ( */}
+      ) : (
         <FlatList
           data={reviews}
           keyExtractor={(item) => item.id.toString()}
-renderItem={({ item }) => (
-                    <ReviewItem review={item} />
-                )}          scrollEnabled={false}
+          renderItem={({ item }) => (
+            <ReviewItem
+              event_id={event_id}
+              review={item}
+              deletePress={() => deletePress(item.id)}
+              createReply={createReply}
+              loadReviews={loadReviews} // Truyền loadReviews để reload sau khi reply
+            />
+          )}
+          scrollEnabled={false}
           contentContainerStyle={styles.list}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
@@ -71,12 +201,17 @@ renderItem={({ item }) => (
             </View>
           )}
         />
-      {/* )} */}
+      )}
 
-      <ReviewModal event_id={event_id}
+      <ReviewModal
+        event_id={event_id}
         visible={showReviewModal}
         onClose={() => setShowReviewModal(false)}
-        // onSubmit={handleSubmitReview}
+        onSubmit={createReview}
+        rating={rating}
+        setRating={setRating}
+        comment={comment}
+        setComment={setComment}
       />
     </View>
   );
@@ -85,13 +220,13 @@ renderItem={({ item }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    // backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // padding: 16,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.accentLight,
   },
@@ -115,64 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   list: {
-    paddingBlock: 16,
-  },
-  reviewItem: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  reviewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  username: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.primaryDark,
-  },
-  date: {
-    fontSize: 12,
-    color: COLORS.grey,
-    marginTop: 2,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  comment: {
-    fontSize: 14,
-    color: COLORS.primaryDark,
-    lineHeight: 20,
+    paddingVertical: 16,
   },
   emptyContainer: {
     flex: 1,
@@ -192,4 +270,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TabReviews; 
+export default TabReviews;

@@ -1,4 +1,4 @@
-const BASE_URL = "https://7fd7-14-241-246-227.ngrok-free.app/";
+const BASE_URL = "https://582b-171-252-155-229.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
@@ -6,19 +6,24 @@ export const endpoints = {
     'category': '/category/',
     'review': (event_id) => `/event/${event_id}/reviews/`,
     'create-review': (event_id) => `/event/${event_id}/reviews/create/`,
+    'delete-review': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/delete_review/`,
+    'reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/response/`,
+    'delete-reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/delete_review/`,
+
     'stats_rating': (event_id) => `/event/${event_id}/reviews/stats/`,
     'eventDetail': (id) => `/event/${id}/`,
     'register': '/user/',
     'login': '/o/token/',
     'current-user': '/user/me/',
     'favoriteEvent': '/favorite/event/',
+    'delete-favor': (event_id) => `/favorite/event/${event_id}/`,
     'invoice': '/invoice/',
     'my-discount': '/discount/my_discount/',
     'my-ticket': '/ticket/my_ticket/',
     'my-event': '/event/my_event/',
     'dashboard': '/reports/organizer/dashboard/',
-    'delete-event' : (event_id) => `/event/${event_id}/delete_event/`,
-    'momo-payment' : (event_id) => `/invoice/${event_id}/momo-payment/`,
+    'delete-event': (event_id) => `/event/${event_id}/delete_event/`,
+    'momo-payment': (event_id) => `/invoice/${event_id}/momo-payment/`,
 }
 
 export const authApis = (token) => {

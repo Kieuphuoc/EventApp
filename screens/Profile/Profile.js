@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
 import { useNavigation } from "@react-navigation/native";
 import { MyDispatchContext, MyUserContext } from '../../configs/Context';
-import { Button } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const menuItems = [
   { icon: 'person', label: 'Edit Profile', screen: 'editProfile' },
@@ -31,7 +31,8 @@ const Profile = () => {
   const dispatch = useContext(MyDispatchContext);
   const navigation = useNavigation();
   console.info(user);
-  const logout = () => {
+
+  const logout = async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -43,21 +44,24 @@ const Profile = () => {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            navigation.navigate('index');
+          onPress: async () => {
+            try {
+              // Xóa token khỏi AsyncStorage
+              await AsyncStorage.removeItem('token');
+              // Dispatch action logout để đặt user thành null
+              dispatch({ type: 'logout' });
+              // Điều hướng về màn hình index
+              navigation.navigate('index');
+            } catch (error) {
+              console.error('Logout Error:', error);
+              Alert.alert('Error', 'Đã có lỗi xảy ra khi đăng xuất. Vui lòng thử lại.');
+            }
           },
         },
       ],
       { cancelable: true }
     );
-    dispatch({
-      'type': 'logout',
-      
-    });
-    navigation.navigate('index');
-  }
-  // console.log(user._j.role);
-
+  };
 
   return (
     <View style={styles.container}>
@@ -70,7 +74,6 @@ const Profile = () => {
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
-              {/* <Text style={styles.name}>Chào {fullName}</Text> */}
               <Text style={styles.email}>phuoc@example.com</Text>
             </View>
             <TouchableOpacity style={styles.editButton}>
@@ -79,16 +82,15 @@ const Profile = () => {
           </View>
         </View>
 
-
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Ionicons name="log-out" size={24} color="#FF3B30" />
           <Text style={styles.logoutText}>Log Out</Text>
-          
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
-}
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

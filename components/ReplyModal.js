@@ -10,15 +10,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
-const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, comment, setComment }) => {
+const ReplyModal = ({ event_id, review_id, visible, onClose, onSubmit }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(height));
+  const [reply, setReply] = useState('');
 
   useEffect(() => {
     if (visible) {
@@ -48,49 +50,17 @@ const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, 
           useNativeDriver: true,
         }),
       ]).start();
+      setReply(''); // Reset reply khi đóng modal
     }
   }, [visible]);
 
   const handleSubmit = () => {
-    if (rating === 0) {
-      Alert.alert('Error', 'Please select a rating');
+    if (reply.trim() === '') {
+      Alert.alert('Error', 'Please write a reply');
       return;
     }
-    if (comment.trim() === '') {
-      Alert.alert('Error', 'Please write a review');
-      return;
-    }
-    onSubmit();
-  };
-
-  const renderStars = () => {
-    return (
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => setRating(star)}
-            style={styles.starButton}
-          >
-            <Animated.View
-              style={{
-                transform: [
-                  {
-                    scale: rating === star ? new Animated.Value(1.2) : new Animated.Value(1),
-                  },
-                ],
-              }}
-            >
-              <Ionicons
-                name={star <= rating ? 'star' : 'star-outline'}
-                size={32}
-                color={star <= rating ? COLORS.secondary : COLORS.grey}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
+    onSubmit(reply);
+    setReply('');
   };
 
   return (
@@ -104,23 +74,15 @@ const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalContainer}
       >
-        <Animated.View
-          style={[styles.backdrop, { opacity: fadeAnim }]}
-        >
-          <TouchableOpacity
-            style={styles.backdropTouchable}
-            activeOpacity={1}
-            onPress={onClose}
-          />
+        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+          <TouchableOpacity style={styles.backdropTouchable} activeOpacity={1} onPress={onClose} />
         </Animated.View>
 
-        <Animated.View
-          style={[styles.modalContent, { transform: [{ translateY: slideAnim }] }]}
-        >
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.header}>
             <View style={styles.headerContent}>
-              <Text style={styles.title}>Write a Review</Text>
-              <Text style={styles.subtitle}>Share your experience</Text>
+              <Text style={styles.title}>Reply to Review</Text>
+              <Text style={styles.subtitle}>Share your response</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close-circle" size={28} color={COLORS.primary} />
@@ -128,34 +90,16 @@ const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, 
           </View>
 
           <View style={styles.content}>
-            <View style={styles.ratingSection}>
-              <Text style={styles.label}>How was your experience?</Text>
-              {renderStars()}
-              <Text style={styles.ratingText}>
-                {rating === 0
-                  ? 'Select a rating'
-                  : rating === 1
-                    ? 'Poor'
-                    : rating === 2
-                      ? 'Fair'
-                      : rating === 3
-                        ? 'Good'
-                        : rating === 4
-                          ? 'Very Good'
-                          : 'Excellent'}
-              </Text>
-            </View>
-
             <View style={styles.commentSection}>
-              <Text style={styles.label}>Your Review</Text>
+              <Text style={styles.label}>Your Reply</Text>
               <TextInput
                 style={styles.input}
                 multiline
                 numberOfLines={4}
-                placeholder="Tell us about your experience..."
+                placeholder="Write your reply here..."
                 placeholderTextColor={COLORS.grey}
-                value={comment}
-                onChangeText={setComment}
+                value={reply}
+                onChangeText={setReply}
                 textAlignVertical="top"
               />
             </View>
@@ -166,11 +110,11 @@ const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, 
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.submitButton, (!rating || !comment.trim()) && styles.submitButtonDisabled]}
+              style={[styles.submitButton, !reply.trim() && styles.submitButtonDisabled]}
               onPress={handleSubmit}
-              disabled={!rating || !comment.trim()}
+              disabled={!reply.trim()}
             >
-              <Text style={styles.submitButtonText}>Send Review</Text>
+              <Text style={styles.submitButtonText}>Send Reply</Text>
               <Ionicons name="send" size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -231,31 +175,14 @@ const styles = StyleSheet.create({
   content: {
     marginBottom: 20,
   },
-  ratingSection: {
-    alignItems: 'center',
-    marginBottom: 24,
+  commentSection: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.primaryDark,
     marginBottom: 12,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  starButton: {
-    padding: 8,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: COLORS.secondary,
-    fontWeight: '600',
-  },
-  commentSection: {
-    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
@@ -302,4 +229,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ReviewModal;
+export default ReplyModal;

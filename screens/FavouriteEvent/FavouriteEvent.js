@@ -26,7 +26,7 @@ const FavouriteEvent = ({ navigation }) => {
       let res = await authApis(token).get(endpoints['favoriteEvent']);
       if (res.data) {
         setFavoriteEvent(res.data);
-      }
+      } 
     } catch (ex) {
       console.error("Error loading events:", ex);
       console.log('Error details:', ex.response?.data);
@@ -96,12 +96,12 @@ const FavouriteEvent = ({ navigation }) => {
           <Text style={styles.headerSubtitle}>Your saved events</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.searchButton}>
-            <Ionicons name="search" size={24} color={COLORS.primary} />
+          <TouchableOpacity style={styles.searchButton} onPress={loadFavoriteEvent}>
+            <Ionicons name="reload" size={24} color={COLORS.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton}>
+          {/* <TouchableOpacity style={styles.filterButton}>
             <Ionicons name="options" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </Animated.View>
       <FlatList

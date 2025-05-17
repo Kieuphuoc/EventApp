@@ -41,7 +41,7 @@ const StackProfile = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="profile" component={Profile} />
       <Stack.Screen name="login" component={Login} />
-      <Stack.Screen name="register" component={Register} />      
+      <Stack.Screen name="register" component={Register} />
       <Stack.Screen name="catesSelection" component={CatesSelection} />
     </Stack.Navigator>
   )
@@ -70,6 +70,8 @@ const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
   const user = useContext(MyUserContext);
   // const dispatch = useContext(MyDispatchContext);
+  // console.log(user);
+  // console.log(user._j);
 
 
   return (
@@ -123,16 +125,29 @@ const TabNavigator = () => {
         <>
           {/* Organizer only */}
           {user?._j?.role === 'organizer' && (
-            <Tab.Screen
-              name="stackMyEvent"
-              options={{
-                title: 'My Events',
-                tabBarIcon: ({ color, focused }) => (
-                  <Ionicons name={focused ? 'calendar' : 'calendar-outline'} color={COLORS.primary} size={24} />
-                ),
-              }}
-              component={StackMyEvent}
-            />
+            <>
+              <Tab.Screen
+                name="stackMyEvent"
+                options={{
+                  title: 'My Events',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'calendar' : 'calendar-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={StackMyEvent}
+              />
+              <Tab.Screen
+                name="profile"
+                options={{
+                  title: 'Profile',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={MyTicket}
+              />
+            </>
+
           )}
 
           {/* Participant only */}
@@ -168,10 +183,13 @@ const TabNavigator = () => {
                 }}
                 component={StackProfile}
               />
+
             </>
 
           )}
+
         </>
+
       )}
     </Tab.Navigator>
   );
