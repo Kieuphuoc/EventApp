@@ -137,6 +137,16 @@ const TabNavigator = () => {
                 component={StackMyEvent}
               />
               <Tab.Screen
+                name="statistics"
+                options={{
+                  title: 'Statistics',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={Statistics}
+              />
+              <Tab.Screen
                 name="profile"
                 options={{
                   title: 'Profile',

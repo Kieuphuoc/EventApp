@@ -11,9 +11,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
-import { PieChart, BarChart } from 'react-native-chart-kit';
+import { BarChart, PieChart } from 'react-native-chart-kit';
 import { authApis, endpoints } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
+
+// Log để kiểm tra import
+console.log('BarChart:', typeof BarChart);
+console.log('PieChart:', typeof PieChart);
 
 const { width } = Dimensions.get('window');
 
@@ -25,74 +30,18 @@ const CHART_COLORS = [
 const Statistics = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalEvents: 0,
-    totalTickets: 0,
-    totalRevenue: '0',
-    totalViews: 0,
-    categoryDistribution: [],
-    monthlyRevenue: [],
+    total_tickets: 0,
+    total_revenue: '0',
+    total_views: 0,
+    events: [],
   });
-
-  // const loadStatistics = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const token = await AsyncStorage.getItem('token');
-  //     if (!token) {
-  //       console.warn('No token found, using mock data.');
-  //       throw new Error('No token found');
-  //     }
-
-  //     const response = await authApis(token).get(endpoints['dashboard']);
-  //     if (response.data && typeof response.data === 'object') {
-  //       setStats({
-  //         totalEvents: response.data.events || 0,
-  //         totalTickets: response.data.total_tickets || 0,
-  //         totalRevenue: response.data.total_revenue || '0',
-  //         totalViews: response.data.total_views || 0,
-  //         categoryDistribution: Array.isArray(response.data.categoryDistribution) && response.data.categoryDistribution.length > 0
-  //           ? response.data.categoryDistribution
-  //           : [
-  //               { category: 'Music', count: 5 },
-  //               { category: 'Sports', count: 3 },
-  //             ],
-  //         monthlyRevenue: Array.isArray(response.data.monthlyRevenue) && response.data.monthlyRevenue.length > 0
-  //           ? response.data.monthlyRevenue
-  //           : [
-  //               { month: 'Jan', revenue: 1000 },
-  //               { month: 'Feb', revenue: 2000 },
-  //             ],
-  //       });
-  //     } else {
-  //       console.warn('API response data is not in expected format, using mock data.');
-  //       throw new Error('Invalid API response format');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error loading statistics:', error);
-  //     setStats({
-  //       totalEvents: 25,
-  //       totalTickets: 250,
-  //       totalRevenue: '$37,500.00',
-  //       totalViews: 1500,
-  //       categoryDistribution: [
-  //         { category: 'Concerts', count: 8 },
-  //         { category: 'Workshops', count: 5 },
-  //         { category: 'Festivals', count: 6 },
-  //         { category: 'Sports', count: 4 },
-  //         { category: 'Tech', count: 2 },
-  //       ],
-  //       monthlyRevenue: [
-  //         { month: 'Jan', revenue: 2500 },
-  //         { month: 'Feb', revenue: 4000 },
-  //         { month: 'Mar', revenue: 3200 },
-  //         { month: 'Apr', revenue: 5500 },
-  //         { month: 'May', revenue: 4800 },
-  //         { month: 'Jun', revenue: 6200 },
-  //       ],
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const [monthlyStats, setMonthlyStats] = useState({
+    ticket_pie_chart: [],
+    revenue_pie_chart: [],
+  });
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [monthlyLoading, setMonthlyLoading] = useState(false);
 
   const loadStats = async () => {
     try {
@@ -101,59 +50,93 @@ const Statistics = () => {
       if (!token) {
         throw new Error('No token found');
       }
-
-      let res = await authApis(token).get(endpoints['dashboard']);
-      if (res.data) {
-        setStats(res.data);
+      const response = await authApis(token).get(endpoints['dashboard']);
+      console.log('Dashboard API response:', response.data);
+      if (response.data) {
+        setStats(response.data);
       }
     } catch (ex) {
-      console.error("Error loading events:", ex);
-      setStats([]); // Set empty array on error
+      console.error('Error loading statistics:', ex);
+      setStats({
+        total_tickets: 0,
+        total_revenue: '0',
+        total_views: 0,
+        events: [],
+      });
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  const loadMonthlyStats = async () => {
+    try {
+      setMonthlyLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await authApis(token).get(endpoints['monthly'], {
+        params: { month: selectedMonth, year: selectedYear },
+      });
+      console.log('Monthly API response:', response.data);
+      if (response.data) {
+        setMonthlyStats(response.data);
+      }
+    } catch (ex) {
+      console.error('Error loading monthly statistics:', ex);
+      setMonthlyStats({
+        ticket_pie_chart: [],
+        revenue_pie_chart: [],
+      });
+    } finally {
+      setMonthlyLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadStats();
+    loadMonthlyStats();
   }, []);
 
-  // const pieChartData = stats.categoryDistribution.map((item, index) => ({
-  //   name: item.category,
-  //   population: item.count,
-  //   color: CHART_COLORS[index % CHART_COLORS.length],
-  //   legendFontColor: COLORS.darkGrey || '#555',
-  //   legendFontSize: 13,
-  // }));
+  useEffect(() => {
+    loadMonthlyStats();
+  }, [selectedMonth, selectedYear]);
 
-  // const barChartData = {
-  //   labels: stats.monthlyRevenue.map((item) => item.month),
-  //   datasets: [
-  //     {
-  //       data: stats.monthlyRevenue.map((item) => item.revenue),
-  //       color: (opacity = 1) => COLORS.secondary,
-  //     },
-  //   ],
-  // };
+  // Dữ liệu cho BarChart
+  const viewsChartData = {
+    labels: Array.isArray(stats.events) ? stats.events.map(event => event.event_title?.length > 10 ? event.event_title.substring(0, 10) + '...' : event.event_title || 'Unknown') : [],
+    datasets: [
+      {
+        data: Array.isArray(stats.events) ? stats.events.map(event => event.views || 0) : [],
+      },
+    ],
+  };
 
-const eventTitles = Array.isArray(stats.event_title)
-  ? stats.event_title.map((item) => item.event_title)
-  : [];
+  const ratingChartData = {
+    labels: Array.isArray(stats.events) ? stats.events.map(event => event.event_title?.length > 10 ? event.event_title.substring(0, 10) + '...' : event.event_title || 'Unknown') : [],
+    datasets: [
+      {
+        data: Array.isArray(stats.events) ? stats.events.map(event => event.average_rating || 0) : [],
+      },
+    ],
+  };
 
-const viewData = Array.isArray(stats.views)
-  ? stats.views.map((item) => item.views)
-  : [];
+  // Dữ liệu cho PieChart
+  const ticketPieData = Array.isArray(monthlyStats.ticket_pie_chart) ? monthlyStats.ticket_pie_chart.map((item, index) => ({
+    name: item.event_title?.length > 15 ? item.event_title.substring(0, 15) + '...' : item.event_title || 'Unknown',
+    value: item.value || 0,
+    color: CHART_COLORS[index % CHART_COLORS.length],
+    legendFontColor: COLORS.darkGrey || '#555',
+    legendFontSize: 12,
+  })) : [];
 
-  // console.log(stats.events.event_title))
-const data = {
-  labels: stats.events.event_title,
-  datasets: [
-    {
-      data: viewData
-    }
-  ]
-};
-
+  const revenuePieData = Array.isArray(monthlyStats.revenue_pie_chart) ? monthlyStats.revenue_pie_chart.map((item, index) => ({
+    name: item.event_title?.length > 15 ? item.event_title.substring(0, 15) + '...' : item.event_title || 'Unknown',
+    value: item.value || 0,
+    color: CHART_COLORS[index % CHART_COLORS.length],
+    legendFontColor: COLORS.darkGrey || '#555',
+    legendFontSize: 12,
+  })) : [];
 
   const renderStatCard = (title, value, icon, color) => (
     <View style={styles.statCard}>
@@ -187,8 +170,11 @@ const data = {
         </View>
         <TouchableOpacity
           style={styles.refreshButton}
-          onPress={loadStats}
-          disabled={loading}
+          onPress={() => {
+            loadStats();
+            loadMonthlyStats();
+          }}
+          disabled={loading || monthlyLoading}
         >
           <Ionicons name="refresh-circle-outline" size={28} color={COLORS.white} />
         </TouchableOpacity>
@@ -197,107 +183,90 @@ const data = {
       <View style={styles.statsGrid}>
         {renderStatCard(
           'Total Tickets',
-          // stats.totalTickets.toLocaleString(),
-          stats.total_tickets,
+          stats.total_tickets.toLocaleString(),
           'ticket-outline',
           COLORS.primary
         )}
         {renderStatCard(
           'Total Revenue',
-          stats.total_revenue,
+          `$${parseFloat(stats.total_revenue).toLocaleString()}`,
           'wallet-outline',
           COLORS.secondary
         )}
         {renderStatCard(
           'Total Views',
-          stats.total_views,
+          stats.total_views.toLocaleString(),
           'eye-outline',
           COLORS.success || '#2ECC71'
         )}
       </View>
 
-      <View style={styles.chartSection}>
-        <Text style={styles.sectionTitle}>Event Categories</Text>
-        <View style={styles.chartView}>
-          {/* <PieChart
-              data={pieChartData}
-              width={width - 40}
-              height={230}
-              chartConfig={{
-                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              }}
-              
-            /> */}
-          {/* <BarChart
-            // style={graphStyle}
-            data={data}
-            width={width - 40}
-            height={230}
-            chartConfig={{
-             color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`, // Màu xanh lá
-            }}
-            verticalLabelRotation={30}accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="20"
-              absolute
-          /> */}
-        </View>
-      </View>
-
-      {/* {stats.categoryDistribution.length > 0 && (
-        <View style={styles.chartSection}>
-          <Text style={styles.sectionTitle}>Event Categories</Text>
-          <View style={styles.chartView}>
-            <PieChart
-              data={pieChartData}
-              width={width - 40}
-              height={230}
-              chartConfig={{
-                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              }}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="20"
-              absolute
-            />
+      {Array.isArray(stats.events) && stats.events.length > 0 ? (
+        <>
+          <View style={styles.chartSection}>
+            <Text style={styles.sectionTitle}>Event Views</Text>
+            <View style={styles.chartView}>
+              <BarChart
+                data={viewsChartData}
+                width={width - 40}
+                height={220}
+                yAxisLabel=""
+                chartConfig={{
+                  backgroundColor: COLORS.white,
+                  backgroundGradientFrom: COLORS.white,
+                  backgroundGradientTo: COLORS.white,
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => COLORS.primary,
+                  labelColor: (opacity = 1) => COLORS.darkGrey || '#555',
+                  propsForBackgroundLines: {
+                    strokeDasharray: '',
+                    stroke: COLORS.lightGrey || '#eef',
+                  },
+                  barPercentage: 0.4,
+                  style: {
+                    borderRadius: 16,
+                  },
+                }}
+                style={styles.barChartStyle}
+                verticalLabelRotation={stats.events.length > 3 ? 45 : 0}
+                showValuesOnTopOfBars
+              />
+            </View>
           </View>
-        </View>
-      )}
 
-      {stats.monthlyRevenue.length > 0 && (
-        <View style={styles.chartSection}>
-          <Text style={styles.sectionTitle}>Monthly Revenue Stream</Text>
-          <View style={styles.chartView}>
-            <BarChart
-              data={barChartData}
-              width={width - 50}
-              height={230}
-              yAxisLabel="$"
-              chartConfig={{
-                backgroundColor: COLORS.white,
-                backgroundGradientFrom: COLORS.white,
-                backgroundGradientTo: COLORS.white,
-                decimalPlaces: 0,
-                color: (opacity = 1) => COLORS.primary,
-                labelColor: (opacity = 1) => COLORS.darkGrey || '#555',
-                propsForBackgroundLines: {
-                  strokeDasharray: '',
-                  stroke: COLORS.lightGrey || '#eef',
-                },
-                barPercentage: 0.7,
-                style: {
-                  borderRadius: 16,
-                },
-              }}
-              style={styles.barChartStyle}
-              showValuesOnTopOfBars
-              verticalLabelRotation={stats.monthlyRevenue.length > 5 ? 25 : 0}
-            />
+          <View style={styles.chartSection}>
+            <Text style={styles.sectionTitle}>Event Ratings</Text>
+            <View style={styles.chartView}>
+              <BarChart
+                data={ratingChartData}
+                width={width - 40}
+                height={220}
+                yAxisLabel=""
+                yAxisSuffix=""
+                chartConfig={{
+                  backgroundColor: COLORS.white,
+                  backgroundGradientFrom: COLORS.white,
+                  backgroundGradientTo: COLORS.white,
+                  decimalPlaces: 1,
+                  color: (opacity = 1) => COLORS.secondary,
+                  labelColor: (opacity = 1) => COLORS.darkGrey || '#555',
+                  propsForBackgroundLines: {
+                    strokeDasharray: '',
+                    stroke: COLORS.lightGrey || '#eef',
+                  },
+                  barPercentage: 0.4,
+                  style: {
+                    borderRadius: 16,
+                  },
+                }}
+                style={styles.barChartStyle}
+                verticalLabelRotation={stats.events.length > 3 ? 45 : 0}
+                showValuesOnTopOfBars
+              />
+            </View>
           </View>
-        </View>
-      )} */}
-
-      {/* {!stats.categoryDistribution.length && !stats.monthlyRevenue.length && !loading && (
+        </>
+      ) : (
         <View style={styles.noDataContainer}>
           <Ionicons name="sad-outline" size={60} color={COLORS.grey} />
           <Text style={styles.noDataText}>No statistics to display yet.</Text>
@@ -305,7 +274,112 @@ const data = {
             Start creating events to see your dashboard come alive!
           </Text>
         </View>
-      )} */}
+      )}
+
+      <View style={styles.chartSection}>
+        <Text style={styles.sectionTitle}>Monthly Statistics</Text>
+        <View style={styles.pickerContainer}>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={selectedMonth}
+              style={styles.picker}
+              onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                <Picker.Item key={month} label={`Month ${month}`} value={month} />
+              ))}
+            </Picker>
+          </View>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={selectedYear}
+              style={styles.picker}
+              onValueChange={(itemValue) => setSelectedYear(itemValue)}
+            >
+              {Array.from({ length: 6 }, (_, i) => 2020 + i).map(year => (
+                <Picker.Item key={year} label={`${year}`} value={year} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        {monthlyLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Loading Monthly Stats...</Text>
+          </View>
+        ) : ticketPieData.length > 0 ? (
+          <>
+            <View style={styles.chartView}>
+              <Text style={styles.subSectionTitle}>Ticket Distribution</Text>
+              <PieChart
+                data={ticketPieData}
+                width={width - 40}
+                height={200}
+                chartConfig={{
+                  backgroundColor: COLORS.white,
+                  backgroundGradientFrom: COLORS.white,
+                  backgroundGradientTo: COLORS.white,
+                  color: (opacity = 1) => COLORS.primary,
+                  labelColor: (opacity = 1) => COLORS.darkGrey || '#555',
+                }}
+                accessor="value"
+                backgroundColor="transparent"
+                paddingLeft="15"
+                hasLegend={false}
+                // absolute
+              />
+              <View style={styles.legendContainer}>
+                {ticketPieData.map((item, index) => (
+                  <View key={index} style={styles.legendItem}>
+                    <View
+                      style={[styles.legendColor, { backgroundColor: item.color }]}
+                    />
+                    <Text style={styles.legendText}>{`${item.name}: ${item.value}`}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            <View style={styles.chartView}>
+              <Text style={styles.subSectionTitle}>Revenue Distribution</Text>
+              <PieChart
+                data={revenuePieData}
+                width={width - 40}
+                height={200}
+                chartConfig={{
+                  backgroundColor: COLORS.white,
+                  backgroundGradientFrom: COLORS.white,
+                  backgroundGradientTo: COLORS.white,
+                  color: (opacity = 1) => COLORS.primary,
+                  labelColor: (opacity = 1) => COLORS.darkGrey || '#555',
+                }}
+                accessor="value"
+                backgroundColor="transparent"
+                paddingLeft="15"
+                hasLegend={false}
+              />
+              <View style={styles.legendContainer}>
+                {revenuePieData.map((item, index) => (
+                  <View key={index} style={styles.legendItem}>
+                    <View
+                      style={[styles.legendColor, { backgroundColor: item.color }]}
+                    />
+                    <Text style={styles.legendText}>{`${item.name}: $${item.value.toLocaleString()}`}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Ionicons name="sad-outline" size={60} color={COLORS.grey} />
+            <Text style={styles.noDataText}>No monthly statistics available.</Text>
+            <Text style={styles.noDataSubText}>
+              Select a different month or year to view stats.
+            </Text>
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 };
@@ -320,6 +394,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.backgroundLight || '#F4F6F8',
+    padding: 20,
   },
   loadingText: {
     marginTop: 10,
@@ -422,8 +497,16 @@ const styles = StyleSheet.create({
     color: COLORS.primaryDark,
     marginBottom: 16,
   },
+  subSectionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.primaryDark,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   chartView: {
     alignItems: 'center',
+    marginBottom: 20,
   },
   barChartStyle: {
     marginVertical: 8,
@@ -434,7 +517,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 30,
-    marginTop: 50,
   },
   noDataText: {
     fontSize: 18,
@@ -448,6 +530,44 @@ const styles = StyleSheet.create({
     color: COLORS.mediumGrey || '#888',
     textAlign: 'center',
     marginTop: 8,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  pickerWrapper: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    marginHorizontal: 5,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15,
+    marginBottom: 5,
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 3,
+    marginRight: 5,
+  },
+  legendText: {
+    fontSize: 12,
+    color: COLORS.darkGrey || '#555',
   },
 });
 

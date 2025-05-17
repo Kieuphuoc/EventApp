@@ -9,7 +9,6 @@ export const endpoints = {
     'delete-review': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/delete_review/`,
     'reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/response/`,
     'delete-reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/delete_review/`,
-
     'stats_rating': (event_id) => `/event/${event_id}/reviews/stats/`,
     'eventDetail': (id) => `/event/${id}/`,
     'register': '/user/',
@@ -24,6 +23,8 @@ export const endpoints = {
     'dashboard': '/reports/organizer/dashboard/',
     'delete-event': (event_id) => `/event/${event_id}/delete_event/`,
     'momo-payment': (invoice_id) => `/invoice/${invoice_id}/momo-payment/`,
+    'monthly': '/reports/organizer/monthly/',
+
 }
 
 export const authApis = (token) => {
