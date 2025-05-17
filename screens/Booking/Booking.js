@@ -11,6 +11,8 @@ import {
   Modal,
   FlatList,
   Alert,
+  Linking,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../../constants/colors';
@@ -19,12 +21,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import globalStyles from '../../constants/globalStyles';
 import { MyDispatchContext, MyUserContext } from '../../configs/Context';
 import { ActivityIndicator } from 'react-native-paper';
-
-const PROMO_CODES = [
-  { code: 'SUMMER10', discount: 10, description: 'Giảm 10% cho mùa hè' },
-  { code: 'WELCOME20', discount: 20, description: 'Giảm 20% cho khách hàng mới' },
-  { code: 'SPECIAL15', discount: 15, description: 'Giảm 15% cho sự kiện đặc biệt' },
-];
 
 const PAYMENT_METHODS = [
   { id: 'cash', name: 'Cash', icon: 'cash-outline' },
@@ -42,15 +38,13 @@ const Booking = ({ route, navigation }) => {
   const [showVoucher, setShowVoucher] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [discount_id, setDiscount_id] = useState();
-
   const [percentDiscount, setPercentDiscount] = useState('');
-
+  const [momoUrl, setMomoUrl] = useState(null);
+  const [invoice_id, setInvoice_id] = useState(null);
 
   const basePrice = event.ticket_price || 0;
   const totalPrice = basePrice * quantity;
   const finalPrice = totalPrice - (appliedVoucher ? totalPrice * (percentDiscount / 100) : 0);
-
-  // console.log(event.);
 
   const date = new Date(event.start_time);
   const day = new Intl.DateTimeFormat('en-GB', {
@@ -63,16 +57,12 @@ const Booking = ({ route, navigation }) => {
   const loadDiscount = async () => {
     try {
       setLoading(true);
-
-      // Lấy token từ AsyncStorage
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
 
-      // Gọi API lấy danh sách giảm giá
       const res = await authApis(token).get(endpoints['my-discount']);
-
       if (res.data) {
         setDiscount(res.data);
       } else {
@@ -85,7 +75,7 @@ const Booking = ({ route, navigation }) => {
         status: error.response?.status,
         data: error.response?.data,
       });
-      setDiscount([]); // Set mảng rỗng khi lỗi
+      setDiscount([]);
     } finally {
       setLoading(false);
     }
@@ -94,32 +84,29 @@ const Booking = ({ route, navigation }) => {
   const user = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
 
-
   const booking = async () => {
     try {
-      setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      console.log('Token:', token);
       if (!token) {
         throw new Error('No token found');
       }
 
       let form = new FormData();
       form.append('event_id', event.id);
-      form.append('discount_id', discount_id ?? "");
+      form.append('discount_id', discount_id ?? '');
       form.append('ticket_count', quantity);
 
-      let res = await authApis(token).post(endpoints['invoice'], form, {
+      const res = await authApis(token).post(endpoints['invoice'], form, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      console.log('Invoice Response:', res.data);
-
-        if (res.status === 201) {
-          navigation.navigate('paymentSuccess');
-        }
+      if (res.status === 201) {
+        setInvoice_id(res.data.id);
+        return res.data.id; // Return invoice_id for MoMo payment
+      }
+      throw new Error('Failed to create invoice');
     } catch (error) {
       console.error('Booking Error:', {
         message: error.message,
@@ -127,9 +114,69 @@ const Booking = ({ route, navigation }) => {
         status: error.response?.status,
         data: error.response?.data,
       });
+      throw error; // Re-throw error to be handled by the caller
+    }
+  };
+
+  const momoPayment = async (invoiceId) => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+    if (!invoiceId) {
+      throw new Error('Invoice ID is missing');
+    }
+
+    const res = await authApis(token).post(
+      endpoints['momo-payment'](invoiceId),
+      null, // No FormData needed, invoice already created
+      {
+        headers: {
+          'Content-Type': 'application/json', // Adjusted for POST with no body
+        },
+      }
+    );
+
+    console.log('Momo Payment Response:', res.data);
+    console.log('URL MOMO:', res.data.pay_url);
+
+    if (res.status === 200 && res.data) {
+      const payUrl = res.data.pay_url; // Directly use pay_url
+      setMomoUrl(payUrl);
+      if (payUrl) {
+        const supported = await Linking.canOpenURL(payUrl);
+        if (supported) {
+          await Linking.openURL(payUrl); // Navigate to the MoMo pay_url
+        } else {
+          Alert.alert('Error', 'Cannot open MoMo payment URL. Please ensure the MoMo app is installed.');
+        }
+      } else {
+        Alert.alert('Error', 'No payment URL found in response.');
+      }
+    } else {
+      throw new Error('Failed to initiate MoMo payment');
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      setLoading(true);
+
+      // Step 1: Create invoice
+      const newInvoiceId = await booking();
+
+      // Step 2: Handle payment based on method
+      if (selectedPayment.id === 'momo') {
+        await momoPayment(newInvoiceId);
+      } else {
+        // For Cash, navigate directly to payment success
+        navigation.navigate('paymentSuccess');
+      }
+    } catch (error) {
+      console.error('Payment Error:', error);
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Booking failed. Please try again.'
+        error.message || 'Payment failed. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -140,8 +187,32 @@ const Booking = ({ route, navigation }) => {
     loadDiscount();
   }, []);
 
+  // Log momoUrl when it changes
+  useEffect(() => {
+    if (momoUrl) {
+      console.log('Updated momoUrl:', momoUrl);
+    }
+  }, [momoUrl]);
 
+  // Handle deep link callback from MoMo
+  useEffect(() => {
+    const handleDeepLink = ({ url }) => {
+      console.log('Deep Link URL:', url);
+      if (url.includes('success')) {
+        navigation.navigate('paymentSuccess');
+      } else if (url.includes('fail') || url.includes('cancel')) {
+        Alert.alert('Payment Failed', 'MoMo payment was not successful. Please try again.');
+      }
+    };
 
+    // Linking.addEventListener('url', handleDeepLink);
+    // // Initial check for any pending deep link
+    // Linking.getInitialURL().then((url) => {
+    //   if (url) handleDeepLink({ url });
+    // });
+
+    return () => Linking.removeEventListener('url', handleDeepLink);
+  }, [navigation]);
 
   const handlePromoApply = (code) => {
     setPromoCode(code);
@@ -167,8 +238,6 @@ const Booking = ({ route, navigation }) => {
         <Text style={styles.headerTitle}>Bill of Payment</Text>
       </View>
       <ScrollView style={styles.scrollView}>
-
-
         <View style={styles.content}>
           <View style={styles.eventInfo}>
             <Text style={styles.eventTitle}>{event.title}</Text>
@@ -210,7 +279,7 @@ const Booking = ({ route, navigation }) => {
               onPress={() => setShowVoucher(true)}
             >
               <View style={styles.promoInput}>
-                <Text style={promoCode ? styles.promoCode : styles.paymentPlaceholder} >
+                <Text style={promoCode ? styles.promoCode : styles.paymentPlaceholder}>
                   {promoCode || 'Select voucher'}
                 </Text>
               </View>
@@ -255,7 +324,7 @@ const Booking = ({ route, navigation }) => {
             {appliedVoucher && (
               <View style={styles.priceRow}>
                 <Text style={styles.priceLabel}>Discount</Text>
-                <Text style={[styles.priceValue, styles.discountText]}>- {Number(percentDiscount)}</Text>
+                <Text style={[styles.priceValue, styles.discountText]}>- {Number(percentDiscount)}%</Text>
               </View>
             )}
             <View style={[styles.priceRow, styles.totalRow]}>
@@ -273,24 +342,11 @@ const Booking = ({ route, navigation }) => {
         </View>
         <TouchableOpacity
           style={[styles.payButton, !selectedPayment && styles.payButtonDisabled]}
-          onPress={() => {
-            if (selectedPayment) {
-              // navigation.navigate('paymentSuccess');
-              setLoading(true);  // <- Đặt loading ngay lập tức
-              booking();
-            }
-          }}
-          disabled={!selectedPayment}
-
-
+          onPress={handlePayment}
+          disabled={!selectedPayment || loading}
         >
-
           <Text style={[styles.payButtonText, loading && { opacity: 0.6 }]}>
-            {selectedPayment
-              ? loading
-                ? "Paying..."
-                : "Pay"
-              : 'Please select payment method'}
+            {selectedPayment ? (loading ? 'Paying...' : 'Pay') : 'Please select payment method'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -300,7 +356,7 @@ const Booking = ({ route, navigation }) => {
         visible={showVoucher}
         transparent
         animationType="slide"
-        onRequestClose={() => setVoucher(false)}
+        onRequestClose={() => setShowVoucher(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -316,11 +372,15 @@ const Booking = ({ route, navigation }) => {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.promoItem}
-                  onPress={() => { handlePromoApply(item.discount_code); setPercentDiscount(item.discount_percent); setDiscount_id(item.id); }}
+                  onPress={() => {
+                    handlePromoApply(item.discount_code);
+                    setPercentDiscount(item.discount_percent);
+                    setDiscount_id(item.id);
+                  }}
                 >
                   <View>
                     <Text style={styles.promoCode}>{item.discount_code}</Text>
-                    <Text style={styles.promoDescription}>{ }description</Text>
+                    <Text style={styles.promoDescription}>{item.description || 'No description'}</Text>
                   </View>
                   <Text style={styles.promoDiscount}>-{item.discount_percent}%</Text>
                 </TouchableOpacity>
@@ -368,6 +428,7 @@ const Booking = ({ route, navigation }) => {
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -469,12 +530,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 20,
   },
-  quantitySelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-  },
   quantityButton: {
     width: 45,
     height: 45,
@@ -524,7 +579,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.accentLight,
   },
-
   applyButton: {
     backgroundColor: COLORS.secondary,
     paddingHorizontal: 25,

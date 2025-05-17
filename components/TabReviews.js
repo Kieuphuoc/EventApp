@@ -113,6 +113,37 @@ const TabReviews = ({ event_id }) => {
     []
   );
 
+  const delete_reply = useCallback(
+    async (reviewId) => {
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
+        }
+
+        const response = await authApis(token).delete(endpoints['delete-reply'](event_id, reviewId));
+
+        if (response.status === 200 || response.status === 204) {
+          console.log('Delete review successfully!');
+          loadReviews();
+          Alert.alert('Success', 'Review deleted successfully.');
+        }
+      } catch (error) {
+        console.error('Delete Review Error:', {
+          message: error.message,
+          response: error.response,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+        Alert.alert('Error', error.response?.data?.message || 'Failed to delete review.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [event_id]
+  );
+
   const delete_review = useCallback(
     async (reviewId) => {
       try {

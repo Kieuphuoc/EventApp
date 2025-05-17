@@ -23,7 +23,7 @@ export const endpoints = {
     'my-event': '/event/my_event/',
     'dashboard': '/reports/organizer/dashboard/',
     'delete-event': (event_id) => `/event/${event_id}/delete_event/`,
-    'momo-payment': (event_id) => `/invoice/${event_id}/momo-payment/`,
+    'momo-payment': (invoice_id) => `/invoice/${invoice_id}/momo-payment/`,
 }
 
 export const authApis = (token) => {
