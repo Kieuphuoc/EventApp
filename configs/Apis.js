@@ -1,4 +1,4 @@
-const BASE_URL = "https://582b-171-252-155-229.ngrok-free.app/";
+const BASE_URL = "https://363b-14-169-26-201.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
@@ -24,7 +24,8 @@ export const endpoints = {
     'delete-event': (event_id) => `/event/${event_id}/delete_event/`,
     'momo-payment': (invoice_id) => `/invoice/${invoice_id}/momo-payment/`,
     'monthly': '/reports/organizer/monthly/',
-
+    'check_in': '/ticket/check_in/',
+    'user_preference': '/user/preference/'
 }
 
 export const authApis = (token) => {
