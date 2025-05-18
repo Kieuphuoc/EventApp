@@ -1,4 +1,4 @@
-const BASE_URL = "https://363b-14-169-26-201.ngrok-free.app/";
+const BASE_URL = "https://15d9-14-169-26-201.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
@@ -25,7 +25,9 @@ export const endpoints = {
     'momo-payment': (invoice_id) => `/invoice/${invoice_id}/momo-payment/`,
     'monthly': '/reports/organizer/monthly/',
     'check_in': '/ticket/check_in/',
-    'user_preference': '/user/preference/'
+    'user_preference': '/user/preference/',
+    'trend': '/event/trend/',
+    'recommend': '/event/recommended/',
 }
 
 export const authApis = (token) => {

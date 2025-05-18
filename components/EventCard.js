@@ -316,12 +316,7 @@ const EventCard = ({ item, onPress, cardWidth }) => {
             >
               <Ionicons name="bookmark-outline" size={18} color={COLORS.primary} />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.shareButton]}
-              onPress={() => { }}
-            >
-              <Ionicons name="share-social-outline" size={18} color={COLORS.primary} />
-            </TouchableOpacity>
+          
             <TouchableOpacity
               style={styles.joinButton}
               onPress={onPress}
@@ -349,6 +344,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4, // Độ lan tỏa của bóng
     // Thêm elevation cho Android
     elevation: 3,
+  
   },
   imageContainer: {
     position: 'relative',

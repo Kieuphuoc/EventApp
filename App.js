@@ -17,11 +17,13 @@ import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
+
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
 import EditEvent from "./screens/CreateEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
 import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
+import UpcommingEvent from "./screens/UpcomingEvent";
 
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +32,7 @@ const StackNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
+            <Stack.Screen name="upcomingEvent" component={UpcommingEvent} />
       <Stack.Screen name="booking" component={Booking} />
       {/* <Stack.Screen name="paymentConfirmation" component={PaymentConfirmation} /> */}
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
