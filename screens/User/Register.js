@@ -61,6 +61,7 @@ const info = [
 
 const Register = () => {
   const navigation = useNavigation();
+  const userContext = useContext(MyUserContext);
   const dispatch = useContext(MyDispatchContext);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState({});
@@ -169,53 +170,61 @@ const Register = () => {
       });
 
       if (res.status === 201) {
-        // Alert.alert('Success', 'Registration successful! Please login.', [
-        //   {
-        //     text: 'OK',
-        //     onPress: () => navigation.navigate('login'),
-        //   },
-        // ]);
-
-        const formData = new FormData();
-        formData.append('username', user.username);
-        formData.append('password', user.password);
-        formData.append('grant_type', 'password');
-        formData.append('client_id', '9J87vnUboufZI6oWdhNtd0pLSq7OhEEvketSdt9D');
-        formData.append('client_secret', '9GPR7JTMlk43rXNAp5tbaSawqsEuT6rFEUaO4VAA0JJr3Qc5fSn6WLiZkwAxrmmvjJnIi3H3f4JkumSvjRDS0cyxcFyYJ0Ij5cbfxuDL7M81f8guKv1kWJkhLI7DQ26j');
-
-        let res = await Apis.post(endpoints['login'], formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        await AsyncStorage.setItem('token', res.data.access_token);
-        let u = await authApis(res.data.access_token).get(endpoints['current-user']);
-        console.info(u.data);
-        dispatch({
-          type: 'login',
-          payload: u.data,
-        });
-        if (role === 'participant') {
-          navigation.navigate('catesSelection');
-        }
-        else
-          navigation.navigate('index')
-      }
-    } catch (error) {
-      console.error(error);
-      // Nếu server trả về lỗi rõ ràng
-      if (error.response?.data?.username?.length > 0) {
-        showError(error.response.data.username[0]); // ví dụ: "A user with that username already exists."
-      } else if (error.response?.data?.message) {
-        showError(error.response.data.message);
-      } else {
-        showError('Registration failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+              const formData = new FormData();
+              formData.append('username', user.username);
+              formData.append('password', user.password);
+              formData.append('grant_type', 'password');
+              formData.append('client_id', '9J87vnUboufZI6oWdhNtd0pLSq7OhEEvketSdt9D');
+              formData.append('client_secret', '9GPR7JTMlk43rXNAp5tbaSawqsEuT6rFEUaO4VAA0JJr3Qc5fSn6WLiZkwAxrmmvjJnIi3H3f4JkumSvjRDS0cyxcFyYJ0Ij5cbfxuDL7M81f8guKv1kWJkhLI7DQ26j');
+      
+              let loginRes = await Apis.post(endpoints['login'], formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+      
+              // Store token
+              const token = loginRes.data.access_token;
+              await AsyncStorage.setItem('token', token);
+         
+              // Fetch user data
+              let userData = await authApis(token).get(endpoints['current-user']);
+              dispatch({
+                type: 'login',
+                payload: userData.data,
+              });
+      
+              setTimeout(() => {
+                console.log('User context after dispatch:', userContext);
+                console.log('Navigation status:', navigation.getState().routes);
+      
+                // Route base on role
+                if (role === 'participant') {
+                  console.log('Navigate to catesSelection...');
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'profile', params: { screen: 'catesSelection' } }],
+                  });
+                } else {
+                  console.log('Navigate to index...');
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'index' }],
+                  });
+                }
+              }, 100); 
+            }
+          } catch (error) {
+            console.error('Registration Error:', error);
+            let errorMessage = 'Registration failed. Please try again.';
+            if (error.response?.data?.message) {
+              errorMessage = error.response.data.message;
+            }
+            Alert.alert('Error', errorMessage);
+          } finally {
+            setLoading(false);
+          }
+        };
 
   return (
     <SafeAreaView style={userStyles.container}>

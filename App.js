@@ -17,11 +17,12 @@ import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
-import CheckIn from "./screens/CheckIn/CheckIn";
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
 import EditEvent from "./screens/CreateEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
+import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
+
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
@@ -39,7 +40,7 @@ const StackNavigator = () => {
 const StackProfile = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="profile" component={Profile} />
+      <Stack.Screen name="userProfile" component={Profile} />
       <Stack.Screen name="login" component={Login} />
       <Stack.Screen name="register" component={Register} />
       <Stack.Screen name="catesSelection" component={CatesSelection} />
@@ -53,15 +54,6 @@ const StackMyEvent = () => {
       <Stack.Screen name="myEvent" component={MyEvent} />
       <Stack.Screen name="createEvent" component={CreateEvent} />
       <Stack.Screen name="editEvent" component={EditEvent} />
-    </Stack.Navigator>
-  )
-}
-
-const StackRegister = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="register" component={Register} />
-      <Stack.Screen name="catesSelection" component={CatesSelection} />
     </Stack.Navigator>
   )
 }
@@ -147,6 +139,16 @@ const TabNavigator = () => {
                 component={Statistics}
               />
               <Tab.Screen
+                name="ticketCheckIn"
+                options={{
+                  title: 'Check In',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'qr-code' : 'qr-code-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={TicketCheckIn}
+              />
+              <Tab.Screen
                 name="profile"
                 options={{
                   title: 'Profile',
@@ -154,7 +156,7 @@ const TabNavigator = () => {
                     <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
                   ),
                 }}
-                component={MyTicket}
+                component={StackProfile}
               />
             </>
 
