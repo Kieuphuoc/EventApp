@@ -37,6 +37,7 @@ const Home = () => {
   const user = useContext(MyUserContext);
 
 
+
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -46,14 +47,6 @@ const Home = () => {
     setCategories(res.data);
   }
 
-  const loadRating = async () => {
-    try {
-      let res = await Apis.get(endpoints['stats_rating'](events));
-      setRating(res.data || {}); // Kiểm tra res.data
-    } catch (error) {
-      console.error('Lỗi gọi API:', error);
-    }
-  };
 
   const loadEvents = async () => {
     try {
@@ -81,19 +74,35 @@ const Home = () => {
     try {
       setLoading(true);
 
-      let url = `${endpoints['trend']}`;
+      let res = await Apis.get(endpoints['trend']);
 
-      let res = await Apis.get(url);
-      if (res.data) {
+      if (res.data && res.data.length > 0) {
         setTrend(res.data);
+
+        // Lấy rating cho từng sự kiện
+        const ratings = {};
+        for (let event of res.data) {
+          try {
+            let resRating = await Apis.get(endpoints['stats_rating'](event.id));
+            ratings[event.id] = resRating.data || {};
+          } catch (err) {
+            console.error(`Lỗi khi lấy rating của event ${event.id}:`, err);
+          }
+        }
+
+        setRating(ratings); // setRating là object chứa rating theo id
+      } else {
+        setTrend([]);
       }
     } catch (ex) {
       console.error("Error loading Trend:", ex);
-      setTrend([]); // Set empty array on error
+      setTrend([]);
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+
 
   const loadRecommend = async () => {
     try {
@@ -116,47 +125,18 @@ const Home = () => {
       setLoading(false);
     }
   }
-  const loadDiscount = async () => {
-    try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
 
-      const res = await authApis(token).get(endpoints['my-discount']);
-      if (res.data) {
-        setDiscount(res.data);
-      } else {
-        setDiscount([]);
-      }
-    } catch (error) {
-      console.error('Error loading discounts:', {
-        message: error.message,
-        response: error.response,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      setDiscount([]);
-    } finally {
-      setLoading(false);
+
+  useEffect(() => {
+    if (user?._j?.role === 'participant') {
+      loadRecommend();
     }
-  };
-  useEffect(() => {
-    loadRecommend();
-  }, []);
-  useEffect(() => {
-    loadRating();
   }, []);
 
   useEffect(() => {
     loadTrend();
-
   }, []);
-  useEffect(() => {
-    loadDiscount();
 
-  }, []);
   useEffect(() => {
     loadCates();
   }, []);
@@ -218,9 +198,9 @@ const Home = () => {
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
-        <Header />
+        <Header/>
         <SearchBox q={q} setQ={setQ} />
-        <Text style={globalStyles.title}>Categories</Text>
+        <Text style={[globalStyles.title, globalStyles.mi]}>Categories</Text>
 
         <View style={[globalStyles.container, globalStyles.mb]}>
           {categories.map((c) => {
@@ -231,75 +211,60 @@ const Home = () => {
             return <Category key={c.id} type={c.name} iconName={icon} />;
           })}
         </View>
-        <Text style={globalStyles.title}>Trending Events</Text>
-
-
-        <View style={{ marginBottom: 18 }}>
+        {/* Trending Events */}
+        <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
+        <View style={{}}>
           <Animated.FlatList
             data={trend}
-            renderItem={({ item, index }) => <SliderItem item={item} index={index} scrollX={scrollX} />}
+            renderItem={({ item, index }) => <SliderItem item={item} index={index} scrollX={scrollX} rating={rating} />}
             horizontal
             showsHorizontalScrollIndicator={false}
             pagingEnabled
             onScroll={onScrollHandler}
             viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
             keyExtractor={(item, idx) => item.id?.toString() || idx.toString()}
-            style={{ minHeight: 440 }}
+            style={{}}
           />
-        </View>
-
-        <Text style={{ fontWeight: 'bold', fontSize: 22, color: '#222', marginBottom: 10 }}>Recommend Events</Text>
-        
-<FlatList
-          data={recommend}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <EventCard
-              item={item}
-              onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-            />
-          )}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
-          ListEmptyComponent={() => (
-            <View style={{ padding: 20, alignItems: 'center' }}>
-              <Text>No events found</Text>
-            </View>
-          )}
-          ListFooterComponent={loading && <ActivityIndicator size={30} />}
+        <Pagination
+          items={trend}
+          paginationIndex={paginationIndex}
+          scrollX={scrollX}
         />
-        {user && (<><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222' }}>Discount for you</Text>
-          <TouchableOpacity><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
+
         </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 18 }}>
-            <View style={{ backgroundColor: '#e6f7ed', borderRadius: 14, padding: 14, marginRight: 12, minWidth: 220 }}>
-              <Text style={{ color: '#43a047', fontWeight: 'bold', fontSize: 16 }}>{discount.discount_percent}</Text>
-              <Text style={{ color: '#2196F3', fontSize: 13, marginBottom: 2 }}>Tự động áp dụng khi thanh toán{discount.discount_code}</Text>
-              <Text style={{ color: '#222', fontWeight: 'bold', fontSize: 15 }}>BHD: Ưu đãi đồng giá 95K/vé 2D</Text>
-              <Text style={{ color: '#666', fontSize: 12 }}>Khi mua vé 2D từ Thứ 6 đến Chủ Nhật</Text>
-            </View>
-          </ScrollView></>)}
 
-        {/* 
+        {/* Recommend Events */}
+        {user?._j?.role === 'participant' && (
+          <><Text style={{ fontWeight: 'bold', fontSize: 22, color: '#222', marginBottom: 10 }}>Recommend Events</Text>
+            <FlatList
+              data={events}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <EventCard
+                  item={item}
+                  onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+                  cardWidth={300}
+                />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
+              ListEmptyComponent={() => (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text>No events found</Text>
+                </View>
+              )}
+              ListFooterComponent={loading && <ActivityIndicator size={30} />}
+            /></>)}
+
+        {/* Upcoming Events */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222' }}>Rạp đề xuất</Text>
-          <TouchableOpacity><Text style={{ color: '#2196F3', fontWeight: '600' }}>Xem tất cả</Text></TouchableOpacity>
-        </View>
-        <View style={{ backgroundColor: '#e3f2fd', borderRadius: 14, padding: 16, marginBottom: 24 }}>
-          <Text style={{ color: '#222', fontWeight: 'bold', fontSize: 15, marginBottom: 2 }}>Gần đây có rạp nào nhỉ?</Text>
-          <Text style={{ color: '#666', fontSize: 13, marginBottom: 2 }}>Chia sẻ vị trí của bạn với MoMo để biết các rạp phim và suất chiếu gần bạn nhất nha.</Text>
-        </View> */}
-
-
-        {/* </View> */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222' }}>Upcoming Events</Text>
+        <Text style={[globalStyles.title, globalStyles.mi]}>Upcoming Event</Text>
           <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')}
           ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
         </View>
         <FlatList
+        style={{padding:20}}
           data={events}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
@@ -308,9 +273,10 @@ const Home = () => {
               onPress={() => navigation.navigate('eventDetail', { id: item.id })}
             />
           )}
+          cardWidth={300}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+          ItemSeparatorComponent={() => <View style={{ width: 15}} />}
           ListEmptyComponent={() => (
             <View style={{ padding: 20, alignItems: 'center' }}>
               <Text>No events found</Text>
@@ -318,14 +284,9 @@ const Home = () => {
           )}
           ListFooterComponent={loading && <ActivityIndicator size={30} />}
         />
-
-
-        <View style={{ flex: 1 }} />
-
-        <Text style={globalStyles.title}>🔥 Bài đăng nổi bật</Text>
+        <View/>
       </View>
-
-      <FeaturedPosts />
+      {/* <FeaturedPosts /> */}
     </ScrollView>
   );
 };

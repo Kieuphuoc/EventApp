@@ -1,9 +1,10 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Pressable } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../constants/colors";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApis, endpoints } from '../configs/Apis';
+import { MyUserContext } from '../configs/Context';
 
 const EventCard = ({ item, onPress, cardWidth }) => {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -43,43 +44,47 @@ const EventCard = ({ item, onPress, cardWidth }) => {
       // setLoading(false);
     }
   };
+  const user = useContext(MyUserContext);
 
-   useEffect(() => {
-    loadFavor(); // Khởi tạo trạng thái yêu thích khi component mount
+
+  useEffect(() => {
+    if (user?._j?.role === 'participant') {
+      loadFavor();
+    }
   }, []);
 
   const favor = async () => {
-  try {
-    // setLoading(true);
-    const token = await AsyncStorage.getItem('token');
-    if (!token) {
-      throw new Error('No token found');
+    try {
+      // setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await authApis(token).post(endpoints['favoriteEvent'], {
+        event_id: item.id,
+      });
+
+      console.log('Favorite Response:', response.data);
+
+      if (response.status === 201 || response.status === 200) {
+        setIsFavorite(true);
+      };
+    } catch (error) {
+      console.error('Favorite Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to add to favorites.'
+      );
+    } finally {
+      // setLoading(false);
     }
-
-    const response = await authApis(token).post(endpoints['favoriteEvent'], {
-      event_id: item.id,
-    });
-
-    console.log('Favorite Response:', response.data);
-
-    if (response.status === 201 || response.status === 200) {
-      setIsFavorite(true);
-    };
-  } catch (error) {
-    console.error('Favorite Error:', {
-      message: error.message,
-      response: error.response,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-    Alert.alert(
-      'Error',
-      error.response?.data?.message || 'Failed to add to favorites.'
-    );
-  } finally {
-    // setLoading(false);
-  }
-};
+  };
   const delete_favor = async () => {
     try {
       // setLoading(true);
@@ -316,7 +321,7 @@ const EventCard = ({ item, onPress, cardWidth }) => {
             >
               <Ionicons name="bookmark-outline" size={18} color={COLORS.primary} />
             </TouchableOpacity>
-          
+
             <TouchableOpacity
               style={styles.joinButton}
               onPress={onPress}
@@ -344,7 +349,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4, // Độ lan tỏa của bóng
     // Thêm elevation cho Android
     elevation: 3,
-  
+
   },
   imageContainer: {
     position: 'relative',

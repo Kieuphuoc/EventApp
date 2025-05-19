@@ -3,15 +3,15 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 // import { ImageSliderType } from '../constants/SliderData';
 import Animated, { useAnimatedStyle, SharedValue, withTiming, interpolate, Extrapolation } from 'react-native-reanimated';
 
-type Props = {
-  item: ImageSliderType[];
-  paginationIndex: number;
-  scrollX: SharedValue<number>;
-}
+// type Props = {
+//   item: [];
+//   paginationIndex: number;
+//   scrollX: SharedValue<number>;
+// }
 
 const { width } = Dimensions.get('screen');
 
-const Pagination = ({ items, paginationIndex, scrollX }: Props) => {
+const Pagination = ({ items, paginationIndex, scrollX }) => {
   return (
     <View style={styles.container}>
       {items.map((_, index) => {

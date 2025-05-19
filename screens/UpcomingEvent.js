@@ -1,129 +1,231 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, StatusBar, SafeAreaView, Alert, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native-paper';
-import Apis, { endpoints } from '../configs/Apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import EventCardMini from '../components/EventCardMini';
 import COLORS from '../constants/colors';
-import { useNavigation } from '@react-navigation/native';
+import Apis, { authApis, endpoints } from '../configs/Apis';
 
-export default function UpcommingEvent() {
-      const navigation = useNavigation();
-    
-    const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(false);
-    
+const ITEMS_PER_PAGE = 6;
 
-    const loadEvents = async () => {
-        try {
-            setLoading(true);
+const UpcomingEvent = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const scrollY = new Animated.Value(0);
 
-            let url = `${endpoints['event']}`;
+  const loadEvents = async () => {
+      try {
+        setLoading(true);
+  
+        let url = `${endpoints['event']}`;
 
-            let res = await Apis.get(url);
-            if (res.data) {
-                setEvents(res.data);
-            }
-        } catch (ex) {
-            console.error("Error loading events:", ex);
-            setEvents([]); // Set empty array on error
-        } finally {
-            setLoading(false);
+        let res = await Apis.get(url);
+        if (res.data) {
+          setEvents(res.data);
         }
+      } catch (ex) {
+        console.error("Error loading events:", ex);
+        setEvents([]); // Set empty array on error
+      } finally {
+        setLoading(false);
+      }
     }
-    useEffect(() => {
-        loadEvents();
-    }, []);
 
-    const EventCard = ({ event }) => (
-        <View style={styles.card}>
-            <Image source={{ uri: event.image }} style={styles.image} />
-            <View style={styles.info}>
-                <View style={styles.row}>
-                    <Text style={styles.age}>{event.age}</Text>
-                    <Text style={styles.rating}>★ {event.rating}/10 ({event.votes} đánh giá)</Text>
-                </View>
-                <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
-                <Text style={styles.genres}>{event.genres}</Text>
-                <View style={styles.row}>
-                    <Text style={styles.meta}>⏱ {event.duration}'</Text>
-                    <Text style={styles.meta}>📅 {event.date}</Text>
-                </View>
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.detailBtn}>
-                        <Text style={styles.detailText}>Join</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.buyBtn}  onPress={() => navigation.navigate('booking', { event: events })}>
-                        <Text style={styles.buyText}>Booking</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </View>
-    );
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [200, 100],
+    extrapolate: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0.9],
+    extrapolate: 'clamp',
+  });
+
+  const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
+  const paginatedData = events.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.header}>Phim sắp chiếu</Text>
-            <FlatList
-                data={events}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => <EventCard event={item} />}
-                contentContainerStyle={{ paddingBottom: 20 }}
-                showsVerticalScrollIndicator={false}
-                ListFooterComponent={loading && <ActivityIndicator size={30} />}
+      <View style={styles.pagination}>
+        <TouchableOpacity
+          style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+          onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? COLORS.grey : COLORS.primary} />
+        </TouchableOpacity>
+        
+        <Text style={styles.pageText}>
+          Page {currentPage} of {totalPages}
+        </Text>
 
-            />
-        </View>
+        <TouchableOpacity
+          style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+          onPress={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? COLORS.grey : COLORS.primary} />
+        </TouchableOpacity>
+      </View>
     );
-}
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <Animated.View style={[styles.header, {paddingTop:40}]}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Upcoming Event</Text>
+          <Text style={styles.headerSubtitle}>Your saved events</Text>
+        </View>
+        {/* <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.searchButton} onPress={}>
+            <Ionicons name="reload" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View> */}
+      </Animated.View>
+      <FlatList
+        data={paginatedData}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item, index }) => (
+          <EventCardMini
+            item={item.event || item}
+            onPress={() => navigation.navigate('eventDetail', { id: item.event?.id || item.id })}
+            index={index}
+          />
+        )}
+        contentContainerStyle={styles.list}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        scrollEnabled={true}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No events found</Text>
+          </View>
+        )}
+        ListFooterComponent={
+          <>
+            {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
+            {renderPagination()}
+          </>
+        }
+      />
+    </View>
+  );
+};
+
+export default UpcomingEvent;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-    header: { fontSize: 22, fontWeight: 'bold', marginBottom: 12, color: '#333' },
-    card: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        marginBottom: 16,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-        padding: 10,
-    },
-    image: { width: 100, height: 130, borderRadius: 8, marginRight: 12 },
-    info: { flex: 1, justifyContent: 'space-between' },
-    row: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-    age: {
-        backgroundColor: '#f8b400',
-        color: '#fff',
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        fontWeight: 'bold',
-        marginRight: 8,
-        fontSize: 12,
-    },
-    rating: { color: '#f39c12', fontWeight: 'bold', fontSize: 12 },
-    title: { fontWeight: 'bold', fontSize: 16, color: '#222', marginBottom: 2 },
-    genres: { color: '#888', fontSize: 13, marginBottom: 4 },
-    meta: { color: '#555', fontSize: 12, marginRight: 12 },
-    buttonRow: { flexDirection: 'row', marginTop: 8 },
-    detailBtn: {
-        borderWidth: 1,
-        borderColor: COLORS.primary,
-        borderRadius: 6,
-        paddingVertical: 6,
-        paddingHorizontal: 18,
-        marginRight: 10,
-    },
-    detailText: { color: COLORS.primary, fontWeight: 'bold' },
-    buyBtn: {
-        backgroundColor:  COLORS.primary + '30',
-        borderRadius: 6,
-        paddingVertical: 6,
-        paddingHorizontal: 18,
-        borderWidth: 1,
-        borderColor:  COLORS.primary,
-    },
-    buyText: { color:  COLORS.primary, fontWeight: 'bold' },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    backgroundColor: COLORS.primary,
+    padding: 20,
+    // paddingTop: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.8,
+    marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  searchButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  list: {
+    padding: 16,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: COLORS.primaryDark,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 15,
+  },
+  pageButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.accentLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pageButtonDisabled: {
+    opacity: 0.5,
+  },
+  pageText: {
+    fontSize: 14,
+    color: COLORS.primaryDark,
+    fontWeight: '600',
+  },
 });

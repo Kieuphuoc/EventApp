@@ -6,7 +6,7 @@ import globalStyles from "../constants/globalStyles";
 const SearchBox = ({q, setQ}) => {
     
   return (
-    <View style={[globalStyles.container, globalStyles.mb]} >
+    <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]} >
       <TextInput style={[globalStyles.input, globalStyles.placeholder]} 
         placeholder="Search Event.." 
         placeholderTextColor={'gray'}

@@ -66,7 +66,7 @@ const TabNavigator = () => {
   const user = useContext(MyUserContext);
   // const dispatch = useContext(MyDispatchContext);
   // console.log(user);
-  // console.log(user._j);
+  console.log(user);
 
 
   return (
@@ -93,7 +93,7 @@ const TabNavigator = () => {
         component={StackNavigator}
       />
 
-      {user === null ? (
+      {(user === null || user?._j===null) ? (
         <>
           <Tab.Screen
             name="login"

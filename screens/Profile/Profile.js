@@ -66,7 +66,7 @@ const Profile = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <ScrollView style={styles.scrollView}>
+      <View style={styles.scrollView}>
         <View style={styles.header}>
           <View style={styles.profileHeader}>
             <Image
@@ -74,6 +74,7 @@ const Profile = () => {
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
+              <Text style={styles.name}>Kieu Phuoc</Text>
               <Text style={styles.email}>phuoc@example.com</Text>
             </View>
             <TouchableOpacity style={styles.editButton}>
@@ -82,24 +83,59 @@ const Profile = () => {
           </View>
         </View>
 
+        <View style={styles.statsContainer}>
+          <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('register')}>
+            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statLabel}>Events</Text>
+          </TouchableOpacity>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>8</Text>
+            <Text style={styles.statLabel}>Tickets</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>5</Text>
+            <Text style={styles.statLabel}>Favorites</Text>
+          </View>
+        </View>
+
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.menuItem}
+              onPress={() => handleMenuItemPress(item.screen)}
+            >
+              <View style={styles.menuItemLeft}>
+                <Ionicons name={item.icon} size={24} color={COLORS.primary} />
+                <Text style={styles.menuItemText}>{item.label}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Ionicons name="log-out" size={24} color="#FF3B30" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </View>
   );
-};
-
+}
 const styles = StyleSheet.create({
   container: {
+
     flex: 1,
     backgroundColor: '#fff',
   },
   scrollView: {
+
     flex: 1,
   },
   header: {
+
     backgroundColor: COLORS.primary,
     padding: 20,
     paddingTop: 10,
@@ -107,6 +143,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
   },
   profileHeader: {
+    paddingTop: 40,
+
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
@@ -209,3 +247,4 @@ const styles = StyleSheet.create({
 });
 
 export default Profile;
+

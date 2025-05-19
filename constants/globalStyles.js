@@ -10,6 +10,9 @@ const globalStyles = StyleSheet.create({
   mb:{
     marginBottom:10,
   },
+  mi:{
+    marginInline: 20,
+  },
   container: {
     flexDirection: 'row',
     gap: 10,

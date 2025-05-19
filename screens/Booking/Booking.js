@@ -162,14 +162,11 @@ const Booking = ({ route, navigation }) => {
     try {
       setLoading(true);
 
-      // Step 1: Create invoice
       const newInvoiceId = await booking();
 
-      // Step 2: Handle payment based on method
       if (selectedPayment.id === 'momo') {
         await momoPayment(newInvoiceId);
       } else {
-        // For Cash, navigate directly to payment success
         navigation.navigate('paymentSuccess');
       }
     } catch (error) {
@@ -194,7 +191,6 @@ const Booking = ({ route, navigation }) => {
     }
   }, [momoUrl]);
 
-  // Handle deep link callback from MoMo
   useEffect(() => {
     const handleDeepLink = ({ url }) => {
       console.log('Deep Link URL:', url);
