@@ -7,8 +7,8 @@ const Category = ({ type, iconName }) => {
     return (
         <View style={styles.container}>
             <TouchableOpacity>
-                <View style={styles.icon}><Ionicons name={iconName} size={35} color={COLORS.primary} /></View>               
-                <Text style={{ fontSize: 14, fontWeight: 500, marginTop: 5, color: 'gray', alignSelf:'center' }}>{type}</Text>
+                <View style={styles.icon}><Ionicons name={iconName} size={35} color={COLORS.primary} /></View>
+                <Text style={{ fontSize: 14, fontWeight: 500, marginTop: 5, color: 'gray', alignSelf: 'center' }}>{type}</Text>
             </TouchableOpacity>
         </View>
 
@@ -17,17 +17,24 @@ const Category = ({ type, iconName }) => {
 
 const styles = StyleSheet.create({
     container: {
-        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 12,
     },
     icon: {
+        width: 65,
+        height: 65,
         backgroundColor: COLORS.accentLight,
-        shadowOffset: { width: 2, height: 4 },
-        borderRadius: '50%',
-        padding: 15,
-        justify: 'center',
+        borderRadius: 65 / 2, // hoặc: 32.5
+        padding: 10,
+        justifyContent: 'center',
         alignItems: 'center',
+        shadowColor: COLORS.primary, // Màu của bóng
+        shadowOffset: { width: 2, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5, // cho Android
+    },
 
-    }
 })
 
 export default Category;

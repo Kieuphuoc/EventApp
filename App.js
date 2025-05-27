@@ -61,6 +61,15 @@ const StackMyEvent = () => {
   )
 }
 
+const StackFavourite = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="favoriteEvent" component={FavouriteEvent} />
+      <Stack.Screen name="eventDetail" component={EventDetail} />
+    </Stack.Navigator>
+  )
+}
+
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
   const user = useContext(MyUserContext);
@@ -186,7 +195,7 @@ const TabNavigator = () => {
                     <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
                   ),
                 }}
-                component={FavouriteEvent}
+                component={StackFavourite}
               />
               <Tab.Screen
                 name="profile"

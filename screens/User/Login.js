@@ -66,8 +66,8 @@ const Login = () => {
         formData.append('username', user.username);
         formData.append('password', user.password);
         formData.append('grant_type', 'password');
-        formData.append('client_id', '9J87vnUboufZI6oWdhNtd0pLSq7OhEEvketSdt9D');
-        formData.append('client_secret', '9GPR7JTMlk43rXNAp5tbaSawqsEuT6rFEUaO4VAA0JJr3Qc5fSn6WLiZkwAxrmmvjJnIi3H3f4JkumSvjRDS0cyxcFyYJ0Ij5cbfxuDL7M81f8guKv1kWJkhLI7DQ26j');
+        formData.append('client_id', 'cAJaTDABqUkqUpGqn0COLHSFYDOFQF5tUCpITJbV');
+        formData.append('client_secret', 'UXh8HYabWc94SDoX0Y9UyuolgQWu80TTYUdTXgipxF5SPc2iFwsa3Cf2jBrhkTquzJwkyhTOuB2A0QFmUBQBsS6iqa1ICUI5LcjmKsmYdPohNbTsHSDOENJyku4wbCzV');
 
         let res = await Apis.post(endpoints['login'], formData, {
           headers: {

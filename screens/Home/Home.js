@@ -193,24 +193,56 @@ const Home = () => {
   ]);
 
 
+  const getIconNameByCategory = (category) => {
+    switch (category.toLowerCase()) {
+      case 'concert':
+        return 'musical-notes';
+      case 'meetup':
+        return 'people';
+      case 'workshop':
+        return 'construct';
+      case 'conference':
+        return 'briefcase';
+      case 'festival':
+        return 'balloon';
+      case 'exhibition':
+        return 'images';
+      case 'networking':
+        return 'chatbox-ellipses';
+      case 'competition':
+        return 'trophy';
+      case 'ceremony':
+        return 'ribbon';
+      case 'webinar':
+        return 'videocam';
+      default:
+        return 'alert';
+    }
+  };
 
 
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
-        <Header/>
+        <Header />
         <SearchBox q={q} setQ={setQ} />
         <Text style={[globalStyles.title, globalStyles.mi]}>Categories</Text>
 
-        <View style={[globalStyles.container, globalStyles.mb]}>
-          {categories.map((c) => {
-            let icon = "alert"; // mặc định
-            if (c.name.includes("Sport")) icon = "football";
-            else if (c.name.includes("")) icon = "library";
-            else if (c.name.includes("Alo")) icon = "headset";
-            return <Category key={c.id} type={c.name} iconName={icon} />;
-          })}
-        </View>
+        <FlatList
+          data={categories}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <Category
+              type={item.name}
+              iconName={getIconNameByCategory(item.name)}
+            />
+          )}
+          contentContainerStyle={[globalStyles.container, globalStyles.mb]}
+        />
+
+
         {/* Trending Events */}
         <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
         <View style={{}}>
@@ -225,25 +257,31 @@ const Home = () => {
             keyExtractor={(item, idx) => item.id?.toString() || idx.toString()}
             style={{}}
           />
-        <Pagination
-          items={trend}
-          paginationIndex={paginationIndex}
-          scrollX={scrollX}
-        />
+          <Pagination
+            items={trend}
+            paginationIndex={paginationIndex}
+            scrollX={scrollX}
+          />
 
         </View>
 
         {/* Recommend Events */}
         {user?._j?.role === 'participant' && (
-          <><Text style={{ fontWeight: 'bold', fontSize: 22, color: '#222', marginBottom: 10 }}>Recommend Events</Text>
+          <><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={[globalStyles.title, globalStyles.mi]}>Recommend Event</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')}
+            ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
+          </View>
             <FlatList
-              data={events}
+              style={{ padding: 20 }}
+              data={recommend}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <EventCard
                   item={item}
                   onPress={() => navigation.navigate('eventDetail', { id: item.id })}
                   cardWidth={300}
+
                 />
               )}
               horizontal
@@ -255,28 +293,30 @@ const Home = () => {
                 </View>
               )}
               ListFooterComponent={loading && <ActivityIndicator size={30} />}
-            /></>)}
+            />
+            <View /></>)}
 
         {/* Upcoming Events */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={[globalStyles.title, globalStyles.mi]}>Upcoming Event</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={[globalStyles.title, globalStyles.mi]}>Upcoming Event</Text>
           <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')}
           ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
         </View>
         <FlatList
-        style={{padding:20}}
+          style={{ padding: 20 }}
           data={events}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <EventCard
               item={item}
               onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+              cardWidth={300}
+
             />
           )}
-          cardWidth={300}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ width: 15}} />}
+          ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
           ListEmptyComponent={() => (
             <View style={{ padding: 20, alignItems: 'center' }}>
               <Text>No events found</Text>
@@ -284,7 +324,7 @@ const Home = () => {
           )}
           ListFooterComponent={loading && <ActivityIndicator size={30} />}
         />
-        <View/>
+        <View />
       </View>
       {/* <FeaturedPosts /> */}
     </ScrollView>

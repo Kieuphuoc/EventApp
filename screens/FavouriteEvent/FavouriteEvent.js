@@ -10,6 +10,7 @@ import EventCardMini from '../../components/EventCardMini';
 const ITEMS_PER_PAGE = 6;
 
 const FavouriteEvent = ({ navigation }) => {
+
   const [loading, setLoading] = useState(false);
   const [favouriteEvent, setFavoriteEvent] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,7 +27,7 @@ const FavouriteEvent = ({ navigation }) => {
       let res = await authApis(token).get(endpoints['favoriteEvent']);
       if (res.data) {
         setFavoriteEvent(res.data);
-      } 
+      }
     } catch (ex) {
       console.error("Error loading events:", ex);
       console.log('Error details:', ex.response?.data);
@@ -71,7 +72,7 @@ const FavouriteEvent = ({ navigation }) => {
         >
           <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? COLORS.grey : COLORS.primary} />
         </TouchableOpacity>
-        
+
         <Text style={styles.pageText}>
           Page {currentPage} of {totalPages}
         </Text>
@@ -90,7 +91,7 @@ const FavouriteEvent = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <Animated.View style={[styles.header, {paddingTop:40}]}>
+      <Animated.View style={[styles.header, { paddingTop: 40 }]}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Favourite Events</Text>
           <Text style={styles.headerSubtitle}>Your saved events</Text>
@@ -108,9 +109,9 @@ const FavouriteEvent = ({ navigation }) => {
         data={paginatedData}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item, index }) => (
-          <EventCardMini 
+          <EventCardMini
             item={item.event || item}
-            onPress={() => navigation.navigate('eventDetail', { id: item.event?.id || item.id })}
+            onPress={() => navigation.navigate('eventDetail', { id: item.event.id })}
             index={index}
           />
         )}
