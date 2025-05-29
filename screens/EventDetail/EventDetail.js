@@ -14,6 +14,7 @@ import globalStyles from '../../constants/globalStyles';
 const EventDetail = ({ route }) => {
     const { id } = route.params;
     const eventId = parseInt(id, 10);
+
     const navigation = useNavigation();
 
     const [tabItem, moveTab] = useState(1);
@@ -63,7 +64,7 @@ const EventDetail = ({ route }) => {
                 <ScrollView>
                     <View style={styles.imageContainer}>
                         <Image source={{ uri: events.image }} style={styles.image} />
-                        <TouchableOpacity style={styles.backButton} onPress={()=>navigation.goBack()}>
+                        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.favoriteButton}>
@@ -119,11 +120,17 @@ const EventDetail = ({ route }) => {
                         {tabItem === 1 && (
                             <TabAbout
                                 description={events.description || 'No description available'}
+                                ticketSold={events.ticket_sold}
+                                ticketQuantity={events.ticket_quantity}
+                                startTime={events.start_time}
+                                endTime={events.end_time}
+
                                 manager={{
-                                    image: 'https://play-lh.googleusercontent.com/VMPS_t-CGBp-NVqefuMvMOGEDfmovBcGiepmAAF1I9hkdjLOjsfVjEV5d41DTAy3qI_akNaJKTdmaNwMRIs=w240-h480-rw',
-                                    name: 'Kieu Phuoc',
-                                    role: 'Manager'
+                                    image: events.organizer.avatar || 'https://example.com/default-avatar.png',
+                                    name: `${events.organizer.first_name} ${events.organizer.last_name}`,
+                                    role: 'Organizer',
                                 }}
+
                             />
                         )}
 
@@ -208,7 +215,7 @@ const styles = StyleSheet.create({
     eventType: {
         color: COLORS.primary,
         fontWeight: '600',
-        fontSize: 17,
+        fontSize: 15,
     },
     ratingContainer: {
         flexDirection: 'row',
@@ -287,8 +294,8 @@ const styles = StyleSheet.create({
     },
     price: {
         fontSize: 24,
+        color: COLORS.error,
         fontWeight: 'bold',
-        color: COLORS.primary,
     },
     bookButton: {
         flexDirection: 'row',

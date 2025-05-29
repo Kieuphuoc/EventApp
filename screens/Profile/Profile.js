@@ -70,12 +70,12 @@ const Profile = () => {
         <View style={styles.header}>
           <View style={styles.profileHeader}>
             <Image
-              source={{ uri: 'https://m.media-amazon.com/images/S/pv-target-images/16627900db04b76fae3b64266ca161511422059cd24062fb5d900971003a0b70.jpg' }}
+              source={{ uri: user._j?.avatar }}
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.name}>Kieu Phuoc</Text>
-              <Text style={styles.email}>phuoc@example.com</Text>
+              <Text style={styles.name}>{user._j?.first_name} {user._j?.last_name}</Text>
+              <Text style={styles.email}>{user._j?.email}</Text>
             </View>
             <TouchableOpacity style={styles.editButton}>
               <Ionicons name="create" size={20} color={COLORS.primary} />
@@ -84,7 +84,7 @@ const Profile = () => {
         </View>
 
         <View style={styles.statsContainer}>
-          <TouchableOpacity style={styles.statItem} onPress={() => navigation.navigate('register')}>
+          <TouchableOpacity style={styles.statItem} >
             <Text style={styles.statNumber}>12</Text>
             <Text style={styles.statLabel}>Events</Text>
           </TouchableOpacity>
@@ -105,7 +105,7 @@ const Profile = () => {
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
-              onPress={() => handleMenuItemPress(item.screen)}
+              onPress={() => navigation.navigate(item.screen)}
             >
               <View style={styles.menuItemLeft}>
                 <Ionicons name={item.icon} size={24} color={COLORS.primary} />

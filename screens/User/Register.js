@@ -246,7 +246,7 @@ const Register = () => {
           </View>
 
           {/* <HelperText type="error" visible={!!msg}>{msg}</HelperText> */}
-          <Snackbar
+          {/* <Snackbar
             visible={visible}
             onDismiss={() => setVisible(false)}
             action={{
@@ -256,7 +256,7 @@ const Register = () => {
             duration={5000}
           >
             {msg}
-          </Snackbar>
+          </Snackbar> */}
           <View style={userStyles.form}>
             {info.map((i, index) => (
               <View key={index} style={userStyles.inputContainer}>

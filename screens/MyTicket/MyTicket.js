@@ -16,10 +16,11 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import COLORS from "../../constants/colors";
 import { authApis, endpoints } from "../../configs/Apis";
-import SearchBox from "../../components/SearchBox";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 
 export default function MyTicket({ navigation }) {
+  const [tabItem, moveTab] = useState(1);
+
   const [searchText, setSearchText] = useState("");
   const [ticket, setTicket] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,10 @@ export default function MyTicket({ navigation }) {
     loadTicket();
   }, []);
 
+  const bookedTickets = ticket.filter(t => t.status === "booked");
+  const checkedInTickets = ticket.filter(t => t.status === "checked-in");
+
+
   const formatDateTime = (dateTime) => {
     if (!dateTime) return "N/A";
     const date = new Date(dateTime);
@@ -76,15 +81,13 @@ export default function MyTicket({ navigation }) {
     setShowQr(false)
   };
 
+
+
   const Ticket = ({ item }) => (
-    <TouchableOpacity
+    <View
       style={styles.ticketCard}
-      onPress={() => {
-        setQr(item.qr_code);
-        openModal();
-      }}
     >
-      <View style={styles.ticketDetailsContainer}>
+      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('myInvoice', item.invoice_id)} >
         <View style={styles.ticketHeader}>
           <Text style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">
             {item?.event?.title || "Event Title Missing"}
@@ -125,10 +128,13 @@ export default function MyTicket({ navigation }) {
             </Text>
           </View>)}
 
-      </View>
+      </TouchableOpacity>
 
       {/* Right Section - QR Preview */}
-      <View style={styles.qrPreviewContainer}>
+      <TouchableOpacity style={styles.qrPreviewContainer} onPress={() => {
+        setQr(item.qr_code);
+        openModal();
+      }}>
         <Image
           style={styles.qrPreviewImage}
           source={{
@@ -137,9 +143,9 @@ export default function MyTicket({ navigation }) {
           resizeMode="contain"
         />
         <Ionicons name="chevron-down" size={20} color={COLORS.grey} style={styles.chevronIcon} />
-      </View>
+      </TouchableOpacity>
 
-    </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -153,22 +159,54 @@ export default function MyTicket({ navigation }) {
 
       <ScrollView style={{ paddingInline: 15 }}>
 
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, tabItem === 1 && styles.activeTab]}
+            onPress={() => moveTab(1)}
+          >
+            <Text style={[styles.tabText, tabItem === 1 && styles.activeTabText]}>Booked</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, tabItem === 2 && styles.activeTab]}
+            onPress={() => moveTab(2)}
+          >
+            <Text style={[styles.tabText, tabItem === 2 && styles.activeTabText]}>Checked-in</Text>
+          </TouchableOpacity>
+        </View>
         {loading ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
         ) : (
-
-          <FlatList
-            data={ticket}
-            renderItem={({ item, index }) => <Ticket key={index} item={item} />}
-            contentContainerStyle={styles.listContent}
-            scrollEnabled={false}
-            showsHorizontalScrollIndicator={false}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No tickets found</Text>
-              </View>
-            }
-          />
+          <><>
+            {tabItem === 1 && (
+              <FlatList
+                data={bookedTickets}
+                renderItem={({ item, index }) => <Ticket key={index} item={item} />}
+                contentContainerStyle={styles.listContent}
+                scrollEnabled={false}
+                showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No booked tickets found</Text>
+                  </View>
+                }
+              />
+            )}
+            {tabItem === 2 && (
+              <FlatList
+                data={checkedInTickets}
+                renderItem={({ item, index }) => <Ticket key={index} item={item} />}
+                contentContainerStyle={styles.listContent}
+                scrollEnabled={false}
+                showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No checked-in tickets found</Text>
+                  </View>
+                }
+              />
+            )}
+          </>
+          </>
         )}
 
 
@@ -197,6 +235,30 @@ export default function MyTicket({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: 20,
+  },
+  tab: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -216,7 +278,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   header: {
     backgroundColor: COLORS.primary,

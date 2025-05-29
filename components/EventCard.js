@@ -293,6 +293,11 @@ const EventCard = ({ item, onPress, cardWidth }) => {
               {item.title}
             </Text>
             <View style={styles.priceContainer}>
+              <Ionicons
+                name="wallet"
+                size={20}
+                color={COLORS.error}
+              />
               <Text style={styles.priceText}>${item.ticket_price}</Text>
             </View>
           </View>
@@ -343,7 +348,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#f0f0f0',
-    shadowColor: '#000', // Màu của bóng
+    shadowColor: 'red',  // Màu của bóng
     shadowOffset: { width: 0, height: 2 }, // Độ lệch của bóng (ngang, dọc)
     shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
     shadowRadius: 4, // Độ lan tỏa của bóng
@@ -381,13 +386,16 @@ const styles = StyleSheet.create({
   },
 
   priceContainer: {
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: '#FFA500' + '20',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    flexDirection:'row', 
+    gap: 5, 
+    alignItems:'center',
   },
   priceText: {
-    color: COLORS.primary,
+    color: COLORS.error,
     fontSize: 14,
     fontWeight: '600',
   },

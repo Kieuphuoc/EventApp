@@ -240,7 +240,7 @@ const Booking = ({ route, navigation }) => {
             <View style={styles.eventDetails}>
               <View style={styles.detailRow}>
                 <Ionicons name="calendar" size={20} color={COLORS.primary} />
-                <Text style={styles.detailText}>{day} {time}</Text>
+                <Text style={styles.detailText}>{day} at {time}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Ionicons name="location" size={20} color={COLORS.primary} />

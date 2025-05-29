@@ -8,15 +8,18 @@ import Register from './screens/User/Register';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "./constants/colors";
 import MyTicket from './screens/MyTicket/MyTicket';
+
 import CreateEvent from "./screens/CreateEvent/CreateEvent";
 import FavouriteEvent from "./screens/FavouriteEvent/FavouriteEvent";
 import Profile from "./screens/Profile/Profile";
+import EditProfile from "./screens/Profile/EditProfile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
 import { useContext, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
+import SearchingScreen from "./screens/SearchingScreen";
 
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
@@ -24,6 +27,7 @@ import EditEvent from "./screens/CreateEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
 import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
 import UpcommingEvent from "./screens/UpcomingEvent";
+import MyInvoice from "./screens/MyInvoice";
 
 const Stack = createNativeStackNavigator();
 
@@ -32,9 +36,9 @@ const StackNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
-            <Stack.Screen name="upcomingEvent" component={UpcommingEvent} />
+      <Stack.Screen name="upcomingEvent" component={UpcommingEvent} />
       <Stack.Screen name="booking" component={Booking} />
-      {/* <Stack.Screen name="paymentConfirmation" component={PaymentConfirmation} /> */}
+      <Stack.Screen name="searchingScreen" component={SearchingScreen} />
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
     </Stack.Navigator>
   );
@@ -47,6 +51,7 @@ const StackProfile = () => {
       <Stack.Screen name="login" component={Login} />
       <Stack.Screen name="register" component={Register} />
       <Stack.Screen name="catesSelection" component={CatesSelection} />
+      <Stack.Screen name="editProfile" component={EditProfile} />
     </Stack.Navigator>
   )
 }
@@ -57,6 +62,15 @@ const StackMyEvent = () => {
       <Stack.Screen name="myEvent" component={MyEvent} />
       <Stack.Screen name="createEvent" component={CreateEvent} />
       <Stack.Screen name="editEvent" component={EditEvent} />
+    </Stack.Navigator>
+  )
+}
+
+const StackMyTicket = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="myTicket" component={MyTicket} />
+      <Stack.Screen name="myInvoice" component={MyInvoice} />
     </Stack.Navigator>
   )
 }
@@ -102,7 +116,7 @@ const TabNavigator = () => {
         component={StackNavigator}
       />
 
-      {(user === null || user?._j===null) ? (
+      {(user === null || user?._j === null) ? (
         <>
           <Tab.Screen
             name="login"
@@ -185,7 +199,7 @@ const TabNavigator = () => {
                     <Ionicons name={focused ? 'ticket' : 'ticket-outline'} color={COLORS.primary} size={24} />
                   ),
                 }}
-                component={MyTicket}
+                component={StackMyTicket}
               />
               <Tab.Screen
                 name="favouriteEvent"
@@ -202,7 +216,7 @@ const TabNavigator = () => {
                 options={{
                   title: 'Profile',
                   tabBarIcon: ({ color, focused }) => (
-                    <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
+                    <Ionicons name={focused ? 'person' : 'person-outline'} color={COLORS.primary} size={24} />
                   ),
                 }}
                 component={StackProfile}

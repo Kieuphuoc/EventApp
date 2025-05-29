@@ -7,7 +7,7 @@ const EventCardMini = ({ item, onPress, index }) => {
   const date = new Date(item.start_time);
   const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
@@ -48,7 +48,7 @@ const EventCardMini = ({ item, onPress, index }) => {
             </View>
             <Text style={styles.price}>${item.ticket_price}</Text>
           </View>
-          
+
           <Text style={styles.title} numberOfLines={2}>
             {item.title}
           </Text>
@@ -85,10 +85,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#f0f0f0',
-     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    shadowColor: '#000', // Màu của bóng
+    shadowOffset: { width: 5, height: 7 }, // Độ lệch của bóng (ngang, dọc)
+    shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
+    shadowRadius: 3, // Độ lan tỏa của bóng
+    // Thêm elevation cho Android
     elevation: 3,
   },
   image: {

@@ -1,4 +1,4 @@
-const BASE_URL = "https://ceac-171-252-155-229.ngrok-free.app/";
+const BASE_URL = "https://d6de-171-252-155-229.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
@@ -17,6 +17,7 @@ export const endpoints = {
     'favoriteEvent': '/favorite/event/',
     'delete-favor': (event_id) => `/favorite/event/${event_id}/`,
     'invoice': '/invoice/',
+    'invoice-detail': (id) => `/invoice/${id}/`,
     'my-discount': '/discount/my_discount/',
     'my-ticket': '/ticket/my_ticket/',
     'my-event': '/event/my_event/',

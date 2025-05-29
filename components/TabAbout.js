@@ -5,27 +5,73 @@ import COLORS from '../constants/colors';
 import RenderHTML from 'react-native-render-html';
 import globalStyles from '../constants/globalStyles';
 
-const TabAbout = ({ description, manager }) => {
+const TabAbout = ({ description, ticketSold, ticketQuantity, startTime, endTime, manager }) => {
     const [isExpanded, setIsExpanded] = useState(false); //Chưa xử lí được
     const { width } = useWindowDimensions(); // 👈 Lấy chiều rộng màn hình
-    
+
+
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    const startDay = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    }).format(startDate);
+
+    const endDay = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    }).format(endDate);
+
+    const startTimeStr = `${startDate.getHours()}:${startDate.getMinutes().toString().padStart(2, '0')}`;
+    const endTimeStr = `${endDate.getHours()}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+
     return (
         <View style={{}}>
+            {/* <Text style={globalStyles.text}>Ticket quantity: {ticketQuantity} </Text> */}
+            <View style={globalStyles.container}><Text style={globalStyles.title}>Detail Information</Text>
+                <View style={globalStyles.hor}>
+                    <Ionicons name="ticket" size={15} color={COLORS.primary} />
+                    <Text style={globalStyles.miniText}>Sold {ticketSold}/{ticketQuantity}</Text>
+                </View>
+            </View>
+            <Text style={[globalStyles.text, globalStyles.mbText]}>Start: {startDay} at {startTimeStr}</Text>
+            <Text style={[globalStyles.text, globalStyles.mbText]}>End: {endDay} at {endTimeStr}</Text>
+            <Text style={globalStyles.text}>Remaining: {ticketQuantity - ticketSold}</Text>
+
+            {/* <View style={globalStyles.mb}></View> */}
+            <View style={globalStyles.mb}></View>
+
+
             <Text style={globalStyles.title}>Description</Text>
             <RenderHTML
                 contentWidth={width}
                 source={{
-                    html: description,
+                    html: description
+                    // isExpanded ? description : description.slice(0, 100) + '...',
                 }}
                 tagsStyles={{
                     p: {
                         color: '#666',
                         fontSize: 15,
                         lineHeight: 22,
-                        marginBottom: 20,
+                        // marginBottom: 20,
                     }
                 }}
             />
+
+            {/* {description.length > 100 && (
+                <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)}>
+                    <Text style={styles.seeMore}>
+                        {isExpanded ? 'See less' : 'See more'}
+                    </Text>
+                </TouchableOpacity>
+            )} */}
+
+            <View style={globalStyles.mb}></View>
+
 
             {/* <TouchableOpacity><Text>see more</Text></TouchableOpacity> */}
 
@@ -63,7 +109,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     seeMore: {
-        color: COLORS.primary,
+        color: COLORS.info,
         fontWeight: '500',
     },
     managerContainer: {

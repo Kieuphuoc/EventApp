@@ -13,10 +13,20 @@ const globalStyles = StyleSheet.create({
   mi:{
     marginInline: 20,
   },
+  mbText:{
+    marginBottom: 5,
+  },
+  mr:{
+    marginRight: 10,
+  },
   container: {
     flexDirection: 'row',
     gap: 10,
     justifyContent: 'space-around',
+  },
+  hor: {
+    flexDirection: 'row',
+    gap: 3,
   },
   buttonText: {
     color: '#fff',
@@ -63,14 +73,19 @@ const globalStyles = StyleSheet.create({
     marginBottom: 15,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.primaryDark,
+    color: '#333',
     marginBottom: 15,
+    flex:1,
   },
   text: {
-    fontSize: 16,
-    color: COLORS.primaryDark,
+    fontSize: 15,
+    color: '#666',
+  },
+    miniText: {
+    fontSize: 13,
+    color: '#666',
   },
   box: {
     marginBottom: 30,

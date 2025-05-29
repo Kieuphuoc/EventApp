@@ -7,6 +7,7 @@ import Category from '../../components/Category';
 import EventCard from '../../components/EventCard';
 import Pagination from "../../components/Pagination";
 import SliderItem from "../../components/SliderItem";
+import { RefreshControl} from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
 
@@ -19,12 +20,12 @@ import globalStyles from "../../constants/globalStyles";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyUserContext } from "../../configs/Context";
-import { Touchable } from "react-native";
-import { center } from "@shopify/react-native-skia";
+import LottieView from "lottie-react-native";
 
 const Home = () => {
   const navigation = useNavigation();
 
+  const [globalLoading, setGlobalLoading] = useState(true);
 
   const [categories, setCategories] = useState([]);
   const [events, setEvents] = useState([]);
@@ -127,23 +128,53 @@ const Home = () => {
   }
 
 
-  useEffect(() => {
-    if (user?._j?.role === 'participant') {
-      loadRecommend();
+  // useEffect(() => {
+  //   if (user?._j?.role === 'participant') {
+  //     loadRecommend();
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   loadTrend();
+  // }, []);
+
+  // useEffect(() => {
+  //   loadCates();
+  // }, []);
+
+  // useEffect(() => {
+  //   loadEvents();
+  // }, [q]);
+
+  const loadAllData = async () => {
+    try {
+      setGlobalLoading(true);
+
+      await Promise.all([
+        loadCates(),
+        loadEvents(),
+        loadTrend(),
+        // user?._j?.role === 'participant' &&
+        loadRecommend()
+      ]);
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu:", error);
+    } finally {
+      setGlobalLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    loadTrend();
+    loadAllData();
   }, []);
 
-  useEffect(() => {
-    loadCates();
-  }, []);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadEvents();
-  }, [q]);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAllData(); // Hàm bạn đã định nghĩa để tải dữ liệu
+    setRefreshing(false);
+  };
 
   const scrollX = useSharedValue(0);
   const onScrollHandler = useAnimatedScrollHandler({
@@ -222,112 +253,130 @@ const Home = () => {
 
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.container}>
-        <Header />
-        <SearchBox q={q} setQ={setQ} />
-        <Text style={[globalStyles.title, globalStyles.mi]}>Categories</Text>
 
-        <FlatList
-          data={categories}
-          keyExtractor={(item) => item.id.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <Category
-              type={item.name}
-              iconName={getIconNameByCategory(item.name)}
-            />
-          )}
-          contentContainerStyle={[globalStyles.container, globalStyles.mb]}
+    globalLoading ? (
+      <View style={[globalStyles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+        <LottieView
+          source={require('../../assets/loading.json')}
+          autoPlay
+          loop
+          style={{ width: 200, height: 200 }}
         />
+      </View>
+    ) : (
+      <ScrollView style={styles.scrollView} refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
+      }>
+        <View style={styles.container}>
+          <Header />
+          <TouchableOpacity onPress={() => navigation.navigate('searchingScreen')}>
+            <SearchBox q={q} setQ={setQ} />
+          </TouchableOpacity>
 
-
-        {/* Trending Events */}
-        <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
-        <View style={{}}>
-          <Animated.FlatList
-            data={trend}
-            renderItem={({ item, index }) => <SliderItem item={item} index={index} scrollX={scrollX} rating={rating} />}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            onScroll={onScrollHandler}
-            viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
-            keyExtractor={(item, idx) => item.id?.toString() || idx.toString()}
-            style={{}}
-          />
-          <Pagination
-            items={trend}
-            paginationIndex={paginationIndex}
-            scrollX={scrollX}
-          />
-
-        </View>
-
-        {/* Recommend Events */}
-        {user?._j?.role === 'participant' && (
-          <><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={[globalStyles.title, globalStyles.mi]}>Recommend Event</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')}
-            ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
-          </View>
-            <FlatList
-              style={{ padding: 20 }}
-              data={recommend}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <EventCard
-                  item={item}
-                  onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-                  cardWidth={300}
-
-                />
-              )}
+          {/* Trending Events */}
+          <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
+          <View style={{}}>
+            <Animated.FlatList
+              data={trend}
+              renderItem={({ item, index }) => <SliderItem item={item} index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
               horizontal
               showsHorizontalScrollIndicator={false}
-              ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
-              ListEmptyComponent={() => (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text>No events found</Text>
-                </View>
-              )}
-              ListFooterComponent={loading && <ActivityIndicator size={30} />}
+              pagingEnabled
+              onScroll={onScrollHandler}
+              viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
+              keyExtractor={(item, idx) => item.id?.toString() || idx.toString()}
+              style={{}}
             />
-            <View /></>)}
-
-        {/* Upcoming Events */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={[globalStyles.title, globalStyles.mi]}>Upcoming Event</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')}
-          ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
-        </View>
-        <FlatList
-          style={{ padding: 20 }}
-          data={events}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <EventCard
-              item={item}
-              onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-              cardWidth={300}
-
+            <Pagination
+              items={trend}
+              paginationIndex={paginationIndex}
+              scrollX={scrollX}
             />
-          )}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
-          ListEmptyComponent={() => (
-            <View style={{ padding: 20, alignItems: 'center' }}>
-              <Text>No events found</Text>
+          </View>
+
+          {/* Categories */}
+          <Text style={[globalStyles.title, globalStyles.mi]}>Categories</Text>
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <Category
+                type={item.name}
+                iconName={getIconNameByCategory(item.name)}
+              />
+            )}
+            contentContainerStyle={[globalStyles.container, globalStyles.mb, globalStyles.mi]}
+          />
+
+          <View style={globalStyles.mb}></View>
+
+          {/* Recommend Events */}
+          {(user?._j?.role === 'participant' && recommend.length > 0) && (
+            <><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[globalStyles.title, globalStyles.mi]}>Recommend Event</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')} style={globalStyles.mr}>
+                <Text style={[{ color: '#2196F3', fontWeight: '600' }]}>View all</Text>
+              </TouchableOpacity>
             </View>
-          )}
-          ListFooterComponent={loading && <ActivityIndicator size={30} />}
-        />
-        <View />
-      </View>
-      {/* <FeaturedPosts /> */}
-    </ScrollView>
+              <FlatList
+                style={{ paddingInline: 20 }}
+                data={recommend}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item, index }) => (
+                  <EventCard
+                    item={item}
+                    key={index}
+                    onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+                    cardWidth={300}
+
+                  />
+                )}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
+                ListEmptyComponent={() => (
+                  <View style={{ padding: 20, alignItems: 'center' }}>
+                    <Text>No events found</Text>
+                  </View>
+                )}
+                ListFooterComponent={loading && <ActivityIndicator size={30} />}
+              />
+              <View /></>)}
+
+          {/* Upcoming Events */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={[globalStyles.title, globalStyles.mi]}>Upcoming Event</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')} style={globalStyles.mr}
+            ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
+          </View>
+          <FlatList
+            style={{ paddingInline: 20 }}
+            data={events}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item, index }) => (
+              <EventCard
+                item={item}
+                key={index}
+                onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+                cardWidth={300}
+              />
+            )}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
+            ListEmptyComponent={() => (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text>No events found</Text>
+              </View>
+            )}
+            ListFooterComponent={loading && <ActivityIndicator size={30} />}
+          />
+          <View />
+        </View>
+        {/* <FeaturedPosts /> */}
+      </ScrollView>)
   );
 };
 
