@@ -229,7 +229,7 @@ export default function EditProfile({ navigation, route }) {
                 style={styles.input}
                 placeholder="Enter profile name"
                 placeholderTextColor={COLORS.primaryDark + '60'}
-                value={}
+                value={event.title}
                 onChangeText={(text) => setEvent({ ...event, title: text })}
               />
             </View>

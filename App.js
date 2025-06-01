@@ -29,6 +29,19 @@ import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
 import UpcommingEvent from "./screens/UpcomingEvent";
 import MyInvoice from "./screens/MyInvoice";
 
+import { NotificationProvider, useNotification } from "./context/NotificationContext";
+import * as Notifications from "expo-notifications";
+
+// Notification config
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false
+  })
+})
+
+// Navigator config
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
@@ -83,6 +96,7 @@ const StackFavourite = () => {
     </Stack.Navigator>
   )
 }
+
 
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
@@ -237,13 +251,16 @@ const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
   return (
-    <MyUserContext.Provider value={user} >
+  <NotificationProvider>
+      <MyUserContext.Provider value={user} >
       <MyDispatchContext.Provider value={dispatch}>
         <NavigationContainer>
           <TabNavigator />
         </NavigationContainer>
       </MyDispatchContext.Provider>
     </MyUserContext.Provider>
+  </NotificationProvider>
+    
   );
 }
 

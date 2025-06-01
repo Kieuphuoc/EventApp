@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -10,15 +10,16 @@ import {
   StatusBar,
   SafeAreaView,
   TextInput,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import COLORS from '../../constants/colors';
-import { userStyles } from './UserStyles';
-import Apis, { authApis, endpoints } from '../../configs/Apis';
-import { Alert } from 'react-native';
-import { MyDispatchContext } from '../../configs/Context';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import COLORS from "../../constants/colors";
+import { userStyles } from "./UserStyles";
+import Apis, { authApis, endpoints } from "../../configs/Apis";
+import { Alert } from "react-native";
+import { MyDispatchContext } from "../../configs/Context";
+import { useNotification } from "../../context/NotificationContext";
 
 const Login = () => {
   const [user, setUser] = useState({});
@@ -28,21 +29,23 @@ const Login = () => {
   const navigation = useNavigation();
   const [msg, setMsg] = useState(null);
 
+  // Test notification
+  const { expoPushToken, notification, error } = useNotification();
+
   const info = [
     {
-      label: 'Username',
-      icon: 'person',
+      label: "Username",
+      icon: "person",
       secureTextEntry: false,
-      field: 'username',
+      field: "username",
     },
     {
-      label: 'Mật khẩu',
-      icon: 'lock-closed',
+      label: "Mật khẩu",
+      icon: "lock-closed",
       secureTextEntry: true,
-      field: 'password',
+      field: "password",
     },
   ];
-
 
   const setState = (value, field) => {
     setUser({ ...user, [field]: value });
@@ -50,7 +53,7 @@ const Login = () => {
 
   const validate = () => {
     if (!user?.username || !user?.password) {
-      setMsg('Please enter username and password!');
+      setMsg("Please enter username and password!");
       return false;
     }
     setMsg(null);
@@ -58,37 +61,63 @@ const Login = () => {
   };
 
   const login = async () => {
-    console.log('Login pressed');
+    console.log("Login pressed");
     if (validate()) {
       try {
         setLoading(true);
         const formData = new FormData();
-        formData.append('username', user.username);
-        formData.append('password', user.password);
-        formData.append('grant_type', 'password');
-        formData.append('client_id', 'cAJaTDABqUkqUpGqn0COLHSFYDOFQF5tUCpITJbV');
-        formData.append('client_secret', 'UXh8HYabWc94SDoX0Y9UyuolgQWu80TTYUdTXgipxF5SPc2iFwsa3Cf2jBrhkTquzJwkyhTOuB2A0QFmUBQBsS6iqa1ICUI5LcjmKsmYdPohNbTsHSDOENJyku4wbCzV');
+        formData.append("username", user.username);
+        formData.append("password", user.password);
+        formData.append("grant_type", "password");
+        formData.append(
+          "client_id",
+          "cAJaTDABqUkqUpGqn0COLHSFYDOFQF5tUCpITJbV"
+        );
+        formData.append(
+          "client_secret",
+          "UXh8HYabWc94SDoX0Y9UyuolgQWu80TTYUdTXgipxF5SPc2iFwsa3Cf2jBrhkTquzJwkyhTOuB2A0QFmUBQBsS6iqa1ICUI5LcjmKsmYdPohNbTsHSDOENJyku4wbCzV"
+        );
 
-        let res = await Apis.post(endpoints['login'], formData, {
+        let res = await Apis.post(endpoints["login"], formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         });
 
-        await AsyncStorage.setItem('token', res.data.access_token);
-        let u = await authApis(res.data.access_token).get(endpoints['current-user']);
+        await AsyncStorage.setItem("token", res.data.access_token);
+        let u = await authApis(res.data.access_token).get(
+          endpoints["current-user"]
+        );
         console.info(u.data);
         dispatch({
-          type: 'login',
+          type: "login",
           payload: u.data,
         });
-        navigation.navigate('index');
+
+        if (expoPushToken) {
+          const form = new FormData();
+          form.append("push_token", expoPushToken);
+
+          await authApis(res.data.access_token).post(endpoints["save-push-token"], form, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+
+          console.log("Expo push token saved to backend");
+        }
+
+        navigation.navigate("index");
       } catch (ex) {
-        console.error('Login Error:', ex);
-        if (ex.response && ex.response.data && ex.response.data.error_description) {
+        console.error("Login Error:", ex);
+        if (
+          ex.response &&
+          ex.response.data &&
+          ex.response.data.error_description
+        ) {
           setMsg(ex.response.data.error_description);
         } else {
-          setMsg('Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
+          setMsg("Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.");
         }
       } finally {
         setLoading(false);
@@ -96,18 +125,17 @@ const Login = () => {
     }
   };
 
-
   return (
     <SafeAreaView style={userStyles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.primary} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={userStyles.keyboardView}
       >
         <ScrollView contentContainerStyle={userStyles.scrollContent}>
           <View style={userStyles.header}>
             <Image
-              source={require('../../assets/images/mini_logo.png')}
+              source={require("../../assets/images/mini_logo.png")}
               style={userStyles.logo}
               resizeMode="contain"
             />
@@ -118,22 +146,31 @@ const Login = () => {
           <View style={userStyles.form}>
             {info.map((i, index) => (
               <View key={index} style={userStyles.inputContainer}>
-                <Ionicons name={i.icon} size={20} color={COLORS.primary} style={userStyles.inputIcon} />
+                <Ionicons
+                  name={i.icon}
+                  size={20}
+                  color={COLORS.primary}
+                  style={userStyles.inputIcon}
+                />
                 <TextInput
                   value={user[i.field]}
                   onChangeText={(t) => setState(t, i.field)}
                   placeholder={i.label}
-                  secureTextEntry={i.field.includes('password') ? !showPassword : i.secureTextEntry}
+                  secureTextEntry={
+                    i.field.includes("password")
+                      ? !showPassword
+                      : i.secureTextEntry
+                  }
                   autoCapitalize="none"
                   style={userStyles.input}
                 />
-                {i.field.includes('password') && (
+                {i.field.includes("password") && (
                   <TouchableOpacity
                     style={userStyles.eyeIcon}
                     onPress={() => setShowPassword(!showPassword)}
                   >
                     <Ionicons
-                      name={showPassword ? 'eye' : 'eye-off'}
+                      name={showPassword ? "eye" : "eye-off"}
                       size={20}
                       color="#666"
                     />
@@ -142,12 +179,12 @@ const Login = () => {
               </View>
             ))}
 
-            {msg && (
-              <Text style={userStyles.errorText}>{msg}</Text>
-            )}
+            {msg && <Text style={userStyles.errorText}>{msg}</Text>}
 
             <TouchableOpacity style={userStyles.forgotPassword}>
-              <Text style={userStyles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={userStyles.forgotPasswordText}>
+                Forgot Password?
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -156,7 +193,7 @@ const Login = () => {
               onPress={login}
             >
               <Text style={userStyles.loginButtonText}>
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? "Signing In..." : "Sign In"}
               </Text>
             </TouchableOpacity>
 
@@ -183,7 +220,7 @@ const Login = () => {
 
             <View style={userStyles.signupContainer}>
               <Text style={userStyles.signupText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('register')}>
+              <TouchableOpacity onPress={() => navigation.navigate("register")}>
                 <Text style={userStyles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>

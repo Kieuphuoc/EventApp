@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "951760374677",
+    "project_id": "eventup-98bab",
+    "storage_bucket": "eventup-98bab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:951760374677:android:c022bca61d0a6b7725049c",
+        "android_client_info": {
+          "package_name": "dev.expo.eventup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkt1cxTaoPWxzOsR6enRRBZFkqURAZUI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

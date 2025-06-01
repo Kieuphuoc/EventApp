@@ -22,22 +22,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyUserContext } from "../../configs/Context";
 import LottieView from "lottie-react-native";
 
+
 const Home = () => {
   const navigation = useNavigation();
-
   const [globalLoading, setGlobalLoading] = useState(true);
-
   const [categories, setCategories] = useState([]);
   const [events, setEvents] = useState([]);
   const [trend, setTrend] = useState([]);
   const [recommend, setRecommend] = useState([]);
   const [discount, setDiscount] = useState([]);
-
   const [rating, setRating] = useState({});
-
   const user = useContext(MyUserContext);
-
-
 
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
@@ -208,12 +203,12 @@ const Home = () => {
   //   scrollTo(ref, offset.value, 0 , true);
   // });
 
-  const onViewableItemsChanged = ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      const index = viewableItems[0].index % trend.length; // Đảm bảo quay vòng
-      setPaginationIndex(index);
-    }
-  };
+  const onViewableItemsChanged = ({ viewableItems }) => {
+  if (viewableItems.length > 0 && viewableItems[0].index != null) {
+    const index = viewableItems[0].index % trend.length; // Đảm bảo quay vòng
+    setPaginationIndex(index);
+  }
+};
 
   const viewabilityConfig = {
     itemVisiblePercentThreshold: 50,
@@ -253,7 +248,6 @@ const Home = () => {
 
 
   return (
-
     globalLoading ? (
       <View style={[globalStyles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
         <LottieView
