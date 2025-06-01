@@ -201,13 +201,16 @@ const Booking = ({ route, navigation }) => {
       }
     };
 
-    // Linking.addEventListener('url', handleDeepLink);
-    // // Initial check for any pending deep link
-    // Linking.getInitialURL().then((url) => {
-    //   if (url) handleDeepLink({ url });
-    // });
+   const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    return () => Linking.removeEventListener('url', handleDeepLink);
+    // Initial check for any pending deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => {
+    subscription.remove();
+  };
   }, [navigation]);
 
   const handlePromoApply = (code) => {

@@ -1,4 +1,4 @@
-const BASE_URL = "https://d6de-171-252-155-229.ngrok-free.app/";
+const BASE_URL = "https://4f6c-14-169-26-201.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
@@ -29,6 +29,7 @@ export const endpoints = {
     'user_preference': '/user/preference/',
     'trend': '/event/trend/',
     'recommend': '/event/recommended/',
+    'save-push-token': '/user/save-push-token/'
 }
 
 export const authApis = (token) => {

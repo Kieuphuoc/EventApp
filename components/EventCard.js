@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#f0f0f0',
-    shadowColor: 'red',  // Màu của bóng
+    shadowColor: 'gray',  // Màu của bóng
     shadowOffset: { width: 0, height: 2 }, // Độ lệch của bóng (ngang, dọc)
     shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
     shadowRadius: 4, // Độ lan tỏa của bóng
