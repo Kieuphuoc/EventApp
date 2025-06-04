@@ -174,9 +174,14 @@ const Register = () => {
         formData.append('username', user.username);
         formData.append('password', user.password);
         formData.append('grant_type', 'password');
-        formData.append('client_id', 'cAJaTDABqUkqUpGqn0COLHSFYDOFQF5tUCpITJbV');
-        formData.append('client_secret', 'UXh8HYabWc94SDoX0Y9UyuolgQWu80TTYUdTXgipxF5SPc2iFwsa3Cf2jBrhkTquzJwkyhTOuB2A0QFmUBQBsS6iqa1ICUI5LcjmKsmYdPohNbTsHSDOENJyku4wbCzV');
-        
+       formData.append(
+          "client_id",
+          "AZzHCDaw5vMIWUW7f0vuqhVunNNvwe8HhPdpxxBE"
+        );
+        formData.append(
+          "client_secret",
+          "pcWoNqX3tQnZsAzPr3ZF4Z1E3WIydx5v5WRwBzxQbQaIFHdMmL29Vkkjd7rg6u926EVPte8rMkHxIrlDmNyfXuS7E6Tb2XkAz6M2RF4yUUug3HXg8IgRfLYJ4Cw0v4yg"
+        );
         let loginRes = await Apis.post(endpoints['login'], formData, {
           headers: {
             'Content-Type': 'multipart/form-data',

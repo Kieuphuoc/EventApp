@@ -74,7 +74,7 @@ const EventCardMini = ({ item, onPress, index }) => {
 };
 
 const { width } = Dimensions.get('window');
-const cardWidth = (width - 48) / 2; // 48 = padding (16) * 2 + gap between cards (16)
+const cardWidth = (width - 28) / 2; // 48 = padding (16) * 2 + gap between cards (16)
 
 const styles = StyleSheet.create({
   card: {

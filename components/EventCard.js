@@ -275,7 +275,7 @@ const EventCard = ({ item, onPress, cardWidth }) => {
             <View style={styles.category}>
               <Text style={styles.categoryText}>{item.category.name}</Text>
             </View>
-            <TouchableOpacity style={styles.favoriteButton}
+            {user && <TouchableOpacity style={styles.favoriteButton}
               onPress={() => (isFavorite ? delete_favor() : favor())}            >
 
               <Ionicons
@@ -283,7 +283,7 @@ const EventCard = ({ item, onPress, cardWidth }) => {
                 size={22}
                 color={isFavorite ? COLORS.error : "#fff"}
               />
-            </TouchableOpacity>
+            </TouchableOpacity>}
           </View>
         </View>
 
@@ -390,9 +390,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    flexDirection:'row', 
-    gap: 5, 
-    alignItems:'center',
+    flexDirection: 'row',
+    gap: 5,
+    alignItems: 'center',
   },
   priceText: {
     color: COLORS.error,

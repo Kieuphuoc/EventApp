@@ -14,7 +14,7 @@ import FavouriteEvent from "./screens/FavouriteEvent/FavouriteEvent";
 import Profile from "./screens/Profile/Profile";
 import EditProfile from "./screens/Profile/EditProfile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
-import { useContext, useReducer } from "react";
+import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
@@ -31,6 +31,7 @@ import MyInvoice from "./screens/MyInvoice";
 
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import * as Notifications from "expo-notifications";
+import CategoryFilter from "./screens/CategoryFilter";
 
 // Notification config
 Notifications.setNotificationHandler({
@@ -53,6 +54,7 @@ const StackNavigator = () => {
       <Stack.Screen name="booking" component={Booking} />
       <Stack.Screen name="searchingScreen" component={SearchingScreen} />
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
+      <Stack.Screen name="categoryFilter" component={CategoryFilter} />
     </Stack.Navigator>
   );
 }
@@ -250,17 +252,30 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
+  // useEffect(() => {
+  //   if (__DEV__) {
+  //     const mockUser = {
+  //       id: 1,
+  //       username: 'participant1',
+  //       name: 'Kieu Nghia',
+  //       role: 'participant',
+  //       token: 'fake-jwt-token'
+  //     };
+  //     dispatch({ type: "login", payload: mockUser });
+  //   }
+  // }, []);
+
   return (
-  <NotificationProvider>
+    <NotificationProvider>
       <MyUserContext.Provider value={user} >
-      <MyDispatchContext.Provider value={dispatch}>
-        <NavigationContainer>
-          <TabNavigator />
-        </NavigationContainer>
-      </MyDispatchContext.Provider>
-    </MyUserContext.Provider>
-  </NotificationProvider>
-    
+        <MyDispatchContext.Provider value={dispatch}>
+          <NavigationContainer>
+            <TabNavigator />
+          </NavigationContainer>
+        </MyDispatchContext.Provider>
+      </MyUserContext.Provider>
+    </NotificationProvider>
+
   );
 }
 
