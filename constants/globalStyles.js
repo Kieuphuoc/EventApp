@@ -101,5 +101,9 @@ const globalStyles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  fr:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+  }
 })
 export default globalStyles;

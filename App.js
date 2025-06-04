@@ -32,6 +32,7 @@ import MyInvoice from "./screens/MyInvoice";
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import * as Notifications from "expo-notifications";
 import CategoryFilter from "./screens/CategoryFilter";
+import { useFonts } from "expo-font";
 
 // Notification config
 Notifications.setNotificationHandler({
@@ -265,6 +266,11 @@ const App = () => {
   //   }
   // }, []);
 
+  const [fontsLoaded] = useFonts({
+    'DancingScript': require('./assets/fonts/GreatVibes-Regular.ttf'),
+  });
+
+  // if (!fontsLoaded) return <AppLoading />;
   return (
     <NotificationProvider>
       <MyUserContext.Provider value={user} >
