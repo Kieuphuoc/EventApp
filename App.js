@@ -267,7 +267,7 @@ const App = () => {
   // }, []);
 
   const [fontsLoaded] = useFonts({
-    'DancingScript': require('./assets/fonts/GreatVibes-Regular.ttf'),
+    'GreatVibes': require('./assets/fonts/GreatVibes-Regular.ttf'),
   });
 
   // if (!fontsLoaded) return <AppLoading />;

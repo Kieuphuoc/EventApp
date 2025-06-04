@@ -1,5 +1,5 @@
 const COLORS = {
-  primary: "#3a6f63", // Xanh đậm hơn từ #add1b8
+  primary: "#3e8a73", // Xanh đậm hơn từ #add1b8
   primaryLight: "#5f9885", // Xanh nhạt hơn để tạo gradient
   primaryDark: "#2b4f46", // Xanh đậm hơn primary
   primaryDarker: "#1a3e35", // Xanh tối hơn primary
