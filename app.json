@@ -18,6 +18,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+        "@react-native-google-signin/google-signin",
+        "@react-native-firebase/app",
+        "@react-native-firebase/auth"
+    ],
+    "scheme": "eventup",
+    "deepLinking": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "dev.expo.eventup",
