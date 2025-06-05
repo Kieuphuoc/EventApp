@@ -7,6 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "fonts": {
+      "DancingScript": "./assets/fonts/GreatVibes-Regular.ttf"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

@@ -7,7 +7,7 @@ import Category from '../../components/Category';
 import EventCard from '../../components/EventCard';
 import Pagination from "../../components/Pagination";
 import SliderItem from "../../components/SliderItem";
-import { RefreshControl} from 'react-native';
+import { RefreshControl } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
 
@@ -149,7 +149,7 @@ const Home = () => {
         loadCates(),
         loadEvents(),
         loadTrend(),
-        // user?._j?.role === 'participant' &&
+        user?._j?.role === 'participant' &&
         loadRecommend()
       ]);
     } catch (error) {
@@ -204,11 +204,11 @@ const Home = () => {
   // });
 
   const onViewableItemsChanged = ({ viewableItems }) => {
-  if (viewableItems.length > 0 && viewableItems[0].index != null) {
-    const index = viewableItems[0].index % trend.length; // Đảm bảo quay vòng
-    setPaginationIndex(index);
-  }
-};
+    if (viewableItems.length > 0 && viewableItems[0].index != null) {
+      const index = viewableItems[0].index % trend.length; // Đảm bảo quay vòng
+      setPaginationIndex(index);
+    }
+  };
 
   const viewabilityConfig = {
     itemVisiblePercentThreshold: 50,
@@ -263,8 +263,22 @@ const Home = () => {
       }>
         <View style={styles.container}>
           <Header />
-          <TouchableOpacity onPress={() => navigation.navigate('searchingScreen')}>
+          {/* <TouchableOpacity onPress={() => navigation.navigate('searchingScreen')}>
             <SearchBox q={q} setQ={setQ} />
+          </TouchableOpacity> */}
+
+          <TouchableOpacity
+            style={[
+              globalStyles.container,
+              globalStyles.input,
+              globalStyles.mb,
+              globalStyles.mi,
+              { alignItems: 'center', justifyContent:"flex-start" }
+            ]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('searchingScreen')}          >
+            <Ionicons name="search" size={20} color="gray" style={{ marginRight: 8 }} />
+            <Text style={{ color: 'gray', fontSize: 16 }}>Search Event..</Text>
           </TouchableOpacity>
 
           {/* Trending Events */}
@@ -299,6 +313,7 @@ const Home = () => {
               <Category
                 type={item.name}
                 iconName={getIconNameByCategory(item.name)}
+                onPress={()=> navigation.navigate('categoryFilter', {id: item.id})}
               />
             )}
             contentContainerStyle={[globalStyles.container, globalStyles.mb, globalStyles.mi]}

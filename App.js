@@ -30,6 +30,8 @@ import MyInvoice from "./screens/MyInvoice";
 
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import * as Notifications from "expo-notifications";
+import CategoryFilter from "./screens/CategoryFilter";
+import { useFonts } from "expo-font";
 
 import firebase from '@react-native-firebase/app';
 import { firebaseConfig } from './configs/firebaseConfig';
@@ -56,6 +58,7 @@ const StackNavigator = () => {
       <Stack.Screen name="booking" component={Booking} />
       <Stack.Screen name="searchingScreen" component={SearchingScreen} />
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
+      <Stack.Screen name="categoryFilter" component={CategoryFilter} />
     </Stack.Navigator>
   );
 }
@@ -253,6 +256,7 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
+
   // Initializer firebase
   if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
@@ -265,17 +269,37 @@ const App = () => {
     });
   });
 
+
+  // useEffect(() => {
+  //   if (__DEV__) {
+  //     const mockUser = {
+  //       id: 1,
+  //       username: 'participant1',
+  //       name: 'Kieu Nghia',
+  //       role: 'participant',
+  //       token: 'fake-jwt-token'
+  //     };
+  //     dispatch({ type: "login", payload: mockUser });
+  //   }
+  // }, []);
+
+  const [fontsLoaded] = useFonts({
+    'GreatVibes': require('./assets/fonts/GreatVibes-Regular.ttf'),
+  });
+
+  // if (!fontsLoaded) return <AppLoading />;
+
   return (
-  <NotificationProvider>
+    <NotificationProvider>
       <MyUserContext.Provider value={user} >
-      <MyDispatchContext.Provider value={dispatch}>
-        <NavigationContainer>
-          <TabNavigator />
-        </NavigationContainer>
-      </MyDispatchContext.Provider>
-    </MyUserContext.Provider>
-  </NotificationProvider>
-    
+        <MyDispatchContext.Provider value={dispatch}>
+          <NavigationContainer>
+            <TabNavigator />
+          </NavigationContainer>
+        </MyDispatchContext.Provider>
+      </MyUserContext.Provider>
+    </NotificationProvider>
+
   );
 }
 

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import { authApis, endpoints } from '../configs/Apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
@@ -11,7 +13,9 @@ const MyInvoice = ({ route, navigation }) => {
   const id = route.params;
   const invoice_id = parseInt(id, 10);
 
+  console.log(invoice_id);
   const [invoice, setInvoice] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const loadInvoice = async () => {
     try {
@@ -39,14 +43,14 @@ const MyInvoice = ({ route, navigation }) => {
     loadInvoice();
   }, []);
 
-
-  const date = new Date(invoice?.event?.start_time);
-  const day = new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date).replace(/\//g, '/');
-  const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+  // invoice!==null && {}
+  // const date = new Date(invoice?.event?.start_time);
+  // const day = new Intl.DateTimeFormat('en-GB', {
+  //   day: '2-digit',
+  //   month: '2-digit',
+  //   year: 'numeric',
+  // }).format(date).replace(/\//g, '/');
+  // const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
 
   return (
@@ -61,7 +65,7 @@ const MyInvoice = ({ route, navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Invoice detail</Text>
       </View>
-      <ScrollView style={styles.scrollView}>
+      {loading ? <ActivityIndicator size={'large'} color={COLORS.primary} /> : <><ScrollView style={styles.scrollView}>
         <View style={styles.content}>
           <View style={styles.detailsContainer}>
             <Text style={styles.sectionTitle}>Event Details</Text>
@@ -78,7 +82,18 @@ const MyInvoice = ({ route, navigation }) => {
               <Ionicons name="time-outline" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Date & Time</Text>
-                <Text style={styles.detailValue}>{day} at {time}</Text>
+                <Text style={styles.detailValue}>
+                  {invoice?.event?.start_time ? (() => {
+                    const date = new Date(invoice.event.start_time);
+                    const day = new Intl.DateTimeFormat('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    }).format(date).replace(/\//g, '/');
+                    const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    return `${day} at ${time}`;
+                  })() : "N/A"}
+                </Text>
               </View>
             </View>
 
@@ -97,7 +112,7 @@ const MyInvoice = ({ route, navigation }) => {
             <View style={styles.detailRow}>
               <Ionicons name="ticket-outline" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Ticket </Text>
+                <Text style={styles.detailLabel}>Ticket price</Text>
                 <Text style={styles.detailValue}>{invoice?.event?.ticket_price}</Text>
               </View>
             </View>
@@ -116,27 +131,25 @@ const MyInvoice = ({ route, navigation }) => {
               <Text style={styles.priceLabel}>Price per ticket</Text>
               <Text style={styles.priceValue}>{invoice?.event?.ticket_price}₫</Text>
             </View>
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceLabel}>Discount amount</Text>
+              <Text style={styles.priceValue}>{invoice?.discount_amount == 0 ? 0 : `- ${invoice?.discount_amount}`}₫</Text>
+            </View>
 
             <View style={styles.totalContainer}>
               <Text style={styles.totalLabel}>Total Amount</Text>
-              <Text style={styles.totalValue}>${invoice?.event?.final_amount}</Text>
+              <Text style={styles.totalValue}>${invoice?.final_amount}</Text>
             </View>
           </View>
         </View>
-      </ScrollView>
+      </ScrollView><View style={styles.footer}>
+          <View style={styles.footerTotalContainer}>
+            <Text style={styles.footerTotalLabel}>Total Amount</Text>
+            <Text style={styles.footerTotalValue}>${invoice?.final_amount}</Text>
+          </View>
+        </View></>}
 
-      <View style={styles.footer}>
-        <View style={styles.footerTotalContainer}>
-          <Text style={styles.footerTotalLabel}>Total Amount</Text>
-          <Text style={styles.footerTotalValue}>${ticket?.event?.final_amount}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.confirmButton}
-        //   onPress={handleConfirmPayment}
-        >
-          <Text style={styles.confirmButtonText}>Confirm Payment</Text>
-        </TouchableOpacity>
-      </View>
+
     </View>
   );
 };
