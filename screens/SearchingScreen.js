@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,121 +19,73 @@ import EventCardMini from '../components/EventCardMini';
 
 const suggestions = ["esport", "offline event", "Genfest", "meeting"];
 
-// const categories = [
-//   { name: 'Cà Phê/Trà', icon: require('../assets/images/mini_logo.png') },
-//   { name: 'Trà sữa', icon: require('../assets/images/mini_logo.png') },
-// ];
-
-const getIconNameByCategory = (category) => {
-  switch (category.toLowerCase()) {
-    case 'concert':
-      return 'musical-notes';
-    case 'meetup':
-      return 'people';
-    case 'workshop':
-      return 'construct';
-    case 'conference':
-      return 'briefcase';
-    case 'festival':
-      return 'balloon';
-    case 'exhibition':
-      return 'images';
-    case 'networking':
-      return 'chatbox-ellipses';
-    case 'competition':
-      return 'trophy';
-    case 'ceremony':
-      return 'ribbon';
-    case 'webinar':
-      return 'videocam';
-    default:
-      return 'alert';
-  }
-};
-
-export default function SearchingScreen({ navigation }) {
-  const [q, setQ] = useState("");
+export default function SearchingScreen({ navigation, searchText }) {
+  const [q, setQ] = useState(searchText || ""); // khởi tạo q từ searchText props
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [categories, setCategories] = useState([]);
+  // useEffect(() => {
+  //   // Khi props searchText thay đổi thì cập nhật q
+  //   setQ(searchText || "");
+  // }, [searchText]);
 
-  const loadCates = async () => {
-    let res = await Apis.get(endpoints['category']);
-    setCategories(res.data);
-  }
+  // useEffect(() => {
+  //   // Khi q thay đổi thì gọi loadEvents
+  //   loadEvents();
+  // }, [q]);
 
-
-  const loadEvents = async () => {
+  const loadEvent = async () => {
     try {
       setLoading(true);
-
       let url = `${endpoints['event']}`;
-
       if (q) {
         url = `${url}?search=${q}`;
       }
-
       let res = await Apis.get(url);
       if (res.data) {
         setEvents(res.data);
       }
     } catch (ex) {
       console.error("Error loading events:", ex);
-      setEvents([]); // Set empty array on error
+      setEvents([]);
     } finally {
       setLoading(false);
     }
-  }
+  };
+  
+  useEffect(() => {
+    setQ(searchText);
+    loadEvent();
+  }, [searchText]);
 
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#fff', paddingTop: 60 }}>
-      <View style={styles.searchBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#222" />
-        </TouchableOpacity>
+      <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]}>
         <TextInput
-          style={styles.input}
-          placeholder="Searching any event..."
+          style={[globalStyles.input, globalStyles.placeholder]}
+          placeholder="Search Event.."
+          placeholderTextColor={'gray'}
           value={q}
-          onChangeText={setQ}
-          autoFocus
+          onChangeText={setQ}  // người dùng có thể nhập để thay đổi từ khóa
+          onSubmitEditing={loadEvent} // khi bấm enter, load lại events
         />
-        <TouchableOpacity onPress={() => loadEvents()}>
-          <Text style={{ color: '#2196F3', fontWeight: '600', marginLeft: 8 }}>Search</Text>
+        <TouchableOpacity style={[globalStyles.button]} onPress={loadEvent}>
+          <Ionicons name="search" size={24} color="white" />
         </TouchableOpacity>
       </View>
-
-      {/* Recommend for you */}
-      {/* <Text style={styles.sectionTitle}>Recommend for you </Text>
-      <View style={styles.suggestionContainer}>
-        {suggestions.map((item, idx) => (
-          <TouchableOpacity
-            key={idx}
-            onPress={() => {
-              setQuery(item);
-              loadEvents(item);
-            }}
-            style={styles.suggestionTag}
-          >
-            <Ionicons name="trending-up" size={16} color="#ff7043" style={{ marginRight: 4 }} />
-            <Text style={styles.suggestionText}>{item}</Text>
-          </TouchableOpacity>
-        ))}
-      </View> */}
 
       <Text style={styles.sectionTitle}>SEARCHING RESULT</Text>
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
       ) : (
-        <View style={{ marginHorizontal: 20 }}>
+        <View style={{ marginHorizontal: 10 }}>
           {events.length === 0 ? (
             <Text style={{ color: '#666' }}>No result matching.</Text>
           ) : (
-            <><FlatList
+            <FlatList
               data={events}
-              // keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item, index }) => (
                 <EventCardMini
                   item={item.event || item}
@@ -141,24 +93,15 @@ export default function SearchingScreen({ navigation }) {
                   index={index}
                 />
               )}
-              // contentContainerStyle={styles.list}
               numColumns={2}
-              // columnWrapperStyle={styles.columnWrapper}
               scrollEnabled={true}
-              ListFooterComponent={
-                <>
-                  {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
-                  {/* {renderPagination()} */}
-                </>
-              }
-            /></>
+            />
           )}
         </View>
       )}
     </GestureHandlerRootView>
   );
 }
-
 const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',

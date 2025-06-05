@@ -21,22 +21,6 @@ const CategoryFilter = ({ route, navigation }) => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // const loadEventsByCategory = async () => {
-    //     try {
-    //         setLoading(true);
-    //         let url = `${endpoints['event']}?category_id=${categoryId}`;
-    //         const res = await Apis.get(url);
-
-    //         if (res.data) {
-    //             setEvents(res.data);
-    //         }
-    //     } catch (ex) {
-    //         console.error('Error loading events by category:', ex);
-    //         setEvents([]);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const loadEvent = async () => {
         try {
@@ -73,46 +57,45 @@ const CategoryFilter = ({ route, navigation }) => {
         <View style={styles.container}>
             <StatusBar backgroundColor={COLORS.primaryDark} barStyle="light-content" />
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Events by Category</Text>
+                <Text style={styles.headerTitle}>Invoice detail</Text>
             </View>
-
             {loading ? (
                 <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
             ) : (
-               
-            <><FlatList
-        data={events}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item, index }) => (
-          <EventCardMini
-            item={item.event || item}
-            onPress={() => navigation.navigate('eventDetail', { id: item.event?.id || item.id })}
-            index={index}
-          />
-        )}
-        contentContainerStyle={styles.list}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
-        scrollEnabled={true}
-        // onScroll={Animated.event(
-        //   [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        //   { useNativeDriver: false }
-        // )}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No events found</Text>
-          </View>
-        )}
-        ListFooterComponent={
-          <>
-            {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
-            {/* {renderPagination()} */}
-          </>
-        }
-      /></>)}
+                <><FlatList
+                style={{padding:10}}
+                    data={events}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item, index }) => (
+                        <EventCardMini
+                            item={item.event || item}
+                            onPress={() => navigation.navigate('eventDetail', { id: item.event?.id || item.id })}
+                            index={index}
+                        />
+                    )}
+                    contentContainerStyle={styles.list}
+                    numColumns={2}
+                    columnWrapperStyle={styles.columnWrapper}
+                    scrollEnabled={true}
+                   
+                    ListEmptyComponent={() => (
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>No events found</Text>
+                        </View>
+                    )}
+                    ListFooterComponent={
+                        <>
+                            {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
+                            {/* {renderPagination()} */}
+                        </>
+                    }
+                /></>)}
         </View>
     );
 };
@@ -123,20 +106,32 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.background,
     },
     header: {
+        backgroundColor: COLORS.primary,
+        padding: 20,
+        paddingTop: 40,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.primary,
-        paddingTop: 40,
-        paddingBottom: 20,
-        paddingHorizontal: 16,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 8,
+    },
+    backButton: {
+        marginRight: 15,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        padding: 8,
+        borderRadius: '50%',
     },
     headerTitle: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#fff',
-        marginLeft: 12,
     },
 });
 

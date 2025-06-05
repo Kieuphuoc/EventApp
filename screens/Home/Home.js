@@ -3,6 +3,8 @@ import { ScrollView, View, Text, FlatList, TouchableOpacity, Image } from 'react
 import { styles } from './styles';
 import Header from '../../components/Header';
 import SearchBox from '../../components/SearchBox';
+import SearchBo from '../../components/SearchBo';
+
 import Category from '../../components/Category';
 import EventCard from '../../components/EventCard';
 import Pagination from "../../components/Pagination";
@@ -14,7 +16,7 @@ import COLORS from "../../constants/colors";
 
 import FeaturedPosts from '../../components/FeaturedPosts';
 import Apis, { authApis, endpoints } from '../../configs/Apis';
-import { ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator, TextInput } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
 import globalStyles from "../../constants/globalStyles";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
@@ -37,6 +39,8 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
 
   const loadCates = async () => {
     let res = await Apis.get(endpoints['category']);
@@ -246,6 +250,53 @@ const Home = () => {
     }
   };
 
+  const handleSearch = async (text) => {
+    setQ(text);
+    if (text.trim() === '') {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    try {
+      // Gọi API để lấy gợi ý tìm kiếm
+      const res = await Apis.get(`${endpoints['event']}?search=${text}`);
+      if (res.data) {
+        // Lấy tên sự kiện làm gợi ý
+        const suggestions = res.data.map(event => event.title);
+        setSearchSuggestions(suggestions);
+      }
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+      setSearchSuggestions([]);
+    }
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+  };
+
+  const handleSearchBlur = () => {
+    setIsSearchFocused(false);
+  };
+
+  const handleSearchEnter = (text) => {
+    navigation.navigate('searchingScreen', { searchQuery: text });
+  };
+
+  const loadSearchSuggestions = async () => {
+    try {
+      const res = await Apis.get(endpoints['event']);
+      if (res.data) {
+        setSearchSuggestions(res.data);
+      }
+    } catch (error) {
+      console.error("Error loading search suggestions:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadSearchSuggestions();
+  }, []);
 
   return (
     globalLoading ? (
@@ -261,25 +312,27 @@ const Home = () => {
       <ScrollView style={styles.scrollView} refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
       }>
-        <View style={styles.container}>
+        <View style={[styles.container]}>
           <Header />
-          {/* <TouchableOpacity onPress={() => navigation.navigate('searchingScreen')}>
-            <SearchBox q={q} setQ={setQ} />
-          </TouchableOpacity> */}
+          <SearchBox 
+            onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
+            onEnter={handleSearchEnter}
+            suggestions={searchSuggestions}
+          />
 
-          <TouchableOpacity
-            style={[
-              globalStyles.container,
-              globalStyles.input,
-              globalStyles.mb,
-              globalStyles.mi,
-              { alignItems: 'center', justifyContent:"flex-start" }
-            ]}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('searchingScreen')}          >
-            <Ionicons name="search" size={20} color="gray" style={{ marginRight: 8 }} />
-            <Text style={{ color: 'gray', fontSize: 16 }}>Search Event..</Text>
-          </TouchableOpacity>
+          {/* <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]} >
+            <TextInput style={[globalStyles.input, globalStyles.placeholder]}
+              placeholder="Search Event.."
+              placeholderTextColor={'gray'}
+            // value={q} onChangeText={setQ}
+            />
+
+            <View style={[globalStyles.button]}>
+              <Ionicons name="search" size={24} color="white" />
+            </View>
+          </View> */}
+
 
           {/* Trending Events */}
           <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
@@ -313,7 +366,7 @@ const Home = () => {
               <Category
                 type={item.name}
                 iconName={getIconNameByCategory(item.name)}
-                onPress={()=> navigation.navigate('categoryFilter', {id: item.id})}
+                onPress={() => navigation.navigate('categoryFilter', { id: item.id })}
               />
             )}
             contentContainerStyle={[globalStyles.container, globalStyles.mb, globalStyles.mi]}
