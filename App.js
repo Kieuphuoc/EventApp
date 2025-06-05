@@ -14,11 +14,10 @@ import FavouriteEvent from "./screens/FavouriteEvent/FavouriteEvent";
 import Profile from "./screens/Profile/Profile";
 import EditProfile from "./screens/Profile/EditProfile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
-import { useContext, useReducer } from "react";
+import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
-// import PaymentConfirmation from "./screens/PaymentConfirmation";
 import SearchingScreen from "./screens/SearchingScreen";
 
 import Statistics from "./screens/Statistics/Statistics";
@@ -31,6 +30,10 @@ import MyInvoice from "./screens/MyInvoice";
 
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import * as Notifications from "expo-notifications";
+
+import firebase from '@react-native-firebase/app';
+import { firebaseConfig } from './configs/firebaseConfig';
+import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
 // Notification config
 Notifications.setNotificationHandler({
@@ -249,6 +252,18 @@ const TabNavigator = () => {
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
+
+  // Initializer firebase
+  if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+  useEffect(() => {
+    GoogleSignin.configure({  
+      webClientId: "951760374677-29quu8dvcdaeqjr33jq8e2bgspncjd2r.apps.googleusercontent.com",
+      profileImageSize: 150
+    });
+  });
 
   return (
   <NotificationProvider>

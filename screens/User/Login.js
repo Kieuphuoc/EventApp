@@ -21,6 +21,9 @@ import { Alert } from "react-native";
 import { MyDispatchContext } from "../../configs/Context";
 import { useNotification } from "../../context/NotificationContext";
 
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import auth from "@react-native-firebase/auth"
+
 const Login = () => {
   const [user, setUser] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -29,8 +32,17 @@ const Login = () => {
   const navigation = useNavigation();
   const [msg, setMsg] = useState(null);
 
-  // Test notification
+  // Notification
   const { expoPushToken, notification, error } = useNotification();
+
+  // Google signin
+  // const HandleGoogleSignin = async () => {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     const response = await GoogleSignin.signIn();
+  //     if (isSuccessResponse(response))
+  //   }
+  // }
 
   const info = [
     {
@@ -71,11 +83,11 @@ const Login = () => {
         formData.append("grant_type", "password");
         formData.append(
           "client_id",
-          "cAJaTDABqUkqUpGqn0COLHSFYDOFQF5tUCpITJbV"
+          "AZzHCDaw5vMIWUW7f0vuqhVunNNvwe8HhPdpxxBE"
         );
         formData.append(
           "client_secret",
-          "UXh8HYabWc94SDoX0Y9UyuolgQWu80TTYUdTXgipxF5SPc2iFwsa3Cf2jBrhkTquzJwkyhTOuB2A0QFmUBQBsS6iqa1ICUI5LcjmKsmYdPohNbTsHSDOENJyku4wbCzV"
+          "pcWoNqX3tQnZsAzPr3ZF4Z1E3WIydx5v5WRwBzxQbQaIFHdMmL29Vkkjd7rg6u926EVPte8rMkHxIrlDmNyfXuS7E6Tb2XkAz6M2RF4yUUug3HXg8IgRfLYJ4Cw0v4yg"
         );
 
         let res = await Apis.post(endpoints["login"], formData, {
@@ -124,6 +136,74 @@ const Login = () => {
       }
     }
   };
+
+  const HandleGoogleSignin = async () => {
+  try {
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+    const userInfo = await GoogleSignin.signIn();
+
+    const { idToken : googleIdToken } = await GoogleSignin.getTokens();
+    const googleCredential = auth.GoogleAuthProvider.credential(googleIdToken);
+    const firebaseUserCredential = await auth().signInWithCredential(googleCredential);
+    const firebaseIdToken = await firebaseUserCredential.user.getIdToken();
+    console.log('Firebase ID Token:', firebaseIdToken);
+
+    const formData = new FormData();
+    formData.append('id_token', firebaseIdToken);
+
+    let response = await Apis.post(endpoints["google-login"], formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+    console.log('API Response:', response.data);
+
+    await AsyncStorage.setItem('token', response.data.access_token);
+    
+    // Gửi thông tin người dùng vào context
+    dispatch({
+      type: 'login',
+      payload: response.data.user,
+    });
+    
+    // Lưu push token nếu có
+    if (expoPushToken) {
+          const form = new FormData();
+          form.append("push_token", expoPushToken);
+
+          await authApis(response.data.access_token).post(endpoints["save-push-token"], form, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+
+          console.log("Expo push token saved to backend");
+        }
+    
+    // Chuyển hướng tới màn hình chính
+    navigation.navigate('index');
+  } catch (error) {
+    console.error('Lỗi đăng nhập Google:', error);
+    if (isErrorWithCode(error)) {
+      switch (error.code) {
+        case statusCodes.SIGN_IN_CANCELLED:
+          setMsg('Đăng nhập Google bị hủy');
+          break;
+        case statusCodes.IN_PROGRESS:
+          setMsg('Đang thực hiện đăng nhập');
+          break;
+        case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+          setMsg('Google Play Services không khả dụng');
+          break;
+        default:
+          setMsg('Đăng nhập Google thất bại. Vui lòng thử lại.');
+      }
+    } else {
+      setMsg('Có lỗi xảy ra khi đăng nhập Google.');
+    }
+  }
+};
 
   return (
     <SafeAreaView style={userStyles.container}>
@@ -207,6 +287,7 @@ const Login = () => {
               <TouchableOpacity
                 style={userStyles.socialButton}
                 disabled={loading}
+                onPress={HandleGoogleSignin}
               >
                 <Ionicons name="logo-google" size={24} color="#DB4437" />
               </TouchableOpacity>
