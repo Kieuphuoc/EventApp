@@ -12,18 +12,20 @@ import CreateEvent from "./screens/CreateEvent/CreateEvent";
 import FavouriteEvent from "./screens/FavouriteEvent/FavouriteEvent";
 import Profile from "./screens/Profile/Profile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
-import { useContext, useReducer } from "react";
+import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
-
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
 import EditEvent from "./screens/CreateEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
 import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
 import UpcommingEvent from "./screens/UpcomingEvent";
+
+import { useNotification } from "./components/useNotification";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -222,6 +224,8 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
+  useNotification()
+  
   return (
     <MyUserContext.Provider value={user} >
       <MyDispatchContext.Provider value={dispatch}>
