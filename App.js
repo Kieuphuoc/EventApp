@@ -18,7 +18,6 @@ import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
-// import PaymentConfirmation from "./screens/PaymentConfirmation";
 import SearchingScreen from "./screens/SearchingScreen";
 
 import Statistics from "./screens/Statistics/Statistics";
@@ -34,6 +33,10 @@ import * as Notifications from "expo-notifications";
 import CategoryFilter from "./screens/CategoryFilter";
 import { useFonts } from "expo-font";
 import MyReceipt from "./screens/MyReceipt";
+
+import firebase from '@react-native-firebase/app';
+import { firebaseConfig } from './configs/firebaseConfig';
+import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
 // Notification config
 Notifications.setNotificationHandler({
@@ -263,6 +266,20 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
+
+  // Initializer firebase
+  if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+  useEffect(() => {
+    GoogleSignin.configure({  
+      webClientId: "951760374677-29quu8dvcdaeqjr33jq8e2bgspncjd2r.apps.googleusercontent.com",
+      profileImageSize: 150
+    });
+  });
+
+
   // useEffect(() => {
   //   if (__DEV__) {
   //     const mockUser = {
@@ -281,6 +298,7 @@ const App = () => {
   });
 
   // if (!fontsLoaded) return <AppLoading />;
+
   return (
     <NotificationProvider>
       <MyUserContext.Provider value={user} >
