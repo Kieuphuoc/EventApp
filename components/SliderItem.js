@@ -36,21 +36,12 @@ const SliderItem = ({ item, index, scrollX, onPress }) => {
         <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
             <Animated.View style={[styles.container, rnAnimatedStyle]}>
                 <Image source={{ uri: item.image }} style={{ width: 280, height: 350, borderRadius: 20 }} />
-                <LinearGradient colors={['transparent', 'rgba(13, 59, 28, 0.5)']} style={styles.background}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                        <View style={styles.category}>
-                            <Text style={styles.categoryText}>{item.category.name}</Text>
-                        </View>
-                        {/* <TouchableOpacity style={styles.icon}>
-                            <Ionicons name='heart-outline' size={25} color={'white'} ></Ionicons>
-                        </TouchableOpacity> */}
-
+                <View style={styles.background}>
+                    <View style={styles.category}>
+                        <Text style={styles.categoryText}>{item.category.name}</Text>
                     </View>
-                    <View>
-                        <Text style={styles.title}>{item.title}</Text>
-                    </View>
-
-                </LinearGradient>
+                </View>
+                <Text style={styles.title}>{item.title}</Text>
             </Animated.View>
         </TouchableOpacity>
 
@@ -61,10 +52,11 @@ export default SliderItem;
 
 const styles = StyleSheet.create({
     category: {
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 15,
+        alignSelf: "flex-start",
     },
     categoryText: {
         color: '#fff',
@@ -87,7 +79,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         width: 280,
         height: 350,
-        padding: 20,
+        paddingLeft: 20,
         borderRadius: 20,
         justifyContent: "space-between"
     },
@@ -97,9 +89,9 @@ const styles = StyleSheet.create({
         borderRadius: 30,
     },
     title: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
+        color: '#333',
+        fontSize: 16,
+        fontWeight: '700',
     }
 
 })  

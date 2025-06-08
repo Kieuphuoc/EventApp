@@ -25,20 +25,19 @@ const CategoryFilter = ({ route, navigation }) => {
     const loadEvent = async () => {
         try {
             setLoading(true);
+            let allEvents = [];
 
-            let url = `${endpoints['event']}`;
-
-            if (id) {
-                url = `${url}?category_id=${id}`;
-            }
+            let url = `${endpoints['event']}?category_id=${id}`;
 
             let res = await Apis.get(url);
             if (res.data) {
-                setEvents(res.data);
+                allEvents = [...allEvents, ...res.data.results];
+                url = res.data.next;
             }
+            setEvents(allEvents);
+
         } catch (ex) {
             console.error("Error loading events:", ex);
-            setEvents([]); // Set empty array on error
         } finally {
             setLoading(false);
         }
@@ -48,10 +47,6 @@ const CategoryFilter = ({ route, navigation }) => {
         loadEvent();
     }, []);
 
-
-    // useEffect(() => {
-    //     loadEventsByCategory();
-    // }, []);
 
     return (
         <View style={styles.container}>
@@ -63,13 +58,13 @@ const CategoryFilter = ({ route, navigation }) => {
                 >
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Invoice detail</Text>
+                <Text style={styles.headerTitle}>Filter by category</Text>
             </View>
             {loading ? (
                 <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
             ) : (
                 <><FlatList
-                style={{padding:10}}
+                    style={{ padding: 10 }}
                     data={events}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item, index }) => (
@@ -83,7 +78,7 @@ const CategoryFilter = ({ route, navigation }) => {
                     numColumns={2}
                     columnWrapperStyle={styles.columnWrapper}
                     scrollEnabled={true}
-                   
+
                     ListEmptyComponent={() => (
                         <View style={styles.emptyContainer}>
                             <Text style={styles.emptyText}>No events found</Text>

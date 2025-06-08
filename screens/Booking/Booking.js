@@ -23,7 +23,7 @@ import { MyDispatchContext, MyUserContext } from '../../configs/Context';
 import { ActivityIndicator } from 'react-native-paper';
 
 const PAYMENT_METHODS = [
-  { id: 'cash', name: 'Cash', icon: 'cash-outline' },
+  { id: 'cash', name: 'VNPay', icon: 'cash-outline' },
   { id: 'momo', name: 'MoMo', icon: 'wallet-outline' },
 ];
 
@@ -41,6 +41,7 @@ const Booking = ({ route, navigation }) => {
   const [percentDiscount, setPercentDiscount] = useState('');
   const [momoUrl, setMomoUrl] = useState(null);
   const [invoice_id, setInvoice_id] = useState(null);
+  const [invoice, setInvoice]= useState([]);
 
   const basePrice = event.ticket_price || 0;
   const totalPrice = basePrice * quantity;
@@ -118,6 +119,36 @@ const Booking = ({ route, navigation }) => {
     }
   };
 
+   const loadInvoice = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      let res = await authApis(token).get(endpoints["invoice"]);
+      console.log("Invoice:", res.data);
+      if (res.data) {
+        setInvoice(res.data);
+      }
+    } catch (ex) {
+      console.error("Error loading invoice:", ex);
+      console.log("Error details:", ex.response?.data);
+      setInvoice([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+  (async () => {
+    await booking();
+    await loadInvoice();
+  })();
+}, []);
+
+
   const momoPayment = async (invoiceId) => {
     const token = await AsyncStorage.getItem('token');
     if (!token) {
@@ -141,12 +172,18 @@ const Booking = ({ route, navigation }) => {
     console.log('URL MOMO:', res.data.pay_url);
 
     if (res.status === 200 && res.data) {
-      const payUrl = res.data.pay_url; // Directly use pay_url
+      const payUrl = res.data.pay_url;
       setMomoUrl(payUrl);
       if (payUrl) {
         const supported = await Linking.canOpenURL(payUrl);
         if (supported) {
           await Linking.openURL(payUrl); // Navigate to the MoMo pay_url
+
+ console.log(nvoice.invoiceId.payment_status);
+          if (invoice.invoiceId.payment_status=='success') {
+            console.log("Chuyen trang thanh cong!");
+            navigation.navigate('PaymentSuccess');
+          }
         } else {
           Alert.alert('Error', 'Cannot open MoMo payment URL. Please ensure the MoMo app is installed.');
         }
@@ -201,7 +238,7 @@ const Booking = ({ route, navigation }) => {
       }
     };
 
-   const subscription = Linking.addEventListener('url', handleDeepLink);
+    const subscription = Linking.addEventListener('url', handleDeepLink);
 
     // Initial check for any pending deep link
     Linking.getInitialURL().then((url) => {
@@ -209,8 +246,8 @@ const Booking = ({ route, navigation }) => {
     });
 
     return () => {
-    subscription.remove();
-  };
+      subscription.remove();
+    };
   }, [navigation]);
 
   const handlePromoApply = (code) => {

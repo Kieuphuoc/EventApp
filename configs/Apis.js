@@ -1,4 +1,4 @@
-const BASE_URL = "https://605d-14-169-26-201.ngrok-free.app/";
+const BASE_URL = "https://c499-14-169-26-201.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {

@@ -1,28 +1,25 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { ScrollView, View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
-import { styles } from './styles';
+import { ScrollView, View, Text, FlatList, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native';
 import Header from '../../components/Header';
 import SearchBox from '../../components/SearchBox';
 import SearchBo from '../../components/SearchBo';
+import { Ionicons } from "@expo/vector-icons";
 
 import Category from '../../components/Category';
 import EventCard from '../../components/EventCard';
 import Pagination from "../../components/Pagination";
 import SliderItem from "../../components/SliderItem";
 import { RefreshControl } from 'react-native';
-import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
-
-
-import FeaturedPosts from '../../components/FeaturedPosts';
 import Apis, { authApis, endpoints } from '../../configs/Apis';
-import { ActivityIndicator, TextInput } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
 import globalStyles from "../../constants/globalStyles";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyUserContext } from "../../configs/Context";
 import LottieView from "lottie-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 
 const Home = () => {
@@ -32,9 +29,16 @@ const Home = () => {
   const [events, setEvents] = useState([]);
   const [trend, setTrend] = useState([]);
   const [recommend, setRecommend] = useState([]);
-  const [discount, setDiscount] = useState([]);
-  const [rating, setRating] = useState({});
+
+
+  // Searching 
+  const [isFocused, setIsFocused] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [suggestion, setSuggestion] = useState([]);
+
   const user = useContext(MyUserContext);
+
+  const [nextUrl, setNextUrl] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
@@ -60,15 +64,20 @@ const Home = () => {
 
       let res = await Apis.get(url);
       if (res.data) {
-        setEvents(res.data);
+        setEvents(prevEvents => [...prevEvents, ...res.data.results]);
+        setNextUrl(res.data.next);
       }
     } catch (ex) {
       console.error("Error loading events:", ex);
-      setEvents([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   }
+  const loadMoreEvents = async () => {
+    if (!loading && nextUrl) {
+      await loadEvents(nextUrl);
+    }
+  };
 
   const loadTrend = async () => {
     try {
@@ -78,19 +87,6 @@ const Home = () => {
 
       if (res.data && res.data.length > 0) {
         setTrend(res.data);
-
-        // Lấy rating cho từng sự kiện
-        const ratings = {};
-        for (let event of res.data) {
-          try {
-            let resRating = await Apis.get(endpoints['stats_rating'](event.id));
-            ratings[event.id] = resRating.data || {};
-          } catch (err) {
-            console.error(`Lỗi khi lấy rating của event ${event.id}:`, err);
-          }
-        }
-
-        setRating(ratings); // setRating là object chứa rating theo id
       } else {
         setTrend([]);
       }
@@ -126,25 +122,6 @@ const Home = () => {
     }
   }
 
-
-  // useEffect(() => {
-  //   if (user?._j?.role === 'participant') {
-  //     loadRecommend();
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   loadTrend();
-  // }, []);
-
-  // useEffect(() => {
-  //   loadCates();
-  // }, []);
-
-  // useEffect(() => {
-  //   loadEvents();
-  // }, [q]);
-
   const loadAllData = async () => {
     try {
       setGlobalLoading(true);
@@ -153,8 +130,7 @@ const Home = () => {
         loadCates(),
         loadEvents(),
         loadTrend(),
-        user?._j?.role === 'participant' &&
-        loadRecommend()
+        user?._j?.role === 'participant' && loadRecommend()
       ]);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
@@ -171,7 +147,7 @@ const Home = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadAllData(); // Hàm bạn đã định nghĩa để tải dữ liệu
+    await loadAllData();
     setRefreshing(false);
   };
 
@@ -180,32 +156,8 @@ const Home = () => {
     onScroll: (e) => {
       scrollX.value = e.contentOffset.x;
     },
-    // Dùng cho auto Scroll
-    // onMomentumEnd: (e) => {
-    //   scrollX.value = e.contentOffset.x;
-    //   },
   });
   const [paginationIndex, setPaginationIndex] = useState(0);
-  // const ref = useAnimatedRef<Animated.FlatList<any>>();
-  // const [isAutoPlay, setIsAutoPlay] = useState(true);
-  // const interval = useRef<NodeJS.Timeout>();
-  // const offset = useSharedValue(0);
-
-  // useEffect(() => {
-  //   if(isAutoPlay== true){
-  //     interval.current = setInterval(() => {
-  //       offset.value += width;
-  //       ref.current?.scrollToOffset({offset: offset.value, animated: true});
-  //     }, 2000);
-  //   } else {
-  //     clearInterval(interval.current);
-  //   }
-  //   return () => clearInterval(interval.current);
-  // },[isAutoPlay, offset, width]);
-
-  // useDerivedValue(() => {
-  //   scrollTo(ref, offset.value, 0 , true);
-  // });
 
   const onViewableItemsChanged = ({ viewableItems }) => {
     if (viewableItems.length > 0 && viewableItems[0].index != null) {
@@ -250,53 +202,56 @@ const Home = () => {
     }
   };
 
-  const handleSearch = async (text) => {
-    setQ(text);
-    if (text.trim() === '') {
-      setSearchSuggestions([]);
+  const loadSuggestion = async (keyword) => {
+    try {
+      setLoading(true);
+      let allEvents = [];
+      let nextPageUrl = `${endpoints['event']}?search=${keyword}`;
+
+      while (nextPageUrl) {
+        const res = await Apis.get(nextPageUrl);
+        if (res.data && res.data.results) {
+          allEvents = [...allEvents, ...res.data.results]; // Gộp dữ liệu từ các trang
+          nextPageUrl = res.data.next; // Cập nhật URL trang tiếp theo
+        } else {
+          break; // Thoát nếu không có dữ liệu
+        }
+      }
+
+      setSuggestion(allEvents); // Cập nhật state với toàn bộ dữ liệu
+    } catch (ex) {
+      console.error("Error loading all suggestions:", ex);
+      setSuggestion([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    // Clear timeout trước khi set timeout mới
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Nếu searchText rỗng thì không gọi API mà clear suggestion luôn
+    if (!searchText) {
+      setSuggestion([]);
       return;
     }
 
-    try {
-      // Gọi API để lấy gợi ý tìm kiếm
-      const res = await Apis.get(`${endpoints['event']}?search=${text}`);
-      if (res.data) {
-        // Lấy tên sự kiện làm gợi ý
-        const suggestions = res.data.map(event => event.title);
-        setSearchSuggestions(suggestions);
+    // Đặt timeout 500ms để gọi API loadSuggestion
+    debounceTimeoutRef.current = setTimeout(() => {
+      loadSuggestion(searchText);
+    }, 500);
+
+    // Cleanup function khi component unmount hoặc searchText thay đổi
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
       }
-    } catch (error) {
-      console.error("Error fetching search suggestions:", error);
-      setSearchSuggestions([]);
-    }
-  };
+    };
+  }, [searchText]);
+  const debounceTimeoutRef = useRef(null);
 
-  const handleSearchFocus = () => {
-    setIsSearchFocused(true);
-  };
-
-  const handleSearchBlur = () => {
-    setIsSearchFocused(false);
-  };
-
-  const handleSearchEnter = (text) => {
-    navigation.navigate('searchingScreen', { searchQuery: text });
-  };
-
-  const loadSearchSuggestions = async () => {
-    try {
-      const res = await Apis.get(endpoints['event']);
-      if (res.data) {
-        setSearchSuggestions(res.data);
-      }
-    } catch (error) {
-      console.error("Error loading search suggestions:", error);
-    }
-  };
-
-  useEffect(() => {
-    loadSearchSuggestions();
-  }, []);
 
   return (
     globalLoading ? (
@@ -312,28 +267,54 @@ const Home = () => {
       <ScrollView style={styles.scrollView} refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
       }>
-        <View style={[styles.container]}>
-          <Header />
-          <SearchBox 
+        <View style={{ paddingTop: 40 }}>
+
+          {/* <SearchBox
+            navigation={navigation}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
             onEnter={handleSearchEnter}
             suggestions={searchSuggestions}
-          />
-
-          {/* <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]} >
-            <TextInput style={[globalStyles.input, globalStyles.placeholder]}
+          /> */}
+          <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]}>
+            <TextInput
+              style={[globalStyles.input, globalStyles.placeholder]}
               placeholder="Search Event.."
               placeholderTextColor={'gray'}
-            // value={q} onChangeText={setQ}
+              value={searchText}
+              onChangeText={setSearchText}
+              onFocus={() => setIsFocused(true)}
             />
-
-            <View style={[globalStyles.button]}>
+            <TouchableOpacity
+              style={[globalStyles.button]}
+            >
               <Ionicons name="search" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+          {(isFocused && suggestion.length > 0 && searchText.length > 0) && (
+            <View style={styles.suggestionsContainer}>
+              <FlatList
+                data={suggestion}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.suggestionItem}
+
+                    onPress={() => {
+                      console.log("Pressed item id:", item.id);
+                      navigation.navigate('eventDetail', { id: item.id });
+                    }}
+                  >
+                    <Image source={{ uri: item.image }} style={styles.suggestionImage} />
+                    <View style={styles.suggestionContent}>
+                      <Text style={styles.suggestionTitle}>{item.title}</Text>
+                      <Text style={styles.suggestionDate}>{item.date}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
             </View>
-          </View> */}
-
-
+          )}
           {/* Trending Events */}
           <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
           <View style={{}}>
@@ -414,13 +395,12 @@ const Home = () => {
             ><Text style={{ color: '#2196F3', fontWeight: '600' }}>View all</Text></TouchableOpacity>
           </View>
           <FlatList
-            style={{ paddingInline: 20 }}
+            style={{ paddingHorizontal: 20 }}
             data={events}
             keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <EventCard
                 item={item}
-                key={index}
                 onPress={() => navigation.navigate('eventDetail', { id: item.id })}
                 cardWidth={300}
               />
@@ -428,18 +408,41 @@ const Home = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
+            ListFooterComponent={loading && <ActivityIndicator size={30} />}
+            onEndReachedThreshold={0.5}
+            onEndReached={loadMoreEvents}
             ListEmptyComponent={() => (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text>No events found</Text>
               </View>
             )}
-            ListFooterComponent={loading && <ActivityIndicator size={30} />}
           />
+
           <View />
         </View>
         {/* <FeaturedPosts /> */}
       </ScrollView>)
   );
 };
+
+const styles = StyleSheet.create({
+  scrollView: {
+    backgroundColor: COLORS.white,
+  },
+  categoryText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12, backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+});
+
 
 export default Home;

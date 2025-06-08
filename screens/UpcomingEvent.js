@@ -22,9 +22,10 @@ const UpcomingEvent = ({ navigation }) => {
         let url = `${endpoints['event']}`;
 
         let res = await Apis.get(url);
-        if (res.data) {
-          setEvents(res.data);
-        }
+if (res.data && Array.isArray(res.data.results)) {
+  setEvents(res.data.results);
+}
+
       } catch (ex) {
         console.error("Error loading events:", ex);
         setEvents([]); // Set empty array on error

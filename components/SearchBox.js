@@ -14,8 +14,8 @@ import COLORS from '../constants/colors';
 import globalStyles from '../constants/globalStyles';
 import { useNavigation } from '@react-navigation/native';
 import Apis, { endpoints } from '../configs/Apis';
-const SearchBox = ({ onSearch, suggestions = [], onFocus, onBlur, onEnter }) => {
-  const navigation = useNavigation();
+const SearchBox = ({ navigation, onSearch, suggestions = [], onFocus, onBlur, onEnter }) => {
+  // const navigation = useNavigation();
 
   const [q, setQ] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -25,27 +25,30 @@ const SearchBox = ({ onSearch, suggestions = [], onFocus, onBlur, onEnter }) => 
 
   const debounceTimeoutRef = useRef(null);
 
-  const loadSuggesstion = async (keyword) => {
+  const loadSuggestion = async (keyword) => {
     try {
       setLoading(true);
+      let allEvents = [];
+      let nextPageUrl = `${endpoints['event']}?search=${keyword}`;
 
-      let url = `${endpoints['event']}`;
-      if (keyword) {
-        url = `${url}?search=${keyword}`;
+      while (nextPageUrl) {
+        const res = await Apis.get(nextPageUrl);
+        if (res.data && res.data.results) {
+          allEvents = [...allEvents, ...res.data.results]; // Gộp dữ liệu từ các trang
+          nextPageUrl = res.data.next; // Cập nhật URL trang tiếp theo
+        } else {
+          break; // Thoát nếu không có dữ liệu
+        }
       }
 
-      let res = await Apis.get(url);
-      if (res.data) {
-        setSuggestion(res.data);
-      }
+      setSuggestion(allEvents); // Cập nhật state với toàn bộ dữ liệu
     } catch (ex) {
-      console.error("Error Sugggestion:", ex);
+      console.error("Error loading all suggestions:", ex);
       setSuggestion([]);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     // Clear timeout trước khi set timeout mới
     if (debounceTimeoutRef.current) {
@@ -60,7 +63,7 @@ const SearchBox = ({ onSearch, suggestions = [], onFocus, onBlur, onEnter }) => 
 
     // Đặt timeout 500ms để gọi API loadSuggestion
     debounceTimeoutRef.current = setTimeout(() => {
-      loadSuggesstion(searchText);
+      loadSuggestion(searchText);
     }, 500);
 
     // Cleanup function khi component unmount hoặc searchText thay đổi
@@ -105,13 +108,16 @@ const SearchBox = ({ onSearch, suggestions = [], onFocus, onBlur, onEnter }) => 
       {(isFocused && suggestion.length > 0 && searchText.length > 0) && (
         <View style={styles.suggestionsContainer}>
           <FlatList
-            scrollEnabled={false}
             data={suggestion}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.suggestionItem}
-                onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+
+                onPress={() => {
+                  console.log("Pressed item id:", item.id);
+                  navigation.navigate('eventDetail', { id: item.id });
+                }}
               >
                 <Image source={{ uri: item.image }} style={styles.suggestionImage} />
                 <View style={styles.suggestionContent}>
