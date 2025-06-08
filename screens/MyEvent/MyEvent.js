@@ -72,7 +72,7 @@ const MyEvent = () => {
                 throw new Error('No token found');
               }
 
-              const res = await authApis(token).delete(endpoints['delete-event'](eventId));
+              const res = await authApis(token).delete(endpoints['event'](eventId));
               if (res.status === 204 || res.status === 200) {
                 Alert.alert('Success', 'Event deleted successfully!');
                 await loadEvents();
@@ -94,9 +94,7 @@ const MyEvent = () => {
   useFocusEffect(
     useCallback(() => {
       loadEvents();
-      // Cleanup (optional, to prevent multiple calls if needed)
       return () => {
-        // Any cleanup logic if necessary
       };
     }, [])
   );

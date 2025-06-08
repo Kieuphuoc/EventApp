@@ -38,7 +38,6 @@ export default function EditEvent({ navigation, route }) {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  // Tải danh mục
   const loadCates = async () => {
     try {
       let res = await authApis().get(endpoints['category']);
@@ -49,7 +48,6 @@ export default function EditEvent({ navigation, route }) {
     }
   };
 
-  // Chọn ảnh
   const pickImage = async () => {
     let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -68,7 +66,6 @@ export default function EditEvent({ navigation, route }) {
     }
   };
 
-  // Xử lý chọn ngày giờ
   const onStartTimeChange = (_, selectedDate) => {
     setShowStartPicker(Platform.OS === 'ios');
     if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
@@ -83,7 +80,6 @@ export default function EditEvent({ navigation, route }) {
     }
   };
 
-  // Hàm định dạng ngày giờ
   const formatDateTime = (date) => {
     if (!(date instanceof Date) || isNaN(date)) {
       return 'Select date and time';
@@ -97,7 +93,6 @@ export default function EditEvent({ navigation, route }) {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
-  // Hàm validate
   const validate = (eventData) => {
     if (!eventData.title.trim()) {
       throw new Error('Event title is required.');
@@ -132,7 +127,6 @@ export default function EditEvent({ navigation, route }) {
     }
   };
 
-  // Hàm cập nhật sự kiện
   const update = async () => {
     Alert.alert(
       'Confirm',

@@ -24,7 +24,6 @@ export const endpoints = {
     'my-ticket': '/ticket/my_ticket/',
     'my-event': '/event/my_event/',
     'dashboard': '/reports/organizer/dashboard/',
-    'delete-event': (event_id) => `/event/${event_id}/delete_event/`,
     'momo-payment': (invoice_id) => `/invoice/${invoice_id}/momo-payment/`,
     'monthly': '/reports/organizer/monthly/',
     'check_in': '/ticket/check_in/',

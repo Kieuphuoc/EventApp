@@ -71,7 +71,7 @@ const MyInvoice = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Event Details</Text>
 
             <View style={styles.detailRow}>
-              <Ionicons name="calendar-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="calendar" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Event</Text>
                 <Text style={styles.detailValue}>{invoice?.event?.title}</Text>
@@ -79,7 +79,7 @@ const MyInvoice = ({ route, navigation }) => {
             </View>
 
             <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="time" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Date & Time</Text>
                 <Text style={styles.detailValue}>
@@ -98,7 +98,7 @@ const MyInvoice = ({ route, navigation }) => {
             </View>
 
             <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="location" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Location</Text>
                 <Text style={styles.detailValue}>{invoice?.event?.location}</Text>
@@ -110,7 +110,7 @@ const MyInvoice = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Ticket Details</Text>
 
             <View style={styles.detailRow}>
-              <Ionicons name="ticket-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="ticket" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Ticket price</Text>
                 <Text style={styles.detailValue}>{invoice?.event?.ticket_price}</Text>
@@ -118,7 +118,7 @@ const MyInvoice = ({ route, navigation }) => {
             </View>
 
             <View style={styles.detailRow}>
-              <Ionicons name="people-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="people" size={24} color={COLORS.primary} />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Quantity</Text>
                 <Text style={styles.detailValue}>{invoice?.ticket_count}</Text>

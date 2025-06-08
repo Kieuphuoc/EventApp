@@ -4,11 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import RenderHTML from 'react-native-render-html';
 import globalStyles from '../constants/globalStyles';
+import ChatModal from './ChatModal';
 
 const TabAbout = ({ description, ticketSold, ticketQuantity, startTime, endTime, manager }) => {
-    const [isExpanded, setIsExpanded] = useState(false); //Chưa xử lí được
-    const { width } = useWindowDimensions(); // 👈 Lấy chiều rộng màn hình
-
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [showChat, setShowChat] = useState(false);
+    const { width } = useWindowDimensions();
 
     const startDate = new Date(startTime);
     const endDate = new Date(endTime);
@@ -86,7 +87,10 @@ const TabAbout = ({ description, ticketSold, ticketQuantity, startTime, endTime,
                     <Text style={styles.managerRole}>{manager.role}</Text>
                 </View>
                 <View style={styles.managerActions}>
-                    <TouchableOpacity style={styles.actionButton}>
+                    <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => setShowChat(true)}
+                    >
                         <Ionicons name="chatbox-ellipses" size={24} color={COLORS.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.actionButton}>
@@ -94,6 +98,12 @@ const TabAbout = ({ description, ticketSold, ticketQuantity, startTime, endTime,
                     </TouchableOpacity>
                 </View>
             </View>
+
+            <ChatModal
+                visible={showChat}
+                onClose={() => setShowChat(false)}
+                manager={manager}
+            />
         </View>
     );
 };

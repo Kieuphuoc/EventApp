@@ -32,6 +32,7 @@ import { NotificationProvider, useNotification } from "./context/NotificationCon
 import * as Notifications from "expo-notifications";
 import CategoryFilter from "./screens/CategoryFilter";
 import { useFonts } from "expo-font";
+import MyReceipt from "./screens/MyReceipt";
 
 import firebase from '@react-native-firebase/app';
 import { firebaseConfig } from './configs/firebaseConfig';
@@ -46,7 +47,6 @@ Notifications.setNotificationHandler({
   })
 })
 
-// Navigator config
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
@@ -212,6 +212,16 @@ const TabNavigator = () => {
           {user?._j?.role === 'participant' && (
             <>
               <Tab.Screen
+                name="favouriteEvent"
+                options={{
+                  title: 'Favourites',
+                  tabBarIcon: ({ color, focused }) => (
+                    <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
+                  ),
+                }}
+                component={StackFavourite}
+              />
+              <Tab.Screen
                 name="myTicket"
                 options={{
                   title: 'My Tickets',
@@ -222,14 +232,14 @@ const TabNavigator = () => {
                 component={StackMyTicket}
               />
               <Tab.Screen
-                name="favouriteEvent"
+                name="invoice"
                 options={{
-                  title: 'Favourites',
+                  title: 'My Invoice',
                   tabBarIcon: ({ color, focused }) => (
-                    <Ionicons name={focused ? 'heart' : 'heart-outline'} color={COLORS.primary} size={24} />
+                    <Ionicons name={focused ? 'receipt' : 'receipt-outline'} color={COLORS.primary} size={24} />
                   ),
                 }}
-                component={StackFavourite}
+                component={MyReceipt}
               />
               <Tab.Screen
                 name="profile"

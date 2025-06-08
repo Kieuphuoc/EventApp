@@ -129,6 +129,7 @@ const EventDetail = ({ route }) => {
                                     image: events.organizer.avatar || 'https://example.com/default-avatar.png',
                                     name: `${events.organizer.first_name} ${events.organizer.last_name}`,
                                     role: 'Organizer',
+                                    id: events.organizer.id
                                 }}
 
                             />
