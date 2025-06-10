@@ -20,6 +20,7 @@ import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
 import SearchingScreen from "./screens/SearchingScreen";
+import RecommendEvent from "./screens/RecommendEvent";
 
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
@@ -52,6 +53,7 @@ const StackNavigator = () => {
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
       <Stack.Screen name="upcomingEvent" component={UpcommingEvent} />
+      <Stack.Screen name="recommendEvent" component={RecommendEvent} />
       <Stack.Screen name="booking" component={Booking} />
       <Stack.Screen name="searchingScreen" component={SearchingScreen} />
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
@@ -100,7 +102,7 @@ const StackFavourite = () => {
   )
 }
 
-const StackMyReceipt = ( ) =>{
+const StackMyReceipt = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="myReceipt" component={MyReceipt} />
@@ -271,18 +273,18 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
-  useEffect(() => {
-    if (__DEV__) {
-      const mockUser = {
-        id: 1,
-        username: 'participant1',
-        name: 'Kieu Nghia',
-        role: 'participant',
-        token: 'fake-jwt-token'
-      };
-      dispatch({ type: "login", payload: mockUser });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (__DEV__) {
+  //     const mockUser = {
+  //       id: 1,
+  //       username: 'participant1',
+  //       name: 'Kieu Nghia',
+  //       role: 'participant',
+  //       token: 'fake-jwt-token'
+  //     };
+  //     dispatch({ type: "login", payload: mockUser });
+  //   }
+  // }, []);
 
   const [fontsLoaded] = useFonts({
     'GreatVibes': require('./assets/fonts/GreatVibes-Regular.ttf'),

@@ -150,11 +150,16 @@ const Register = () => {
       for (let key in user) {
         if (key !== 'confirmPassword') {
           if (key === 'avatar') {
-            form.append('avatar', {
-              uri: user.avatar.uri,
-              name: user.avatar.fileName || 'avatar.jpg',
-              type: user.avatar.type || 'image/jpeg',
-            });
+              if (user.avatar.uri) {
+              const filename = user.avatar.uri.split('/').pop();
+              const match = /\.(\w+)$/.exec(filename);
+              const type = match ? `image/${match[1]}` : `image`;
+              form.append('avatar', {
+                uri: user.avatar.uri,
+                name: filename,
+                type,
+              });
+            }
           }
           else {
             form.append(key, user[key]);
@@ -174,7 +179,7 @@ const Register = () => {
         formData.append('username', user.username);
         formData.append('password', user.password);
         formData.append('grant_type', 'password');
-       formData.append(
+        formData.append(
           "client_id",
           "AZzHCDaw5vMIWUW7f0vuqhVunNNvwe8HhPdpxxBE"
         );

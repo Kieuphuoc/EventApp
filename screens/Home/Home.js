@@ -53,39 +53,28 @@ const Home = () => {
 
   const loadEvents = async (isLoadMore = false) => {
     try {
-      if (isLoadMore) {
-        setIsLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
+      if (isLoadMore) setIsLoadingMore(true);
 
-      const url = isLoadMore ? nextPageUrl : endpoints['event'];
-      
+      const url = isLoadMore && nextPageUrl ? nextPageUrl : endpoints['event'];
       if (!url) {
         setHasMoreData(false);
         return;
       }
 
       let res = await Apis.get(url);
-      
       if (res.data) {
         if (isLoadMore) {
-          setEvents(prevEvents => [...prevEvents, ...res.data.results]);
+          setEvents(prev => [...prev, ...res.data.results]);
         } else {
           setEvents(res.data.results);
         }
-        
         setNextPageUrl(res.data.next);
         setHasMoreData(!!res.data.next);
       }
     } catch (ex) {
       console.error("Error loading events:", ex);
     } finally {
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-      } else {
-        setLoading(false);
-      }
+      if (isLoadMore) setIsLoadingMore(false);
     }
   };
 
@@ -125,7 +114,7 @@ const Home = () => {
       let res = await authApis(token).get(endpoints["recommend"]);
       console.log("Recommend", res.data);
       if (res.data.results) {
-        setRecommend(res.data);
+        setRecommend(res.data.results);
       }
     } catch (ex) {
       console.error("Error loading Recommend:", ex);
@@ -348,10 +337,10 @@ const Home = () => {
           <View style={globalStyles.mb}></View>
 
           {/* Recommend Events */}
-          {(user?._j?.role === 'participant' && recommend.length > 0) && (
+          {(user?._j?.role === 'participant') && (
             <><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={[globalStyles.title, globalStyles.mi]}>Recommend Event</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')} style={globalStyles.mr}>
+              <TouchableOpacity onPress={() => navigation.navigate('recommendEvent')} style={globalStyles.mr}>
                 <Text style={[{ color: '#2196F3', fontWeight: '600' }]}>View all</Text>
               </TouchableOpacity>
             </View>
@@ -400,8 +389,8 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
             ListFooterComponent={loading && <ActivityIndicator size={30} />}
+            onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
-            // onEndReached={}
             ListEmptyComponent={() => (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text>No events found</Text>

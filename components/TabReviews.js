@@ -6,7 +6,6 @@ import Apis, { authApis, endpoints } from '../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReviewModal from './ReviewModal';
 import ReviewItem from './ReviewItem';
-import { MyUserContext } from '../configs/Context';
 
 const TabReviews = ({ event_id }) => {
   const [reviews, setReviews] = useState([]);
@@ -28,7 +27,7 @@ const TabReviews = ({ event_id }) => {
     }
   };
 
-  const createReview = useCallback(async () => {
+  const createReview = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
@@ -39,7 +38,7 @@ const TabReviews = ({ event_id }) => {
       form.append('rating', rating);
       form.append('comment', comment);
 
-      let res = await authApis(token).post(endpoints['create-review'](event_id), form, {
+      let res = await authApis(token).post(endpoints['review'](event_id), form, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -58,123 +57,93 @@ const TabReviews = ({ event_id }) => {
       console.error('Error submitting review:', error);
       Alert.alert('Error', 'Failed to submit review. Please try again.');
     }
-  }, [event_id, rating, comment]);
+  };
 
-  const createReply = useCallback(
-    async (reviewId, content) => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found');
-        }
+  const deletePress = (reviewId) => {
+    Alert.alert(
+      'Delete Review',
+      'Are you sure you want to delete this review?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteReview(reviewId),
+        },
+      ]
+    );
+  };
 
-        let form = new FormData();
-        form.append('response', content);
-
-        let res = await authApis(token).post(
-          endpoints['reply'](event_id, reviewId),
-          form,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-
-        console.log('Reply Response:', res.data);
-
-        if (res.status === 201) {
-          Alert.alert('Success', 'Reply submitted successfully');
-          loadReviews(); // Reload reviews để cập nhật replies
-        }
-      } catch (error) {
-        console.error('Error submitting reply:', error);
-        Alert.alert('Error', error.response?.data?.message || 'Failed to submit reply.');
+  const deleteReplyPress = (reviewId, replyId) => {
+    Alert.alert(
+      'Delete Response',
+      'Are you sure you want to delete this response?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteReply(reviewId, replyId),
+        },
+      ]
+    );
+  };
+  const deleteReply = async (reviewId) => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
       }
-    },
-    [event_id]
-  );
 
-  const deletePress = useCallback(
-    (reviewId) => {
-      Alert.alert(
-        'Delete Review',
-        'Are you sure you want to delete this review?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => delete_review(reviewId),
-          },
-        ]
-      );
-    },
-    []
-  );
+      const response = await authApis(token).delete(endpoints['delete-reply'](event_id, reviewId, reply));
 
-  const delete_reply = useCallback(
-    async (reviewId) => {
-      try {
-        setLoading(true);
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found');
-        }
-
-        const response = await authApis(token).delete(endpoints['delete-reply'](event_id, reviewId));
-
-        if (response.status === 200 || response.status === 204) {
-          console.log('Delete review successfully!');
-          loadReviews();
-          Alert.alert('Success', 'Review deleted successfully.');
-        }
-      } catch (error) {
-        console.error('Delete Review Error:', {
-          message: error.message,
-          response: error.response,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        Alert.alert('Error', error.response?.data?.message || 'Failed to delete review.');
-      } finally {
-        setLoading(false);
+      if (response.status === 200 || response.status === 204) {
+        console.log('Delete review successfully!');
+        loadReviews();
+        Alert.alert('Success', 'Review deleted successfully.');
       }
-    },
-    [event_id]
-  );
+    } catch (error) {
+      console.error('Delete Review Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert('Error', error.response?.data?.message || 'Failed to delete review.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const delete_review = useCallback(
-    async (reviewId) => {
-      try {
-        setLoading(true);
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found');
-        }
-
-        const response = await authApis(token).delete(endpoints['delete-review'](event_id, reviewId));
-
-        if (response.status === 200 || response.status === 204) {
-          console.log('Delete review successfully!');
-          loadReviews();
-          Alert.alert('Success', 'Review deleted successfully.');
-        }
-      } catch (error) {
-        console.error('Delete Review Error:', {
-          message: error.message,
-          response: error.response,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        Alert.alert('Error', error.response?.data?.message || 'Failed to delete review.');
-      } finally {
-        setLoading(false);
+  const deleteReview = async (reviewId) => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
       }
-    },
-    [event_id]
-  );
- 
+
+      const response = await authApis(token).delete(endpoints['delete-review'](event_id, reviewId));
+
+      if (response.status === 200 || response.status === 204) {
+        console.log('Delete review successfully!');
+        loadReviews();
+        Alert.alert('Success', 'Review deleted successfully.');
+      }
+    } catch (error) {
+      console.error('Delete Review Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert('Error', error.response?.data?.message || 'Failed to delete review.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadReviews();
   }, []);
@@ -220,8 +189,7 @@ const TabReviews = ({ event_id }) => {
               event_id={event_id}
               review={item}
               deletePress={() => deletePress(item.id)}
-              createReply={createReply}
-              loadReviews={loadReviews} // Truyền loadReviews để reload sau khi reply
+              deleteReplyPress={() => deleteReplyPress(item.id, item.response.id)}
             />
           )}
           scrollEnabled={false}
@@ -235,7 +203,6 @@ const TabReviews = ({ event_id }) => {
       )}
 
       <ReviewModal
-        event_id={event_id}
         visible={showReviewModal}
         onClose={() => setShowReviewModal(false)}
         onSubmit={createReview}
