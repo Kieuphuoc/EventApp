@@ -42,18 +42,6 @@ const FavouriteEvent = ({ navigation }) => {
     loadFavoriteEvent();
   }, []);
 
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [200, 100],
-    extrapolate: 'clamp',
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [1, 0.9],
-    extrapolate: 'clamp',
-  });
-
   const totalPages = Math.ceil(favouriteEvent.length / ITEMS_PER_PAGE);
   const paginatedData = favouriteEvent.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,

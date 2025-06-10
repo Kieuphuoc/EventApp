@@ -8,6 +8,7 @@ import { MyUserContext } from '../configs/Context';
 
 const EventCard = ({ item, onPress, cardWidth }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [favorId, setFavorId] = useState(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const heartPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const heartOpacity = useRef(new Animated.Value(0)).current;
@@ -18,30 +19,37 @@ const EventCard = ({ item, onPress, cardWidth }) => {
   const date = new Date(item.start_time);
   const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+  const [idFavor, setIdFavor] = useState();
+  const [nameFavor, setNameFavor] = useState([]);
 
 
   const loadFavor = async () => {
     try {
-      // setLoading(true);
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
 
       const res = await authApis(token).get(endpoints['favoriteEvent']);
-      if (res.data && Array.isArray(res.data)) {
-        const isFav = res.data.some(fav => fav.event_id === item.id || fav.id === item.id);
-        setIsFavorite(isFav);
+      if (res.data) {
+        const favoriteItem = res.data.find(fav => fav.event_id === item.id);
+        if (favoriteItem) {
+          setIsFavorite(true);
+          setFavorId(favoriteItem.id);
+        } else {
+          setIsFavorite(false);
+          setFavorId(null);
+        }
       } else {
         setIsFavorite(false);
+        setFavorId(null);
       }
     } catch (ex) {
       console.error("Error loading favorite events:", ex);
       console.log('Error details:', ex.response?.data);
       setIsFavorite(false);
+      setFavorId(null);
       Alert.alert('Error', 'Failed to load favorite status. Please try again.');
-    } finally {
-      // setLoading(false);
     }
   };
   const user = useContext(MyUserContext);
@@ -55,7 +63,6 @@ const EventCard = ({ item, onPress, cardWidth }) => {
 
   const favor = async () => {
     try {
-      // setLoading(true);
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
@@ -65,11 +72,10 @@ const EventCard = ({ item, onPress, cardWidth }) => {
         event_id: item.id,
       });
 
-      console.log('Favorite Response:', response.data);
-
       if (response.status === 201 || response.status === 200) {
         setIsFavorite(true);
-      };
+        setFavorId(response.data.id);
+      }
     } catch (error) {
       console.error('Favorite Error:', {
         message: error.message,
@@ -81,22 +87,25 @@ const EventCard = ({ item, onPress, cardWidth }) => {
         'Error',
         error.response?.data?.message || 'Failed to add to favorites.'
       );
-    } finally {
-      // setLoading(false);
     }
   };
   const delete_favor = async () => {
     try {
-      // setLoading(true);
+      if (!favorId) {
+        console.error('No favorId available for deletion');
+        return;
+      }
+
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
 
-      const response = await authApis(token).delete(endpoints['delete-favor'](item.id));
+      const response = await authApis(token).delete(endpoints['delete-favor'](favorId));
 
       if (response.status === 200 || response.status === 204) {
         setIsFavorite(false);
+        setFavorId(null);
       }
     } catch (error) {
       console.error('Delete Favorite Error:', {
@@ -109,59 +118,57 @@ const EventCard = ({ item, onPress, cardWidth }) => {
         'Error',
         error.response?.data?.message || 'Failed to remove from favorites.'
       );
-    } finally {
-      // setLoading(false);
     }
   };
 
-  const getRandomOffset = () => {
-    return (Math.random() - 0.5) * 200; // Random value between -100 and 100
-  };
+  // const getRandomOffset = () => {
+  //   return (Math.random() - 0.5) * 200; // Random value between -100 and 100
+  // };
 
-  const createSmallHearts = () => {
-    const hearts = [];
-    for (let i = 0; i < 8; i++) {
-      hearts.push({
-        position: new Animated.ValueXY({ x: 0, y: 0 }),
-        opacity: new Animated.Value(1),
-        scale: new Animated.Value(0.5),
-      });
-    }
-    return hearts;
-  };
+  // const createSmallHearts = () => {
+  //   const hearts = [];
+  //   for (let i = 0; i < 8; i++) {
+  //     hearts.push({
+  //       position: new Animated.ValueXY({ x: 0, y: 0 }),
+  //       opacity: new Animated.Value(1),
+  //       scale: new Animated.Value(0.5),
+  //     });
+  //   }
+  //   return hearts;
+  // };
 
-  const animateSmallHearts = () => {
-    const hearts = createSmallHearts();
-    smallHearts.push(...hearts);
+  // const animateSmallHearts = () => {
+  //   const hearts = createSmallHearts();
+  //   smallHearts.push(...hearts);
 
-    hearts.forEach((heart) => {
-      const randomX = getRandomOffset();
-      const randomY = getRandomOffset();
+  //   hearts.forEach((heart) => {
+  //     const randomX = getRandomOffset();
+  //     const randomY = getRandomOffset();
 
-      Animated.parallel([
-        Animated.timing(heart.position, {
-          toValue: { x: randomX, y: randomY },
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heart.opacity, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heart.scale, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        const index = smallHearts.indexOf(heart);
-        if (index > -1) {
-          smallHearts.splice(index, 1);
-        }
-      });
-    });
-  };
+  //     Animated.parallel([
+  //       Animated.timing(heart.position, {
+  //         toValue: { x: randomX, y: randomY },
+  //         duration: 1000,
+  //         useNativeDriver: true,
+  //       }),
+  //       Animated.timing(heart.opacity, {
+  //         toValue: 0,
+  //         duration: 1000,
+  //         useNativeDriver: true,
+  //       }),
+  //       Animated.timing(heart.scale, {
+  //         toValue: 1,
+  //         duration: 500,
+  //         useNativeDriver: true,
+  //       }),
+  //     ]).start(() => {
+  //       const index = smallHearts.indexOf(heart);
+  //       if (index > -1) {
+  //         smallHearts.splice(index, 1);
+  //       }
+  //     });
+  //   });
+  // };
 
   const handleDoubleTap = (event) => {
     const now = Date.now();
@@ -176,20 +183,16 @@ const EventCard = ({ item, onPress, cardWidth }) => {
         setIsFavorite(!isFavorite);
         favor();
       }
-      // Get touch position relative to the image container
       const { locationX, locationY } = event.nativeEvent;
       touchPosition.x = locationX;
       touchPosition.y = locationY;
 
-      // Reset heart position to touch position
       heartPosition.setValue({ x: 0, y: 0 });
       heartOpacity.setValue(1);
 
-      // Calculate the position of the favorite button (top right corner)
-      const targetX = 50; // Approximate position of favorite button
-      const targetY = -50; // Approximate position of favorite button
+      const targetX = 50; 
+      const targetY = -50; 
 
-      // Animate main heart towards the favorite button
       Animated.parallel([
         Animated.timing(scaleAnim, {
           toValue: 3,
@@ -210,8 +213,7 @@ const EventCard = ({ item, onPress, cardWidth }) => {
         scaleAnim.setValue(1);
       });
 
-      // Animate small hearts
-      animateSmallHearts();
+      // animateSmallHearts();
     }
     lastTap.current = now;
   };
@@ -276,12 +278,12 @@ const EventCard = ({ item, onPress, cardWidth }) => {
               <Text style={styles.categoryText}>{item.category.name}</Text>
             </View>
             {user && <TouchableOpacity style={styles.favoriteButton}
-              onPress={() => (isFavorite ? delete_favor() : favor())}            >
+              onPress={() => (setIdFavor(), isFavorite ? delete_favor() : favor())}            >
 
               <Ionicons
                 name={isFavorite ? "heart" : "heart-outline"}
                 size={22}
-                color={isFavorite ? COLORS.error : "#fff"}
+                color={isFavorite ? 'red' : "#fff"}
               />
             </TouchableOpacity>}
           </View>

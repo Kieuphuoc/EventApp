@@ -35,13 +35,13 @@ const globalStyles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: 50,
+    height: 45,
     borderWidth: 2,
     borderColor: COLORS.primary,
     borderRadius: 25,
     paddingHorizontal: 20,
     justifyContent: 'center',
-    backgroundColor: COLORS.accentLight,
+    backgroundColor:COLORS.primary + '30',
   },
   button: {
     backgroundColor: COLORS.primary,
