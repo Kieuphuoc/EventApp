@@ -24,15 +24,15 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         backgroundColor: COLORS.accentLight,
-        borderRadius: 65 / 2, // hoặc: 32.5
+        borderRadius: 30, 
         padding: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: COLORS.primary, // Màu của bóng
+        shadowColor: COLORS.primary, 
         shadowOffset: { width: 2, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
-        elevation: 5, // cho Android
+        elevation: 5,
     },
 
 })

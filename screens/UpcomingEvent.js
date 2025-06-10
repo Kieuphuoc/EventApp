@@ -15,67 +15,52 @@ const UpcomingEvent = ({ navigation }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const scrollY = new Animated.Value(0);
 
-  const loadEvents = async () => {
-      try {
-        setLoading(true);
-  
-        let url = `${endpoints['event']}`;
+  const [count, setCount] = useState();
 
-        let res = await Apis.get(url);
-if (res.data && Array.isArray(res.data.results)) {
-  setEvents(res.data.results);
-}
 
-      } catch (ex) {
-        console.error("Error loading events:", ex);
-        setEvents([]); // Set empty array on error
-      } finally {
-        setLoading(false);
+  const loadEvents = async (page = 1) => {
+    try {
+      setLoading(true);
+      let url = `${endpoints['event']}?page=${page}`;
+
+      let res = await Apis.get(url);
+      if (res.data) {
+        setEvents(res.data.results);
+        setCount(res.data.count);
       }
+    } catch (ex) {
+      console.error("Error loading events:", ex);
+    } finally {
+      setLoading(false);
     }
+  };
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    loadEvents(currentPage);
+  }, [currentPage]);
 
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [200, 100],
-    extrapolate: 'clamp',
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [1, 0.9],
-    extrapolate: 'clamp',
-  });
-
-  const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
-  const paginatedData = events.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const renderPagination = () => {
+  const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+  
+  const pagination = () => {
     if (totalPages <= 1) return null;
 
     return (
       <View style={styles.pagination}>
         <TouchableOpacity
           style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
-          onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          onPress={() => setCurrentPage(Math.max(currentPage - 1, 1))}
           disabled={currentPage === 1}
         >
           <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? COLORS.grey : COLORS.primary} />
         </TouchableOpacity>
-        
+
         <Text style={styles.pageText}>
           Page {currentPage} of {totalPages}
         </Text>
 
         <TouchableOpacity
           style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
-          onPress={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          onPress={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
           disabled={currentPage === totalPages}
         >
           <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? COLORS.grey : COLORS.primary} />
@@ -87,19 +72,17 @@ if (res.data && Array.isArray(res.data.results)) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <Animated.View style={[styles.header, {paddingTop:40}]}>
+      <Animated.View style={[styles.header, { paddingTop: 40, gap: 10 }]}>
+        <TouchableOpacity style={styles.searchButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Upcoming Event</Text>
-          <Text style={styles.headerSubtitle}>Your saved events</Text>
         </View>
-        {/* <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.searchButton} onPress={}>
-            <Ionicons name="reload" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View> */}
+
       </Animated.View>
       <FlatList
-        data={paginatedData}
+        data={events}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item, index }) => (
           <EventCardMini
@@ -116,15 +99,10 @@ if (res.data && Array.isArray(res.data.results)) {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
         )}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No events found</Text>
-          </View>
-        )}
         ListFooterComponent={
           <>
             {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
-            {renderPagination()}
+            {pagination()}
           </>
         }
       />
@@ -168,14 +146,10 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     marginTop: 4,
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 15,
-  },
   searchButton: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 30,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',

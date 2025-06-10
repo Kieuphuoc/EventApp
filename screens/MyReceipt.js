@@ -1,222 +1,380 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  StatusBar,
   SafeAreaView,
-  Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
+  ActivityIndicator,
+  Image,
+  Animated,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-// Mock data for receipts - replace with actual data from your backend
-const mockReceipts = [
-  {
-    id: '1',
-    eventName: 'Summer Music Festival',
-    date: '2024-03-15',
-    amount: 150.00,
-    status: 'Paid',
-    ticketType: 'VIP',
-    quantity: 2,
-  },
-  {
-    id: '2',
-    eventName: 'Tech Conference 2024',
-    date: '2024-03-10',
-    amount: 75.00,
-    status: 'Paid',
-    ticketType: 'Standard',
-    quantity: 1,
-  },
-  // Add more mock receipts as needed
-];
+import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import COLORS from "../constants/colors";
+import { authApis, endpoints } from "../configs/Apis";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ReceiptItem = ({ item, onPress }) => (
-  <TouchableOpacity style={styles.receiptItem} onPress={onPress}>
-    <View style={styles.receiptHeader}>
-      <Text style={styles.eventName}>{item.eventName}</Text>
-      <Text style={styles.amount}>${item.amount.toFixed(2)}</Text>
-    </View>
-    <View style={styles.receiptDetails}>
-      <Text style={styles.date}>{item.date}</Text>
-      <Text style={styles.status}>{item.status}</Text>
-    </View>
-  </TouchableOpacity>
-);
+export default function MyReceipt({ navigation }) {
+  const [tabItem, moveTab] = useState(1);
 
-const ReceiptDetail = ({ receipt, onClose }) => (
-  <View style={styles.detailContainer}>
-    <View style={styles.detailHeader}>
-      <Text style={styles.detailTitle}>Receipt Details</Text>
-      <TouchableOpacity onPress={onClose}>
-        <Ionicons name="close" size={24} color={COLORS.primary} />
+  const [invoice, setInvoice] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+
+  const loadInvoice = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      let res = await authApis(token).get(endpoints["invoice"]);
+      console.log("Ivoice:", res.data);
+      if (res.data) {
+        setInvoice(res.data);
+      }
+    } catch (ex) {
+      console.error("Error loading invoice:", ex);
+      console.log("Error details:", ex.response?.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadInvoice();
+  }, []);
+
+  const successInvoice = invoice.filter(t => t.payment_status === "success");
+  const failInvoice = invoice.filter(t => t.payment_status === "fail");
+
+  const Invoice = ({ item }) => (
+    <View style={styles.ticketCard}>
+      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('myInvoice', item.id)}>
+        <View style={styles.ticketHeader}>
+          <Image source={{ uri: item?.event?.image }} style={styles.eventImage} />
+          <View style={styles.eventInfoContainer}>
+            <Text style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">
+              {item?.event?.title || "Event Title Missing"}
+            </Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="ticket" size={18} color={COLORS.primary} />
+              <Text style={styles.infoText} numberOfLines={1} ellipsizeMode="tail">
+                Quantity: {item.ticket_count || "N/A"}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="pricetag" size={18} color={COLORS.primary} />
+              <Text style={styles.infoText}>
+                Discount: {item?.discount_amount || "0"}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="wallet" size={18} color={COLORS.primary} />
+              <Text style={styles.infoText}>
+                Total price: {item?.final_amount || "0"}
+              </Text>
+            </View>
+      
+          </View>
+        </View>
       </TouchableOpacity>
     </View>
-    
-    <View style={styles.detailContent}>
-      <DetailRow label="Event" value={receipt.eventName} />
-      <DetailRow label="Date" value={receipt.date} />
-      <DetailRow label="Amount" value={`$${receipt.amount.toFixed(2)}`} />
-      <DetailRow label="Status" value={receipt.status} />
-      <DetailRow label="Ticket Type" value={receipt.ticketType} />
-      <DetailRow label="Quantity" value={receipt.quantity.toString()} />
-    </View>
-  </View>
-);
-
-const DetailRow = ({ label, value }) => (
-  <View style={styles.detailRow}>
-    <Text style={styles.detailLabel}>{label}:</Text>
-    <Text style={styles.detailValue}>{value}</Text>
-  </View>
-);
-
-const MyReceipt = () => {
-  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Receipts</Text>
+         <TouchableOpacity style={styles.searchButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={'white'} />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>My Receipt</Text>
+        </View>
       </View>
 
-      <FlatList
-        data={mockReceipts}
-        renderItem={({ item }) => (
-          <ReceiptItem
-            item={item}
-            onPress={() => setSelectedReceipt(item)}
-          />
-        )}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      <ScrollView style={{ paddingInline: 15 }}>
 
-      {selectedReceipt && (
-        <ReceiptDetail
-          receipt={selectedReceipt}
-          onClose={() => setSelectedReceipt(null)}
-        />
-      )}
-    </SafeAreaView>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, tabItem === 1 && styles.activeTab]}
+            onPress={() => moveTab(1)}
+          >
+            <Text style={[styles.tabText, tabItem === 1 && styles.activeTabText]}>Payment Success</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, tabItem === 2 && styles.activeTab]}
+            onPress={() => moveTab(2)}
+          >
+            <Text style={[styles.tabText, tabItem === 2 && styles.activeTabText]}>Payment Fail</Text>
+          </TouchableOpacity>
+        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+        ) : (
+          <><>
+
+            {tabItem === 1 && (
+              <FlatList
+                data={successInvoice}
+                renderItem={({ item, index }) => <Invoice key={index} item={item} />}
+                contentContainerStyle={styles.listContent}
+                scrollEnabled={false}
+                showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No Success Payment found</Text>
+                  </View>
+                }
+              />
+            )}
+            {tabItem === 2 && (
+              <FlatList
+                data={failInvoice}
+                renderItem={({ item, index }) => <Invoice key={index} item={item} />}
+                contentContainerStyle={styles.listContent}
+                scrollEnabled={false}
+                showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No Fail Payment found</Text>
+                  </View>
+                }
+              />
+            )}
+          </>
+          </>
+        )}
+
+
+      </ScrollView>
+
+    </GestureHandlerRootView>
   );
-};
+}
 
 const styles = StyleSheet.create({
+    searchButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight || '#F4F6F8',
+    backgroundColor: COLORS.background,
   },
   header: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    paddingTop: Platform.OS === 'android' ? 25 : 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 20,
+    paddingTop: 40,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
     elevation: 8,
+    marginBottom: 15,
+    gap:10
+  },
+  headerContent: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    fontWeight: "bold",
+    color: "#fff",
+    letterSpacing: 0.5,
   },
-  listContainer: {
-    padding: 16,
-  },
-  receiptItem: {
+  tabContainer: {
+    flexDirection: 'row',
     backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
+    borderRadius: 15,
+    marginHorizontal: 15,
+    marginBottom: 20,
+    padding: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  receiptHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 8,
   },
-  eventName: {
+  activeTab: {
+    backgroundColor: COLORS.primary + '15',
+    borderRadius: 12,
+  },
+  tabText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primaryDark,
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  receiptDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  date: {
-    color: COLORS.grey,
-  },
-  status: {
-    color: COLORS.primary,
+    color: '#666',
     fontWeight: '500',
   },
-  detailContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  activeTabText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  ticketCard: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
+    borderRadius: 20,
+    // marginHorizontal: 15,
+    marginBottom: 15,
+shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 3,
   },
-  detailHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  ticketDetailsContainer: {
+    padding: 15,
+  },
+  ticketHeader: {
+    flexDirection: "row",
+    gap: 15,
+  },
+  eventImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  eventInfoContainer: {
+    flex: 1,
+    gap: 8,
+  },
+  eventTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: COLORS.primary,
+    marginBottom: 5,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    color: 'yellow',
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: COLORS.accentLight,
+  },
+  infoText: {
+    fontSize: 14,
+    color: COLORS.darkGrey,
+    marginLeft: 10,
+    flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: COLORS.primaryDark,
+    opacity: 0.6,
+    textAlign: "center",
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  modalContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 25,
+    width: '90%',
+    maxWidth: 360,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  modalQrImage: {
+    width: 280,
+    height: 280,
     marginBottom: 20,
+    borderRadius: 12,
   },
-  detailTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.primaryDark,
-  },
-  detailContent: {
-    gap: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.accentLight,
-  },
-  detailLabel: {
-    fontSize: 16,
-    color: COLORS.grey,
-  },
-  detailValue: {
+  modalText: {
     fontSize: 16,
     color: COLORS.primaryDark,
+    textAlign: "center",
     fontWeight: '500',
   },
+  closeButton: {
+    position: "absolute",
+    top: -15,
+    right: -15,
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  listContent: {
+    // paddingHorizontal: 20,
+    // paddingBottom: 20,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginLeft: 10,
+  },
+  bookedBadge: {
+    backgroundColor: COLORS.primary + '60',
+  },
+  checkedInBadge: {
+    backgroundColor: COLORS.error + '60',
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.primary,
+  },
+  chevronIcon: {
+    marginTop: 3,
+  },
+  // Modal Styles
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.65)", // Darker backdrop
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
-
-export default MyReceipt;

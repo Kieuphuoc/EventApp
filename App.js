@@ -100,6 +100,14 @@ const StackFavourite = () => {
   )
 }
 
+const StackMyReceipt = ( ) =>{
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="myReceipt" component={MyReceipt} />
+      <Stack.Screen name="myInvoice" component={MyInvoice} />
+    </Stack.Navigator>
+  )
+}
 
 const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
@@ -229,14 +237,14 @@ const TabNavigator = () => {
                 component={StackMyTicket}
               />
               <Tab.Screen
-                name="invoice"
+                name="myReceipt"
                 options={{
                   title: 'My Invoice',
                   tabBarIcon: ({ color, focused }) => (
                     <Ionicons name={focused ? 'receipt' : 'receipt-outline'} color={COLORS.primary} size={24} />
                   ),
                 }}
-                component={MyReceipt}
+                component={StackMyReceipt}
               />
               <Tab.Screen
                 name="profile"
@@ -263,18 +271,18 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
-  // useEffect(() => {
-  //   if (__DEV__) {
-  //     const mockUser = {
-  //       id: 1,
-  //       username: 'participant1',
-  //       name: 'Kieu Nghia',
-  //       role: 'participant',
-  //       token: 'fake-jwt-token'
-  //     };
-  //     dispatch({ type: "login", payload: mockUser });
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (__DEV__) {
+      const mockUser = {
+        id: 1,
+        username: 'participant1',
+        name: 'Kieu Nghia',
+        role: 'participant',
+        token: 'fake-jwt-token'
+      };
+      dispatch({ type: "login", payload: mockUser });
+    }
+  }, []);
 
   const [fontsLoaded] = useFonts({
     'GreatVibes': require('./assets/fonts/GreatVibes-Regular.ttf'),

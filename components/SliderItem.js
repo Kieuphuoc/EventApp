@@ -6,6 +6,7 @@ import Animated, { Extrapolation, interpolate, useAnimatedStyle, SharedValue } f
 import COLORS from "../constants/colors";
 
 
+
 const { width } = Dimensions.get('screen')
 
 const SliderItem = ({ item, index, scrollX, onPress }) => {
@@ -42,6 +43,10 @@ const SliderItem = ({ item, index, scrollX, onPress }) => {
                     </View>
                 </View>
                 <Text style={styles.title}>{item.title}</Text>
+                <View style={{flexDirection:"row", gap: 10}}> 
+                    <Ionicons name="star" size={18} color="#FFD700" />
+                    <Text style={styles.rating}>{item?.avg_rating.toFixed(1)} / 5</Text>
+                </View>
             </Animated.View>
         </TouchableOpacity>
 
@@ -68,11 +73,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 20,
         padding: 10,
-        width: width, shadowColor: "#000", // Màu của bóng
+        width: width, shadowColor: "#000",
         shadowOffset: { width: 7, height: 8 },
-        shadowOpacity: 0.2, // Độ mờ của bóng (0 đến 1)
-        shadowRadius: 3, // Độ lan tỏa của bóng
-        // Thêm elevation cho Android
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
         elevation: 3,
     },
     background: {

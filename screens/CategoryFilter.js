@@ -32,7 +32,6 @@ const CategoryFilter = ({ route, navigation }) => {
             let res = await Apis.get(url);
             if (res.data) {
                 allEvents = [...allEvents, ...res.data.results];
-                url = res.data.next;
             }
             setEvents(allEvents);
 

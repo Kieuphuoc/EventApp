@@ -29,7 +29,9 @@ const Home = () => {
   const [events, setEvents] = useState([]);
   const [trend, setTrend] = useState([]);
   const [recommend, setRecommend] = useState([]);
-
+  const [nextPageUrl, setNextPageUrl] = useState(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreData, setHasMoreData] = useState(true);
 
   // Searching 
   const [isFocused, setIsFocused] = useState(false);
@@ -37,8 +39,6 @@ const Home = () => {
   const [suggestion, setSuggestion] = useState([]);
 
   const user = useContext(MyUserContext);
-
-  const [nextUrl, setNextUrl] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
@@ -51,31 +51,47 @@ const Home = () => {
     setCategories(res.data);
   }
 
-
-  const loadEvents = async () => {
+  const loadEvents = async (isLoadMore = false) => {
     try {
-      setLoading(true);
+      if (isLoadMore) {
+        setIsLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
 
-      let url = `${endpoints['event']}`;
-
-      if (q) {
-        url = `${url}?search=${q}`;
+      const url = isLoadMore ? nextPageUrl : endpoints['event'];
+      
+      if (!url) {
+        setHasMoreData(false);
+        return;
       }
 
       let res = await Apis.get(url);
+      
       if (res.data) {
-        setEvents(prevEvents => [...prevEvents, ...res.data.results]);
-        setNextUrl(res.data.next);
+        if (isLoadMore) {
+          setEvents(prevEvents => [...prevEvents, ...res.data.results]);
+        } else {
+          setEvents(res.data.results);
+        }
+        
+        setNextPageUrl(res.data.next);
+        setHasMoreData(!!res.data.next);
       }
     } catch (ex) {
       console.error("Error loading events:", ex);
     } finally {
-      setLoading(false);
+      if (isLoadMore) {
+        setIsLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
-  }
-  const loadMoreEvents = async () => {
-    if (!loading && nextUrl) {
-      await loadEvents(nextUrl);
+  };
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMoreData && nextPageUrl) {
+      loadEvents(true);
     }
   };
 
@@ -85,14 +101,11 @@ const Home = () => {
 
       let res = await Apis.get(endpoints['trend']);
 
-      if (res.data && res.data.length > 0) {
+      if (res.data) {
         setTrend(res.data);
-      } else {
-        setTrend([]);
       }
     } catch (ex) {
       console.error("Error loading Trend:", ex);
-      setTrend([]);
     } finally {
       setLoading(false);
     }
@@ -111,12 +124,11 @@ const Home = () => {
 
       let res = await authApis(token).get(endpoints["recommend"]);
       console.log("Recommend", res.data);
-      if (res.data) {
+      if (res.data.results) {
         setRecommend(res.data);
       }
     } catch (ex) {
       console.error("Error loading Recommend:", ex);
-      setRecommend([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -159,22 +171,6 @@ const Home = () => {
   });
   const [paginationIndex, setPaginationIndex] = useState(0);
 
-  const onViewableItemsChanged = ({ viewableItems }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      const index = viewableItems[0].index % trend.length; // Đảm bảo quay vòng
-      setPaginationIndex(index);
-    }
-  };
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  }
-
-  const viewabilityConfigCallbackPairs = useRef([
-    { viewabilityConfig, onViewableItemsChanged },
-  ]);
-
-
   const getIconNameByCategory = (category) => {
     switch (category.toLowerCase()) {
       case 'concert':
@@ -206,15 +202,15 @@ const Home = () => {
     try {
       setLoading(true);
       let allEvents = [];
-      let nextPageUrl = `${endpoints['event']}?search=${keyword}`;
 
+      let res = await Apis.get(`${endpoints['event']}?search=${keyword}`);
       while (nextPageUrl) {
         const res = await Apis.get(nextPageUrl);
         if (res.data && res.data.results) {
-          allEvents = [...allEvents, ...res.data.results]; // Gộp dữ liệu từ các trang
-          nextPageUrl = res.data.next; // Cập nhật URL trang tiếp theo
+          allEvents = [...allEvents, ...res.data.results];
+          nextPageUrl = res.data.next;
         } else {
-          break; // Thoát nếu không có dữ liệu
+          break;
         }
       }
 
@@ -226,24 +222,18 @@ const Home = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    // Clear timeout trước khi set timeout mới
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-
-    // Nếu searchText rỗng thì không gọi API mà clear suggestion luôn
     if (!searchText) {
       setSuggestion([]);
       return;
     }
-
-    // Đặt timeout 500ms để gọi API loadSuggestion
     debounceTimeoutRef.current = setTimeout(() => {
       loadSuggestion(searchText);
     }, 500);
-
-    // Cleanup function khi component unmount hoặc searchText thay đổi
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -264,18 +254,21 @@ const Home = () => {
         />
       </View>
     ) : (
-      <ScrollView style={styles.scrollView} refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
-      }>
+      <ScrollView 
+        style={styles.scrollView} 
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
+        }
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const paddingToBottom = 20;
+          if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+            handleLoadMore();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
         <View style={{ paddingTop: 40 }}>
-
-          {/* <SearchBox
-            navigation={navigation}
-            onFocus={handleSearchFocus}
-            onBlur={handleSearchBlur}
-            onEnter={handleSearchEnter}
-            suggestions={searchSuggestions}
-          /> */}
           <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]}>
             <TextInput
               style={[globalStyles.input, globalStyles.placeholder]}
@@ -285,9 +278,7 @@ const Home = () => {
               onChangeText={setSearchText}
               onFocus={() => setIsFocused(true)}
             />
-            <TouchableOpacity
-              style={[globalStyles.button]}
-            >
+            <TouchableOpacity style={[globalStyles.button]} >
               <Ionicons name="search" size={24} color="white" />
             </TouchableOpacity>
           </View>
@@ -295,10 +286,11 @@ const Home = () => {
             <View style={styles.suggestionsContainer}>
               <FlatList
                 data={suggestion}
-                keyExtractor={(item, index) => index.toString()}
+                // keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.suggestionItem}
+                    key={`suggestion-${item.id}`}
 
                     onPress={() => {
                       console.log("Pressed item id:", item.id);
@@ -320,13 +312,12 @@ const Home = () => {
           <View style={{}}>
             <Animated.FlatList
               data={trend}
-              renderItem={({ item, index }) => <SliderItem item={item} index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
+              renderItem={({ item, index }) => <SliderItem item={item}                     key={`trending-${item.id}`}
+ index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
               horizontal
               showsHorizontalScrollIndicator={false}
               pagingEnabled
               onScroll={onScrollHandler}
-              viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
-              keyExtractor={(item, idx) => item.id?.toString() || idx.toString()}
               style={{}}
             />
             <Pagination
@@ -340,11 +331,12 @@ const Home = () => {
           <Text style={[globalStyles.title, globalStyles.mi]}>Categories</Text>
           <FlatList
             data={categories}
-            keyExtractor={(item) => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
               <Category
+                    key={`cate-${item.id}`}
+
                 type={item.name}
                 iconName={getIconNameByCategory(item.name)}
                 onPress={() => navigation.navigate('categoryFilter', { id: item.id })}
@@ -366,11 +358,10 @@ const Home = () => {
               <FlatList
                 style={{ paddingInline: 20 }}
                 data={recommend}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item, index }) => (
+                renderItem={({ item }) => (
                   <EventCard
                     item={item}
-                    key={index}
+                    key={`${item.id}`}
                     onPress={() => navigation.navigate('eventDetail', { id: item.id })}
                     cardWidth={300}
 
@@ -397,9 +388,9 @@ const Home = () => {
           <FlatList
             style={{ paddingHorizontal: 20 }}
             data={events}
-            keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <EventCard
+                    key={`upcoming-${item.id}`}
                 item={item}
                 onPress={() => navigation.navigate('eventDetail', { id: item.id })}
                 cardWidth={300}
@@ -410,13 +401,20 @@ const Home = () => {
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
             ListFooterComponent={loading && <ActivityIndicator size={30} />}
             onEndReachedThreshold={0.5}
-            onEndReached={loadMoreEvents}
+            // onEndReached={}
             ListEmptyComponent={() => (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text>No events found</Text>
               </View>
             )}
           />
+
+          {/* Add loading indicator at the bottom when loading more */}
+          {isLoadingMore && (
+            <View style={styles.loadingMoreContainer}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          )}
 
           <View />
         </View>
@@ -441,6 +439,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
+  },
+  loadingMoreContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });
 
