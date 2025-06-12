@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyUserContext } from "../../configs/Context";
 import LottieView from "lottie-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 
 
 const Home = () => {
@@ -38,6 +39,8 @@ const Home = () => {
   const [searchText, setSearchText] = useState('');
   const [suggestion, setSuggestion] = useState([]);
 
+
+  console.log(searchText)
   const user = useContext(MyUserContext);
 
   const [loading, setLoading] = useState(false);
@@ -193,17 +196,10 @@ const Home = () => {
       let allEvents = [];
 
       let res = await Apis.get(`${endpoints['event']}?search=${keyword}`);
-      while (nextPageUrl) {
-        const res = await Apis.get(nextPageUrl);
-        if (res.data && res.data.results) {
-          allEvents = [...allEvents, ...res.data.results];
-          nextPageUrl = res.data.next;
-        } else {
-          break;
-        }
+      if(res.data) {
+        allEvents = [...allEvents, ...res.data.results];
       }
-
-      setSuggestion(allEvents); // Cập nhật state với toàn bộ dữ liệu
+      setSuggestion(allEvents); 
     } catch (ex) {
       console.error("Error loading all suggestions:", ex);
       setSuggestion([]);
@@ -213,23 +209,10 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    if (!searchText) {
-      setSuggestion([]);
-      return;
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      loadSuggestion(searchText);
-    }, 500);
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
+  
+  loadSuggestion(searchText);
+   
   }, [searchText]);
-  const debounceTimeoutRef = useRef(null);
 
 
   return (
@@ -243,8 +226,8 @@ const Home = () => {
         />
       </View>
     ) : (
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
         }
@@ -257,25 +240,28 @@ const Home = () => {
         }}
         scrollEventThrottle={400}
       >
-        <View style={{ paddingTop: 40 }}>
-          <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]}>
+        <StatusBar barStyle="dark-content"/>
+        <View style={{ paddingTop: 40, }}>
+          <View style={[globalStyles.container, globalStyles.mb, { paddingInline: 20}]}>
             <TextInput
-              style={[globalStyles.input, globalStyles.placeholder]}
+              style={[globalStyles.input, globalStyles.placeholder, {}]}
               placeholder="Search Event.."
               placeholderTextColor={'gray'}
               value={searchText}
               onChangeText={setSearchText}
               onFocus={() => setIsFocused(true)}
+              onSubmitEditing={()=> navigation.navigate("searchingScreen",{searchText})}
             />
             <TouchableOpacity style={[globalStyles.button]} >
               <Ionicons name="search" size={24} color="white" />
             </TouchableOpacity>
           </View>
-          {(isFocused && suggestion.length > 0 && searchText.length > 0) && (
+          {(isFocused && searchText.length > 0) && (
             <View style={styles.suggestionsContainer}>
               <FlatList
+                scrollEnabled={false}
                 data={suggestion}
-                // keyExtractor={(item, index) => index.toString()}
+                style ={{paddingLeft:20}}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.suggestionItem}
@@ -301,8 +287,8 @@ const Home = () => {
           <View style={{}}>
             <Animated.FlatList
               data={trend}
-              renderItem={({ item, index }) => <SliderItem item={item}                     key={`trending-${item.id}`}
- index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
+              renderItem={({ item, index }) => <SliderItem item={item} key={`trending-${item.id}`}
+                index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
               horizontal
               showsHorizontalScrollIndicator={false}
               pagingEnabled
@@ -324,7 +310,7 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
               <Category
-                    key={`cate-${item.id}`}
+                key={`cate-${item.id}`}
 
                 type={item.name}
                 iconName={getIconNameByCategory(item.name)}
@@ -379,7 +365,7 @@ const Home = () => {
             data={events}
             renderItem={({ item }) => (
               <EventCard
-                    key={`upcoming-${item.id}`}
+                key={`upcoming-${item.id}`}
                 item={item}
                 onPress={() => navigation.navigate('eventDetail', { id: item.id })}
                 cardWidth={300}

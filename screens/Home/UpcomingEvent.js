@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, StatusBar, SafeAreaView, Alert, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import EventCardMini from '../components/EventCardMini';
-import COLORS from '../constants/colors';
-import Apis, { authApis, endpoints } from '../configs/Apis';
+import Apis, { endpoints } from '../../configs/Apis';
+import COLORS from '../../constants/colors';
+import EventCardMini from '../../components/EventCardMini';
 
 const ITEMS_PER_PAGE = 6;
 

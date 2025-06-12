@@ -2,7 +2,13 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from './screens/Home/Home';
-import EventDetail from './screens/EventDetail/EventDetail';
+import EventDetail from './screens/Home/EventDetail';
+import UpcommingEvent from "./screens/Home/UpcomingEvent";
+import RecommendEvent from "./screens/Home/RecommendEvent";
+import Booking from "./screens/Home/Booking";
+import SearchingScreen from "./screens/Home/SearchingScreen";
+
+
 import Login from './screens/User/Login';
 import Register from './screens/User/Register';
 import { Ionicons } from "@expo/vector-icons";
@@ -16,18 +22,14 @@ import EditProfile from "./screens/Profile/EditProfile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
 import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
-import Booking from "./screens/Booking/Booking";
 import PaymentSuccess from "./screens/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
-import SearchingScreen from "./screens/SearchingScreen";
-import RecommendEvent from "./screens/RecommendEvent";
 
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
 import EditEvent from "./screens/CreateEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
 import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
-import UpcommingEvent from "./screens/UpcomingEvent";
 import MyInvoice from "./screens/MyInvoice";
 
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
@@ -36,7 +38,6 @@ import CategoryFilter from "./screens/CategoryFilter";
 import { useFonts } from "expo-font";
 import MyReceipt from "./screens/MyReceipt";
 
-// Notification config
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

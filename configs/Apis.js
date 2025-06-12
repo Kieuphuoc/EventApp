@@ -1,4 +1,4 @@
-const BASE_URL = "https://fadf-14-169-26-201.ngrok-free.app/";
+const BASE_URL = "https://a121-42-119-84-90.ngrok-free.app/";
 import axios from "axios";
 
 export const endpoints = {
@@ -11,13 +11,15 @@ export const endpoints = {
     'recommend': '/event/recommended/',
 
     // Review
-    'review': (event_id) => `/event/${event_id}/reviews/`,
-    'delete-review': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/`,
-    'reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/response/`,
-    'delete-reply': (event_id, review_id, reply_id) => `/event/${event_id}/reviews/${review_id}/response/${reply_id}`,
+    'review': (event_id) => `/event/${event_id}/reviews/`, // Get Post
+    'edit-review': (review_id) => `/reviews/${review_id}/`, // Delete Put Patch
+    'reply': (review_id) => `/review/${review_id}/response/`, // Get Post
+    'edit-reply': (reply_id) => `/response/${reply_id}`,
 
-    'stats_rating': (event_id) => `/event/${event_id}/reviews/stats/`,
+    // Rating
+    'stats_rating': (event_id) => `/event/${event_id}/stats/`,
 
+    // User
     'register': '/user/',
     'login': '/o/token/',
     'current-user': '/user/me/',

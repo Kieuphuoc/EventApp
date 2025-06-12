@@ -13,7 +13,7 @@ const TabReviews = ({ event_id }) => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [reply, setReply] = useState([]);
+
   const loadReviews = async () => {
     try {
       setLoading(true);
@@ -74,7 +74,7 @@ const TabReviews = ({ event_id }) => {
     );
   };
 
-  const deleteReplyPress = (reviewId, replyId) => {
+  const deleteReplyPress = (replyId) => {
     Alert.alert(
       'Delete Response',
       'Are you sure you want to delete this response?',
@@ -83,12 +83,13 @@ const TabReviews = ({ event_id }) => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteReply(reviewId, replyId),
+          onPress: () => deleteReply(replyId),
         },
       ]
     );
   };
-  const deleteReply = async (reviewId) => {
+
+  const deleteReply = async (replyId) => {
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
@@ -96,7 +97,7 @@ const TabReviews = ({ event_id }) => {
         throw new Error('No token found');
       }
 
-      const response = await authApis(token).delete(endpoints['delete-reply'](event_id, reviewId, reply));
+      const response = await authApis(token).delete(endpoints['edit-reply'](replyId));
 
       if (response.status === 200 || response.status === 204) {
         console.log('Delete review successfully!');
@@ -124,7 +125,7 @@ const TabReviews = ({ event_id }) => {
         throw new Error('No token found');
       }
 
-      const response = await authApis(token).delete(endpoints['delete-review'](event_id, reviewId));
+      const response = await authApis(token).delete(endpoints['edit-review'](reviewId));
 
       if (response.status === 200 || response.status === 204) {
         console.log('Delete review successfully!');
@@ -147,23 +148,6 @@ const TabReviews = ({ event_id }) => {
   useEffect(() => {
     loadReviews();
   }, []);
-
-
-
-  const renderStars = (rating) => {
-    return (
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Ionicons
-            key={star}
-            name={star <= rating ? 'star' : 'star-outline'}
-            size={16}
-            color={star <= rating ? COLORS.secondary : COLORS.grey}
-          />
-        ))}
-      </View>
-    );
-  };
 
   return (
     <View style={styles.container}>
@@ -189,7 +173,7 @@ const TabReviews = ({ event_id }) => {
               event_id={event_id}
               review={item}
               deletePress={() => deletePress(item.id)}
-              deleteReplyPress={() => deleteReplyPress(item.id, item.response.id)}
+              deleteReplyPress={() => deleteReplyPress(item.response.id)}
             />
           )}
           scrollEnabled={false}

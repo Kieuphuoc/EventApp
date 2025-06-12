@@ -49,7 +49,7 @@ const EventDetail = ({ route }) => {
 
     useEffect(() => {
         loadEvents();
-    }, [eventId]); // Thêm event_id làm dependency
+    }, [eventId]); 
 
     useEffect(() => {
         loadRating();
