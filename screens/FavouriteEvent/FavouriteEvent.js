@@ -88,9 +88,7 @@ const FavouriteEvent = ({ navigation }) => {
           <TouchableOpacity style={styles.searchButton} onPress={loadFavoriteEvent}>
             <Ionicons name="reload" size={24} color={COLORS.primary} />
           </TouchableOpacity>
-          {/* <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="options" size={24} color={COLORS.primary} />
-          </TouchableOpacity> */}
+         
         </View>
       </Animated.View>
       <FlatList

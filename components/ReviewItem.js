@@ -41,7 +41,7 @@ const ReviewItem = ({ event_id, review, deletePress, deleteReplyPress }) => {
       form.append('response', reply);
 
       let res = await authApis(token).post(
-        endpoints['reply'](event_id, review.id),
+        endpoints['reply'](review.id),
         form,
         {
           headers: {
@@ -123,8 +123,6 @@ const ReviewItem = ({ event_id, review, deletePress, deleteReplyPress }) => {
       </View>
 
       <ReplyModal
-        event_id={event_id}
-        review_id={review.id}
         visible={showReplyModal}
         onClose={() => setShowReplyModal(false)}
         onSubmit={createReply}

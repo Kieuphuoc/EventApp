@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
-
 const { width, height } = Dimensions.get('window');
 
 const ReviewModal = ({ visible, onClose, onSubmit, rating, setRating, comment, setComment }) => {
