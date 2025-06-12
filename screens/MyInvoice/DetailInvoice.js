@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
-import { authApis, endpoints } from '../configs/Apis';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
+import { authApis, endpoints } from '../../configs/Apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import COLORS from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
 
-const MyInvoice = ({ route, navigation }) => {
+const DetailInvoice = ({ route, navigation }) => {
 
   const id = route.params;
   const invoice_id = parseInt(id, 10);
@@ -325,4 +325,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyInvoice; 
+export default DetailInvoice; 

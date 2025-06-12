@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import COLORS from '../constants/colors';
+import COLORS from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -30,7 +30,7 @@ const PaymentSuccess = ({ navigation }) => {
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <LottieView
-            source={require('../assets/images/mini_logo.png')}
+            source={require('../../assets/images/mini_logo.png')}
             autoPlay
             loop={false}
             style={styles.animation}

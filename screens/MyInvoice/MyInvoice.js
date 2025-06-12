@@ -15,11 +15,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
-import COLORS from "../constants/colors";
-import { authApis, endpoints } from "../configs/Apis";
+import COLORS from "../../constants/colors";
+import { authApis, endpoints } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function MyReceipt({ navigation }) {
+export default function MyInvoice({ navigation }) {
   const [tabItem, moveTab] = useState(1);
 
   const [invoice, setInvoice] = useState([]);
@@ -56,7 +56,7 @@ export default function MyReceipt({ navigation }) {
 
   const Invoice = ({ item }) => (
     <View style={styles.ticketCard}>
-      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('myInvoice', item.id)}>
+      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('detailInvoice', item.id)}>
         <View style={styles.ticketHeader}>
           <Image source={{ uri: item?.event?.image }} style={styles.eventImage} />
           <View style={styles.eventInfoContainer}>
@@ -96,7 +96,7 @@ export default function MyReceipt({ navigation }) {
           <Ionicons name="arrow-back" size={24} color={'white'} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>My Receipt</Text>
+          <Text style={styles.headerTitle}>My Invoice</Text>
         </View>
       </View>
 

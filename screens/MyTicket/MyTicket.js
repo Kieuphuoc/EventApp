@@ -87,7 +87,7 @@ export default function MyTicket({ navigation }) {
     <View
       style={styles.ticketCard}
     >
-      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('myInvoice', item.invoice_id)} >
+      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('detailInvoice', item.invoice_id)} >
         <View style={styles.ticketHeader}>
           <Text style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">
             {item?.event?.title || "Event Title Missing"}

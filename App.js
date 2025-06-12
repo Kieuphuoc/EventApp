@@ -15,28 +15,29 @@ import { Ionicons } from "@expo/vector-icons";
 import COLORS from "./constants/colors";
 import MyTicket from './screens/MyTicket/MyTicket';
 
-import CreateEvent from "./screens/CreateEvent/CreateEvent";
+import CreateEvent from "./screens/MyEvent/CreateEvent";
 import FavouriteEvent from "./screens/FavouriteEvent/FavouriteEvent";
-import Profile from "./screens/Profile/Profile";
-import EditProfile from "./screens/Profile/EditProfile";
+import Profile from "./screens/User/Profile";
+import EditProfile from "./screens/User/EditProfile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
 import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
-import PaymentSuccess from "./screens/PaymentSuccess";
+import PaymentSuccess from "./screens/Home/PaymentSuccess";
 // import PaymentConfirmation from "./screens/PaymentConfirmation";
 
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
-import EditEvent from "./screens/CreateEvent/EditEvent";
+import EditEvent from "./screens/MyEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
 import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
-import MyInvoice from "./screens/MyInvoice";
+import MyInvoice from "./screens/MyInvoice/DetailInvoice";
 
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import * as Notifications from "expo-notifications";
-import CategoryFilter from "./screens/CategoryFilter";
+import CategoryFilter from "./screens/Home/CategoryFilter";
 import { useFonts } from "expo-font";
-import MyReceipt from "./screens/MyReceipt";
+import MyReceipt from "./screens/MyInvoice/MyInvoice";
+import DetailInvoice from "./screens/MyInvoice/DetailInvoice";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -89,7 +90,7 @@ const StackMyTicket = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="myTicket" component={MyTicket} />
-      <Stack.Screen name="myInvoice" component={MyInvoice} />
+      <Stack.Screen name="detailInvoice" component={DetailInvoice} />
     </Stack.Navigator>
   )
 }
