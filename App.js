@@ -23,8 +23,6 @@ import { MyDispatchContext, MyUserContext } from "./configs/Context";
 import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
 import PaymentSuccess from "./screens/Home/PaymentSuccess";
-// import PaymentConfirmation from "./screens/PaymentConfirmation";
-
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
 import EditEvent from "./screens/MyEvent/EditEvent";
@@ -39,6 +37,12 @@ import { useFonts } from "expo-font";
 import MyReceipt from "./screens/MyInvoice/MyInvoice";
 import DetailInvoice from "./screens/MyInvoice/DetailInvoice";
 
+
+import firebase from '@react-native-firebase/app';
+import { firebaseConfig } from './configs/firebaseConfig';
+import { GoogleSignin } from "@react-native-google-signin/google-signin"
+
+// Notification config
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -275,24 +279,25 @@ const TabNavigator = () => {
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
-  // useEffect(() => {
-  //   if (__DEV__) {
-  //     const mockUser = {
-  //       id: 1,
-  //       username: 'participant1',
-  //       name: 'Kieu Nghia',
-  //       role: 'participant',
-  //       token: 'fake-jwt-token'
-  //     };
-  //     dispatch({ type: "login", payload: mockUser });
-  //   }
-  // }, []);
+  // Initializer firebase
+  if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+  useEffect(() => {
+    GoogleSignin.configure({  
+      webClientId: "951760374677-29quu8dvcdaeqjr33jq8e2bgspncjd2r.apps.googleusercontent.com",
+      profileImageSize: 150
+    });
+  });
+
 
   const [fontsLoaded] = useFonts({
     'GreatVibes': require('./assets/fonts/GreatVibes-Regular.ttf'),
   });
 
   // if (!fontsLoaded) return <AppLoading />;
+
   return (
     <NotificationProvider>
       <MyUserContext.Provider value={user} >
