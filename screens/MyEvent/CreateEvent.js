@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../constants/colors';
 import { Chip } from 'react-native-paper';
 import Apis, { authApis, endpoints } from '../../configs/Apis';
+import Header from '../../components/Header';
 
 export default function CreateEvent({ navigation }) {
   const [image, setImage] = useState(null);
@@ -37,7 +38,6 @@ export default function CreateEvent({ navigation }) {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  // Tải danh mục
   const loadCates = async () => {
     try {
       let res = await Apis.get(endpoints['category']);
@@ -48,7 +48,6 @@ export default function CreateEvent({ navigation }) {
     }
   };
 
-  // Chọn ảnh
   const pickImage = async () => {
     let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -67,7 +66,6 @@ export default function CreateEvent({ navigation }) {
     }
   };
 
-  // Xử lý chọn ngày giờ
   const onStartTimeChange = (_, selectedDate) => {
     setShowStartPicker(Platform.OS === 'ios'); // Giữ hiển thị trên iOS
     if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate)) {
@@ -82,7 +80,6 @@ export default function CreateEvent({ navigation }) {
     }
   };
 
-  // Hàm định dạng ngày giờ
   const formatDateTime = (date) => {
     if (!(date instanceof Date) || isNaN(date)) {
       return 'Select date and time';
@@ -97,7 +94,6 @@ export default function CreateEvent({ navigation }) {
   };
 
   const validate = (eventData) => {
-    // Kiểm tra các trường bắt buộc
     if (!eventData.title.trim()) {
       throw new Error('Event title is required.');
     }
@@ -111,7 +107,6 @@ export default function CreateEvent({ navigation }) {
       throw new Error('Ticket price is required.');
     }
 
-    // Kiểm tra ticket_quantity và ticket_price
     const quantity = parseInt(eventData.ticket_quantity);
     const price = parseFloat(eventData.ticket_price);
     if (isNaN(quantity) || quantity <= 0) {
@@ -134,86 +129,86 @@ export default function CreateEvent({ navigation }) {
   };
 
   const create = async () => {
-  Alert.alert(
-    'Confirm',
-    'Are you sure you want to create this event?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Create',
-        onPress: async () => {
-          try {
-            setLoading(true);
-            validate(event);
-            const token = await AsyncStorage.getItem('token');
-            if (!token) {
-              throw new Error('No token found');
-            }
+    Alert.alert(
+      'Confirm',
+      'Are you sure you want to create this event?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Create',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              validate(event);
+              const token = await AsyncStorage.getItem('token');
+              if (!token) {
+                throw new Error('No token found');
+              }
 
-            let form = new FormData();
-            form.append('title', event.title);
-            form.append('category_id', event.category_id);
-            form.append('description', event.description || '');
-            form.append('start_time', event.start_time.toISOString());
-            form.append('end_time', event.end_time.toISOString());
-            form.append('location', event.location || '');
-            form.append('ticket_quantity', event.ticket_quantity);
-            form.append('ticket_price', event.ticket_price);
+              let form = new FormData();
+              form.append('title', event.title);
+              form.append('category_id', event.category_id);
+              form.append('description', event.description || '');
+              form.append('start_time', event.start_time.toISOString());
+              form.append('end_time', event.end_time.toISOString());
+              form.append('location', event.location || '');
+              form.append('ticket_quantity', event.ticket_quantity);
+              form.append('ticket_price', event.ticket_price);
 
-            if (image) {
-              const filename = image.split('/').pop();
-              const match = /\.(\w+)$/.exec(filename);
-              const type = match ? `image/${match[1]}` : `image`;
-              form.append('image', {
-                uri: image,
-                name: filename,
-                type,
+              if (image) {
+                const filename = image.split('/').pop();
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : `image`;
+                form.append('image', {
+                  uri: image,
+                  name: filename,
+                  type,
+                });
+              }
+
+              let res = await authApis(token).post(endpoints['event'], form, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
               });
-            }
 
-            let res = await authApis(token).post(endpoints['event'], form, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            });
-
-            if (res.status === 201) {
-              Alert.alert('Success', 'Event created successfully!');
-              setEvent({
-                title: '',
-                category_id: '',
-                description: '',
-                start_time: new Date(),
-                end_time: new Date(),
-                location: '',
-                ticket_quantity: '',
-                ticket_price: '',
+              if (res.status === 201) {
+                Alert.alert('Success', 'Event created successfully!');
+                setEvent({
+                  title: '',
+                  category_id: '',
+                  description: '',
+                  start_time: new Date(),
+                  end_time: new Date(),
+                  location: '',
+                  ticket_quantity: '',
+                  ticket_price: '',
+                });
+                setImage(null);
+                navigation.goBack();
+              }
+            } catch (error) {
+              console.error('Create Event Error:', {
+                message: error.message,
+                response: error.response,
+                status: error.response?.status,
+                data: error.response?.data,
               });
-              setImage(null);
-              navigation.goBack();
+              if (error.response?.status === 401) {
+                Alert.alert('Session Expired', 'Please log in again.', [
+                  { text: 'OK', onPress: () => navigation.navigate('Login') },
+                ]);
+              } else {
+                Alert.alert('Error', error.message || 'Failed to create event.');
+              }
+            } finally {
+              setLoading(false);
             }
-          } catch (error) {
-            console.error('Create Event Error:', {
-              message: error.message,
-              response: error.response,
-              status: error.response?.status,
-              data: error.response?.data,
-            });
-            if (error.response?.status === 401) {
-              Alert.alert('Session Expired', 'Please log in again.', [
-                { text: 'OK', onPress: () => navigation.navigate('Login') },
-              ]);
-            } else {
-              Alert.alert('Error', error.message || 'Failed to create event.');
-            }
-          } finally {
-            setLoading(false);
-          }
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
   useEffect(() => {
     loadCates();
@@ -222,13 +217,7 @@ export default function CreateEvent({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create New Event</Text>
-      </View>
-
+      <Header title={"Create New Event"} navigation={true} />
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
           {/* Title Section */}
@@ -422,34 +411,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    paddingTop: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  backButton: {
-    marginRight: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 8,
-    borderRadius: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
+
   content: {
     padding: 20,
   },

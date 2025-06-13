@@ -105,7 +105,7 @@ const Booking = ({ route, navigation }) => {
 
       if (res.status === 201) {
         setInvoice_id(res.data.id);
-        return res.data.id; // Return invoice_id for MoMo payment
+        return res.data.id; 
       }
       throw new Error('Failed to create invoice');
     } catch (error) {
@@ -115,7 +115,7 @@ const Booking = ({ route, navigation }) => {
         status: error.response?.status,
         data: error.response?.data,
       });
-      throw error; // Re-throw error to be handled by the caller
+      throw error; 
     }
   };
 
@@ -160,10 +160,10 @@ const Booking = ({ route, navigation }) => {
 
     const res = await authApis(token).post(
       endpoints['momo-payment'](invoiceId),
-      null, // No FormData needed, invoice already created
+      null, 
       {
         headers: {
-          'Content-Type': 'application/json', // Adjusted for POST with no body
+          'Content-Type': 'application/json',
         },
       }
     );
@@ -177,7 +177,7 @@ const Booking = ({ route, navigation }) => {
       if (payUrl) {
         const supported = await Linking.canOpenURL(payUrl);
         if (supported) {
-          await Linking.openURL(payUrl); // Navigate to the MoMo pay_url
+          await Linking.openURL(payUrl); 
 
  console.log(nvoice.invoiceId.payment_status);
           if (invoice.invoiceId.payment_status=='success') {
@@ -221,7 +221,6 @@ const Booking = ({ route, navigation }) => {
     loadDiscount();
   }, []);
 
-  // Log momoUrl when it changes
   useEffect(() => {
     if (momoUrl) {
       console.log('Updated momoUrl:', momoUrl);
@@ -240,7 +239,6 @@ const Booking = ({ route, navigation }) => {
 
     const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    // Initial check for any pending deep link
     Linking.getInitialURL().then((url) => {
       if (url) handleDeepLink({ url });
     });
@@ -464,7 +462,6 @@ const Booking = ({ route, navigation }) => {
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

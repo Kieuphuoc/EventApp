@@ -25,7 +25,7 @@ const FavouriteEvent = ({ navigation }) => {
         throw new Error('No token found');
       }
 
-      let res = await authApis(token).get(endpoints['favoriteEvent']);
+      let res = await authApis(token).get(endpoints['favorite-event']);
       if (res.data) {
         setFavoriteEvent(res.data);
       }

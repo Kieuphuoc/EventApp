@@ -12,6 +12,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import Apis, { endpoints } from '../../configs/Apis';
 import EventCardMini from '../../components/EventCardMini';
 import COLORS from '../../constants/colors';
+import Header from '../../components/Header';
 
 const CategoryFilter = ({ route, navigation }) => {
     const { id } = route.params;
@@ -48,16 +49,8 @@ const CategoryFilter = ({ route, navigation }) => {
 
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor={COLORS.primaryDark} barStyle="light-content" />
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Filter by category</Text>
-            </View>
+            <StatusBar barStyle="light-content" />
+            <Header title={"Filter By Category"} navigation={true} />
             {loading ? (
                 <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
             ) : (
@@ -85,7 +78,6 @@ const CategoryFilter = ({ route, navigation }) => {
                     ListFooterComponent={
                         <>
                             {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
-                            {/* {renderPagination()} */}
                         </>
                     }
                 /></>)}
@@ -97,34 +89,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.background,
-    },
-    header: {
-        backgroundColor: COLORS.primary,
-        padding: 20,
-        paddingTop: 40,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 8,
-    },
-    backButton: {
-        marginRight: 15,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        padding: 8,
-        borderRadius: '50%',
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
     },
 });
 

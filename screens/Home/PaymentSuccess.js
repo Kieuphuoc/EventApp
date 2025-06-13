@@ -11,7 +11,6 @@ const PaymentSuccess = ({ navigation }) => {
   let confettiRef = null;
 
   useEffect(() => {
-    // Trigger confetti animation when component mounts
     if (confettiRef) {
       confettiRef.start();
     }

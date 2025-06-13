@@ -13,11 +13,12 @@ import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import EventCardMini from '../../components/EventCardMini';
 import COLORS from '../../constants/colors';
 import Apis, { endpoints } from '../../configs/Apis';
+import Header from '../../components/Header';
 
 export default function SearchingScreen({ navigation, route }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const {searchText} = route.params;
+  const { searchText } = route.params;
   const loadEvent = async (searchText) => {
     try {
       setLoading(true);
@@ -46,8 +47,9 @@ export default function SearchingScreen({ navigation, route }) {
 
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, paddingTop: 60 }}>
-      <Text style={styles.sectionTitle}>SEARCHING RESULT</Text>
+    <GestureHandlerRootView>
+      <Header title={"Searching Results"} navigation={true} />
+
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
       ) : (
