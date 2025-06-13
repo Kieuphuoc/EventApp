@@ -67,7 +67,7 @@ const globalStyles = StyleSheet.create({
     borderRadius: 12,
   },
   header: {
-    fontSize: 30,
+    fontSize: 25,
     fontWeight: 'bold',
     color: COLORS.primaryDark,
     marginBottom: 15,

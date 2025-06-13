@@ -20,6 +20,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyUserContext } from "../../configs/Context";
 import LottieView from "lottie-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import { Alert } from "react-native";
 
 
 const Home = () => {
@@ -32,12 +34,15 @@ const Home = () => {
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
+  const [favorites, setFavorites] = useState({});
 
   // Searching 
   const [isFocused, setIsFocused] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [suggestion, setSuggestion] = useState([]);
 
+
+  console.log(searchText)
   const user = useContext(MyUserContext);
 
   const [loading, setLoading] = useState(false);
@@ -53,39 +58,28 @@ const Home = () => {
 
   const loadEvents = async (isLoadMore = false) => {
     try {
-      if (isLoadMore) {
-        setIsLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
+      if (isLoadMore) setIsLoadingMore(true);
 
-      const url = isLoadMore ? nextPageUrl : endpoints['event'];
-      
+      const url = isLoadMore && nextPageUrl ? nextPageUrl : endpoints['event'];
       if (!url) {
         setHasMoreData(false);
         return;
       }
 
       let res = await Apis.get(url);
-      
       if (res.data) {
         if (isLoadMore) {
-          setEvents(prevEvents => [...prevEvents, ...res.data.results]);
+          setEvents(prev => [...prev, ...res.data.results]);
         } else {
           setEvents(res.data.results);
         }
-        
         setNextPageUrl(res.data.next);
         setHasMoreData(!!res.data.next);
       }
     } catch (ex) {
       console.error("Error loading events:", ex);
     } finally {
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-      } else {
-        setLoading(false);
-      }
+      if (isLoadMore) setIsLoadingMore(false);
     }
   };
 
@@ -120,12 +114,13 @@ const Home = () => {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         throw new Error("No token found");
-      }
+      } 
 
       let res = await authApis(token).get(endpoints["recommend"]);
       console.log("Recommend", res.data);
-      if (res.data.results) {
+      if (res.data) {
         setRecommend(res.data);
+        console.log("Lấy được recommned");
       }
     } catch (ex) {
       console.error("Error loading Recommend:", ex);
@@ -133,6 +128,74 @@ const Home = () => {
       setLoading(false);
     }
   }
+
+  const loadFavorites = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const res = await authApis(token).get(endpoints['favoriteEvent']);
+      if (res.data) {
+        const favoritesMap = {};
+        res.data.forEach(fav => {
+          favoritesMap[fav.event_id] = {
+            isFavorite: true,
+            favorId: fav.id
+          };
+        });
+        setFavorites(favoritesMap);
+      }
+    } catch (ex) {
+      console.error("Error loading favorite events:", ex);
+      console.log('Error details:', ex.response?.data);
+    }
+  };
+
+  const handleFavorite = async (eventId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const currentFavorite = favorites[eventId];
+      
+      if (currentFavorite?.isFavorite) {
+        // Delete favorite
+        const response = await authApis(token).delete(endpoints['delete-favor'](currentFavorite.favorId));
+        if (response.status === 200 || response.status === 204) {
+          setFavorites(prev => ({
+            ...prev,
+            [eventId]: { isFavorite: false, favorId: null }
+          }));
+        }
+      } else {
+        // Add favorite
+        const response = await authApis(token).post(endpoints['favoriteEvent'], {
+          event_id: eventId,
+        });
+        if (response.status === 201 || response.status === 200) {
+          setFavorites(prev => ({
+            ...prev,
+            [eventId]: { isFavorite: true, favorId: response.data.id }
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Favorite Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to update favorite status.'
+      );
+    }
+  };
 
   const loadAllData = async () => {
     try {
@@ -142,7 +205,8 @@ const Home = () => {
         loadCates(),
         loadEvents(),
         loadTrend(),
-        user?._j?.role === 'participant' && loadRecommend()
+        user?._j?.role === 'participant' && loadRecommend(),
+        user?._j?.role === 'participant' && loadFavorites()
       ]);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
@@ -204,17 +268,10 @@ const Home = () => {
       let allEvents = [];
 
       let res = await Apis.get(`${endpoints['event']}?search=${keyword}`);
-      while (nextPageUrl) {
-        const res = await Apis.get(nextPageUrl);
-        if (res.data && res.data.results) {
-          allEvents = [...allEvents, ...res.data.results];
-          nextPageUrl = res.data.next;
-        } else {
-          break;
-        }
+      if(res.data) {
+        allEvents = [...allEvents, ...res.data.results];
       }
-
-      setSuggestion(allEvents); // Cập nhật state với toàn bộ dữ liệu
+      setSuggestion(allEvents); 
     } catch (ex) {
       console.error("Error loading all suggestions:", ex);
       setSuggestion([]);
@@ -224,24 +281,19 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    if (!searchText) {
-      setSuggestion([]);
-      return;
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      loadSuggestion(searchText);
-    }, 500);
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
+  
+  loadSuggestion(searchText);
   }, [searchText]);
-  const debounceTimeoutRef = useRef(null);
 
+  const renderEventCard = ({ item }) => (
+    <EventCard
+      item={item}
+      onPress={() => navigation.navigate('EventDetail', { event: item })}
+      cardWidth={300}
+      isFavorite={favorites[item.id]?.isFavorite || false}
+      onFavoritePress={() => handleFavorite(item.id)}
+    />
+  );
 
   return (
     globalLoading ? (
@@ -254,8 +306,8 @@ const Home = () => {
         />
       </View>
     ) : (
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
         }
@@ -268,25 +320,28 @@ const Home = () => {
         }}
         scrollEventThrottle={400}
       >
-        <View style={{ paddingTop: 40 }}>
-          <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]}>
+        <StatusBar barStyle="dark-content"/>
+        <View style={{ paddingTop: 40, }}>
+          <View style={[globalStyles.container, globalStyles.mb, { paddingInline: 20}]}>
             <TextInput
-              style={[globalStyles.input, globalStyles.placeholder]}
+              style={[globalStyles.input, globalStyles.placeholder, {}]}
               placeholder="Search Event.."
               placeholderTextColor={'gray'}
               value={searchText}
               onChangeText={setSearchText}
               onFocus={() => setIsFocused(true)}
+              onSubmitEditing={()=> navigation.navigate("searchingScreen",{searchText})}
             />
             <TouchableOpacity style={[globalStyles.button]} >
               <Ionicons name="search" size={24} color="white" />
             </TouchableOpacity>
           </View>
-          {(isFocused && suggestion.length > 0 && searchText.length > 0) && (
+          {(isFocused && searchText.length > 0) && (
             <View style={styles.suggestionsContainer}>
               <FlatList
+                scrollEnabled={false}
                 data={suggestion}
-                // keyExtractor={(item, index) => index.toString()}
+                style ={{paddingLeft:20}}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.suggestionItem}
@@ -312,8 +367,8 @@ const Home = () => {
           <View style={{}}>
             <Animated.FlatList
               data={trend}
-              renderItem={({ item, index }) => <SliderItem item={item}                     key={`trending-${item.id}`}
- index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
+              renderItem={({ item, index }) => <SliderItem item={item} key={`trending-${item.id}`}
+                index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
               horizontal
               showsHorizontalScrollIndicator={false}
               pagingEnabled
@@ -335,7 +390,7 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
               <Category
-                    key={`cate-${item.id}`}
+                key={`cate-${item.id}`}
 
                 type={item.name}
                 iconName={getIconNameByCategory(item.name)}
@@ -348,25 +403,17 @@ const Home = () => {
           <View style={globalStyles.mb}></View>
 
           {/* Recommend Events */}
-          {(user?._j?.role === 'participant' && recommend.length > 0) && (
+          {(user?._j?.role === 'participant') && (
             <><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={[globalStyles.title, globalStyles.mi]}>Recommend Event</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('upcomingEvent')} style={globalStyles.mr}>
+              <TouchableOpacity onPress={() => navigation.navigate('recommendEvent')} style={globalStyles.mr}>
                 <Text style={[{ color: '#2196F3', fontWeight: '600' }]}>View all</Text>
               </TouchableOpacity>
             </View>
               <FlatList
                 style={{ paddingInline: 20 }}
                 data={recommend}
-                renderItem={({ item }) => (
-                  <EventCard
-                    item={item}
-                    key={`${item.id}`}
-                    onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-                    cardWidth={300}
-
-                  />
-                )}
+                renderItem={renderEventCard}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
@@ -388,20 +435,13 @@ const Home = () => {
           <FlatList
             style={{ paddingHorizontal: 20 }}
             data={events}
-            renderItem={({ item }) => (
-              <EventCard
-                    key={`upcoming-${item.id}`}
-                item={item}
-                onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-                cardWidth={300}
-              />
-            )}
+            renderItem={renderEventCard}
             horizontal
             showsHorizontalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
             ListFooterComponent={loading && <ActivityIndicator size={30} />}
+            onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
-            // onEndReached={}
             ListEmptyComponent={() => (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text>No events found</Text>
@@ -409,7 +449,6 @@ const Home = () => {
             )}
           />
 
-          {/* Add loading indicator at the bottom when loading more */}
           {isLoadingMore && (
             <View style={styles.loadingMoreContainer}>
               <ActivityIndicator size="small" color={COLORS.primary} />
@@ -418,7 +457,6 @@ const Home = () => {
 
           <View />
         </View>
-        {/* <FeaturedPosts /> */}
       </ScrollView>)
   );
 };

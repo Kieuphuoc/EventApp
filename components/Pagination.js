@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, SharedValue, withTiming, interpolate, Extra
 
 const { width } = Dimensions.get('screen');
 
-const Pagination = ({ items, paginationIndex, scrollX }) => {
+const Pagination = ({ items, scrollX }) => {
   return (
     <View style={styles.container}>
       {items.map((_, index) => {
@@ -25,7 +25,7 @@ const Pagination = ({ items, paginationIndex, scrollX }) => {
             style={[
               styles.dot,
               pgAnimationStyle,
-              { backgroundColor: paginationIndex === index ?  '#aaa' : '#aaa' },
+              { backgroundColor: '#aaa' },
             ]}></Animated.View>
         );
       })}

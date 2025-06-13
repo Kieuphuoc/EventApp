@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     container: {
         justifyContent: "center",
         alignItems: "center",
-        gap: 20,
+        gap: 10,
         padding: 10,
         width: width, shadowColor: "#000",
         shadowOffset: { width: 7, height: 8 },

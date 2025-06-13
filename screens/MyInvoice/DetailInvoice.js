@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
-import { authApis, endpoints } from '../configs/Apis';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native-paper';
+import { authApis, endpoints } from '../../configs/Apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import COLORS from '../../constants/colors';
+import Header from '../../components/Header';
 
 const { width } = Dimensions.get('window');
 
-const MyInvoice = ({ route, navigation }) => {
+const DetailInvoice = ({ route, navigation }) => {
 
   const id = route.params;
   const invoice_id = parseInt(id, 10);
@@ -43,28 +44,12 @@ const MyInvoice = ({ route, navigation }) => {
     loadInvoice();
   }, []);
 
-  // invoice!==null && {}
-  // const date = new Date(invoice?.event?.start_time);
-  // const day = new Intl.DateTimeFormat('en-GB', {
-  //   day: '2-digit',
-  //   month: '2-digit',
-  //   year: 'numeric',
-  // }).format(date).replace(/\//g, '/');
-  // const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Invoice detail</Text>
-      </View>
+      <Header title={"Invoice Detail"} navigation={true} />
       {loading ? <ActivityIndicator size={'large'} color={COLORS.primary} /> : <><ScrollView style={styles.scrollView}>
         <View style={styles.content}>
           <View style={styles.detailsContainer}>
@@ -161,34 +146,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    paddingTop: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  backButton: {
-    marginRight: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 8,
-    borderRadius: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
   },
   content: {
     padding: 20,
@@ -325,4 +282,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MyInvoice; 
+export default DetailInvoice; 

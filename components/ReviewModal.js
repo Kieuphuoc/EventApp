@@ -13,10 +13,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
-
 const { width, height } = Dimensions.get('window');
 
-const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, comment, setComment }) => {
+const ReviewModal = ({ visible, onClose, onSubmit, rating, setRating, comment, setComment }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(height));
 
@@ -51,7 +50,7 @@ const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, 
     }
   }, [visible]);
 
-  const handleSubmit = () => {
+  const submit = () => {
     if (rating === 0) {
       Alert.alert('Error', 'Please select a rating');
       return;
@@ -167,7 +166,7 @@ const ReviewModal = ({ event_id, visible, onClose, onSubmit, rating, setRating, 
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitButton, (!rating || !comment.trim()) && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
+              onPress={submit}
               disabled={!rating || !comment.trim()}
             >
               <Text style={styles.submitButtonText}>Send Review</Text>

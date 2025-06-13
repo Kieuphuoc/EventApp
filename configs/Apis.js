@@ -1,24 +1,38 @@
-const BASE_URL = "https://3450-14-169-26-201.ngrok-free.app/";
+const BASE_URL = "https://05b4-14-187-40-155.ngrok-free.app/";
 
 import axios from "axios";
 
 export const endpoints = {
-    'event': '/event/',
     'category': '/category/',
-    'review': (event_id) => `/event/${event_id}/reviews/`,
-    'create-review': (event_id) => `/event/${event_id}/reviews/create/`,
-    'delete-review': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/delete_review/`,
-    'reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/response/`,
-    'delete-reply': (event_id, review_id) => `/event/${event_id}/reviews/${review_id}/delete_review/`,
-    'stats_rating': (event_id) => `/event/${event_id}/reviews/stats/`,
+
+    //  Event
+    'event': '/event/',
+    'delete-event':(id) => `/event/${id}/`,
     'eventDetail': (id) => `/event/${id}/`,
+    'recommend': '/event/recommended/',
+
+    // Review
+    'review': (event_id) => `/event/${event_id}/reviews/`, // Get Post
+    'edit-review': (review_id) => `/reviews/${review_id}/`, // Delete Put Patch
+    'reply': (review_id) => `/review/${review_id}/response/`, // Get Post
+    'edit-reply': (reply_id) => `/response/${reply_id}`,
+
+    // Rating
+    'stats_rating': (event_id) => `/event/${event_id}/stats/`,
+
+    // User
     'register': '/user/',
     'login': '/o/token/',
     'current-user': '/user/me/',
+
+    // Favor
     'favoriteEvent': '/favorite/event/',
     'delete-favor': (event_id) => `/favorite/event/${event_id}/`,
+
+    // Invoice
     'invoice': '/invoice/',
     'invoice-detail': (id) => `/invoice/${id}/`,
+
     'my-discount': '/discount/my_discount/',
     'my-ticket': '/ticket/my_ticket/',
     'my-event': '/event/my_event/',

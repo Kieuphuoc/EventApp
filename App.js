@@ -2,37 +2,41 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from './screens/Home/Home';
-import EventDetail from './screens/EventDetail/EventDetail';
+import EventDetail from './screens/Home/EventDetail';
+import UpcommingEvent from "./screens/Home/UpcomingEvent";
+import RecommendEvent from "./screens/Home/RecommendEvent";
+import Booking from "./screens/Home/Booking";
+import SearchingScreen from "./screens/Home/SearchingScreen";
+
+
 import Login from './screens/User/Login';
 import Register from './screens/User/Register';
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "./constants/colors";
 import MyTicket from './screens/MyTicket/MyTicket';
 
-import CreateEvent from "./screens/CreateEvent/CreateEvent";
+import CreateEvent from "./screens/MyEvent/CreateEvent";
 import FavouriteEvent from "./screens/FavouriteEvent/FavouriteEvent";
-import Profile from "./screens/Profile/Profile";
-import EditProfile from "./screens/Profile/EditProfile";
+import Profile from "./screens/User/Profile";
+import EditProfile from "./screens/User/EditProfile";
 import { MyDispatchContext, MyUserContext } from "./configs/Context";
 import { useContext, useEffect, useReducer } from "react";
 import MyUserReducer from "./reducers/MyUserReducer";
-import Booking from "./screens/Booking/Booking";
-import PaymentSuccess from "./screens/PaymentSuccess";
-import SearchingScreen from "./screens/SearchingScreen";
-
+import PaymentSuccess from "./screens/Home/PaymentSuccess";
 import Statistics from "./screens/Statistics/Statistics";
 import MyEvent from "./screens/MyEvent/MyEvent";
-import EditEvent from "./screens/CreateEvent/EditEvent";
+import EditEvent from "./screens/MyEvent/EditEvent";
 import CatesSelection from "./screens/User/CatesSelection";
 import TicketCheckIn from "./screens/CheckIn/TicketCheckIn";
-import UpcommingEvent from "./screens/UpcomingEvent";
-import MyInvoice from "./screens/MyInvoice";
+import MyInvoice from "./screens/MyInvoice/DetailInvoice";
 
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import * as Notifications from "expo-notifications";
-import CategoryFilter from "./screens/CategoryFilter";
+import CategoryFilter from "./screens/Home/CategoryFilter";
 import { useFonts } from "expo-font";
-import MyReceipt from "./screens/MyReceipt";
+import MyReceipt from "./screens/MyInvoice/MyInvoice";
+import DetailInvoice from "./screens/MyInvoice/DetailInvoice";
+
 
 import firebase from '@react-native-firebase/app';
 import { firebaseConfig } from './configs/firebaseConfig';
@@ -55,6 +59,7 @@ const StackNavigator = () => {
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="eventDetail" component={EventDetail} />
       <Stack.Screen name="upcomingEvent" component={UpcommingEvent} />
+      <Stack.Screen name="recommendEvent" component={RecommendEvent} />
       <Stack.Screen name="booking" component={Booking} />
       <Stack.Screen name="searchingScreen" component={SearchingScreen} />
       <Stack.Screen name="paymentSuccess" component={PaymentSuccess} />
@@ -89,7 +94,7 @@ const StackMyTicket = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="myTicket" component={MyTicket} />
-      <Stack.Screen name="myInvoice" component={MyInvoice} />
+      <Stack.Screen name="detailInvoice" component={DetailInvoice} />
     </Stack.Navigator>
   )
 }
@@ -103,7 +108,7 @@ const StackFavourite = () => {
   )
 }
 
-const StackMyReceipt = ( ) =>{
+const StackMyReceipt = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="myReceipt" component={MyReceipt} />

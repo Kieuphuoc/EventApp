@@ -17,7 +17,7 @@ import COLORS from '../constants/colors';
 
 const { width, height } = Dimensions.get('window');
 
-const ReplyModal = ({ event_id, review_id, visible, onClose, onSubmit }) => {
+const ReplyModal = ({ visible, onClose, onSubmit }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(height));
   const [reply, setReply] = useState('');

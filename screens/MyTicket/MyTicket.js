@@ -17,9 +17,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import COLORS from "../../constants/colors";
 import { authApis, endpoints } from "../../configs/Apis";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import Header from "../../components/Header";
 
 export default function MyTicket({ navigation }) {
   const [tabItem, moveTab] = useState(1);
+  const [refresh, setRefresh] = useState(false);
 
   const [searchText, setSearchText] = useState("");
   const [ticket, setTicket] = useState([]);
@@ -28,9 +30,14 @@ export default function MyTicket({ navigation }) {
   const [qr, setQr] = useState("");
   // const fadeAnim = useRef(new Animated.Value(0)).current; // Animation cho modal
 
-  const loadTicket = async () => {
+  const loadTicket = async (isRefreshing = true) => {
     try {
-      setLoading(true);
+      if (isRefreshing) {
+        setRefresh(true);
+      } else {
+        setLoading(true);
+      }
+
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         throw new Error("No token found");
@@ -46,7 +53,11 @@ export default function MyTicket({ navigation }) {
       console.log("Error details:", ex.response?.data);
       setTicket([]);
     } finally {
-      setLoading(false);
+      if (isRefreshing) {
+        setRefresh(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -87,7 +98,7 @@ export default function MyTicket({ navigation }) {
     <View
       style={styles.ticketCard}
     >
-      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('myInvoice', item.invoice_id)} >
+      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('detailInvoice', item.invoice_id)} >
         <View style={styles.ticketHeader}>
           <Text style={styles.eventTitle} numberOfLines={1} ellipsizeMode="tail">
             {item?.event?.title || "Event Title Missing"}
@@ -151,13 +162,8 @@ export default function MyTicket({ navigation }) {
   return (
     <GestureHandlerRootView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>My Tickets</Text>
-        </View>
-      </View>
-
-      <ScrollView style={{ paddingInline: 15 }}>
+      <Header title={"My Ticket"} subtitle={"Your ticket you book"} onPress={loadTicket} />
+      <View style={{ paddingInline: 15 }}>
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
@@ -182,13 +188,14 @@ export default function MyTicket({ navigation }) {
                 data={bookedTickets}
                 renderItem={({ item, index }) => <Ticket key={index} item={item} />}
                 contentContainerStyle={styles.listContent}
-                scrollEnabled={false}
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No booked tickets found</Text>
                   </View>
                 }
+                refreshing={refresh}
+                onRefresh={() => loadTicket(true)}
               />
             )}
             {tabItem === 2 && (
@@ -196,13 +203,16 @@ export default function MyTicket({ navigation }) {
                 data={checkedInTickets}
                 renderItem={({ item, index }) => <Ticket key={index} item={item} />}
                 contentContainerStyle={styles.listContent}
-                scrollEnabled={false}
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No checked-in tickets found</Text>
                   </View>
                 }
+                refreshing={refresh}
+
+                onRefresh={() => loadTicket(true)}
+
               />
             )}
           </>
@@ -210,7 +220,7 @@ export default function MyTicket({ navigation }) {
         )}
 
 
-      </ScrollView>
+      </View>
       {showQr && (
         <Animated.View style={[styles.modalContainer,
         ]}>
@@ -288,34 +298,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    paddingTop: 40,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-    marginBottom: 10,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 15,
   },
   ticketCard: {
     flexDirection: "row",

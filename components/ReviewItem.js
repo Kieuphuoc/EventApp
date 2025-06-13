@@ -7,13 +7,14 @@ import { MyUserContext } from '../configs/Context';
 import ReplyModal from './ReplyModal';
 import Apis, { authApis, endpoints } from '../configs/Apis';
 
-const ReviewItem = ({ event_id, review, deletePress, onReplySubmitted }) => {
+const ReviewItem = ({ event_id, review, deletePress, deleteReplyPress }) => {
   const { width } = useWindowDimensions();
   const [showReplyModal, setShowReplyModal] = useState(false);
   const user = useContext(MyUserContext);
   const fullName = `${review?.participant?.first_name} ${review?.participant?.last_name}`;
   const d = new Date(review?.created_date);
   const date = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+
 
   const source = useMemo(() => ({ html: review?.comment || '' }), [review?.comment]);
   const tagsStyles = useMemo(
@@ -28,9 +29,8 @@ const ReviewItem = ({ event_id, review, deletePress, onReplySubmitted }) => {
     []
   );
 
-  // console.log(review?.response.length);
 
-  const handleReplySubmit = async (reply) => {
+  const createReply = async (reply) => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
@@ -41,7 +41,7 @@ const ReviewItem = ({ event_id, review, deletePress, onReplySubmitted }) => {
       form.append('response', reply);
 
       let res = await authApis(token).post(
-        endpoints['reply'](event_id, review.id),
+        endpoints['reply'](review.id),
         form,
         {
           headers: {
@@ -53,9 +53,6 @@ const ReviewItem = ({ event_id, review, deletePress, onReplySubmitted }) => {
       if (res.status === 201) {
         Alert.alert('Success', 'Reply submitted successfully');
         setShowReplyModal(false);
-        if (onReplySubmitted) {
-          onReplySubmitted(); // Callback để reload reviews
-        }
       }
     } catch (error) {
       console.error('Error submitting reply:', error);
@@ -92,11 +89,11 @@ const ReviewItem = ({ event_id, review, deletePress, onReplySubmitted }) => {
 
       <RenderHTML contentWidth={width} source={source} tagsStyles={tagsStyles} />
 
-      {/* Khu vực hiển thị replies */}
-      {review?.response?.length !== null && (
+      {/* Hiển thị replies */}
+      {review?.response !== null && (
         <View style={styles.repliesContainer}>
           {user?._j?.role === 'organizer' && 
-          <TouchableOpacity style={styles.moreIcon} onPress={deletePress}>
+          <TouchableOpacity style={styles.moreIcon} onPress={deleteReplyPress}>
             <Ionicons name="ellipsis-horizontal" size={20} color="#999" />
           </TouchableOpacity>}
 
@@ -126,11 +123,9 @@ const ReviewItem = ({ event_id, review, deletePress, onReplySubmitted }) => {
       </View>
 
       <ReplyModal
-        event_id={event_id}
-        review_id={review.id}
         visible={showReplyModal}
         onClose={() => setShowReplyModal(false)}
-        onSubmit={handleReplySubmit}
+        onSubmit={createReply}
       />
     </View>
   );

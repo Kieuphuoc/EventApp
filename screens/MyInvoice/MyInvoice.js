@@ -15,11 +15,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
-import COLORS from "../constants/colors";
-import { authApis, endpoints } from "../configs/Apis";
+import COLORS from "../../constants/colors";
+import { authApis, endpoints } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Header from "../../components/Header";
 
-export default function MyReceipt({ navigation }) {
+export default function MyInvoice({ navigation }) {
   const [tabItem, moveTab] = useState(1);
 
   const [invoice, setInvoice] = useState([]);
@@ -56,7 +57,7 @@ export default function MyReceipt({ navigation }) {
 
   const Invoice = ({ item }) => (
     <View style={styles.ticketCard}>
-      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('myInvoice', item.id)}>
+      <TouchableOpacity style={styles.ticketDetailsContainer} onPress={() => navigation.navigate('detailInvoice', item.id)}>
         <View style={styles.ticketHeader}>
           <Image source={{ uri: item?.event?.image }} style={styles.eventImage} />
           <View style={styles.eventInfoContainer}>
@@ -81,7 +82,7 @@ export default function MyReceipt({ navigation }) {
                 Total price: {item?.final_amount || "0"}
               </Text>
             </View>
-      
+
           </View>
         </View>
       </TouchableOpacity>
@@ -91,14 +92,7 @@ export default function MyReceipt({ navigation }) {
   return (
     <GestureHandlerRootView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <View style={styles.header}>
-         <TouchableOpacity style={styles.searchButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={'white'} />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>My Receipt</Text>
-        </View>
-      </View>
+      <Header title={"My Invoice"} />
 
       <ScrollView style={{ paddingInline: 15 }}>
 
@@ -161,43 +155,9 @@ export default function MyReceipt({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    paddingTop: 40,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-    marginBottom: 15,
-    gap:10
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    letterSpacing: 0.5,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -235,7 +195,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     // marginHorizontal: 15,
     marginBottom: 15,
-shadowColor: '#000',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,

@@ -8,11 +8,10 @@ import {
     TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
-import EventCard from '../components/EventCard'; // bạn thay bằng component hiển thị sự kiện của bạn
 import { ActivityIndicator } from 'react-native-paper';
-import Apis, { endpoints } from '../configs/Apis';
-import EventCardMini from '../components/EventCardMini';
+import Apis, { endpoints } from '../../configs/Apis';
+import EventCardMini from '../../components/EventCardMini';
+import COLORS from '../../constants/colors';
 
 const CategoryFilter = ({ route, navigation }) => {
     const { id } = route.params;

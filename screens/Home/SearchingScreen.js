@@ -9,42 +9,29 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
-import Apis, { endpoints } from '../configs/Apis'; // đảm bảo bạn có file Apis.js và endpoints
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
-import globalStyles from '../constants/globalStyles';
-import EventCard from '../components/EventCard';
-import EventCardMini from '../components/EventCardMini';
+import EventCardMini from '../../components/EventCardMini';
+import COLORS from '../../constants/colors';
+import Apis, { endpoints } from '../../configs/Apis';
 
-const suggestions = ["esport", "offline event", "Genfest", "meeting"];
-
-export default function SearchingScreen({ navigation, searchText }) {
-  const [q, setQ] = useState(searchText || ""); // khởi tạo q từ searchText props
+export default function SearchingScreen({ navigation, route }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // useEffect(() => {
-  //   // Khi props searchText thay đổi thì cập nhật q
-  //   setQ(searchText || "");
-  // }, [searchText]);
-
-  // useEffect(() => {
-  //   // Khi q thay đổi thì gọi loadEvents
-  //   loadEvents();
-  // }, [q]);
-
-  const loadEvent = async () => {
+  const {searchText} = route.params;
+  const loadEvent = async (searchText) => {
     try {
       setLoading(true);
-      let url = `${endpoints['event']}`;
-      if (q) {
-        url = `${url}?search=${q}`;
-      }
-      let res = await Apis.get(url);
+      console.log("Chay ham nay");
+      // console.log(searchText);
+
+      let allEvents = [];
+      let res = await Apis.get(`${endpoints['event']}?search=${searchText}`);
       if (res.data) {
-        setEvents(res.data);
+        allEvents = [...allEvents, ...res.data.results];
       }
+      setEvents(allEvents);
+      console.log(res.data.results);
+
     } catch (ex) {
       console.error("Error loading events:", ex);
       setEvents([]);
@@ -52,29 +39,14 @@ export default function SearchingScreen({ navigation, searchText }) {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
-    setQ(searchText);
-    loadEvent();
+    loadEvent(searchText);
   }, [searchText]);
 
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#fff', paddingTop: 60 }}>
-      <View style={[globalStyles.container, globalStyles.mb, globalStyles.mi]}>
-        <TextInput
-          style={[globalStyles.input, globalStyles.placeholder]}
-          placeholder="Search Event.."
-          placeholderTextColor={'gray'}
-          value={q}
-          onChangeText={setQ}  // người dùng có thể nhập để thay đổi từ khóa
-          onSubmitEditing={loadEvent} // khi bấm enter, load lại events
-        />
-        <TouchableOpacity style={[globalStyles.button]} onPress={loadEvent}>
-          <Ionicons name="search" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-
+    <GestureHandlerRootView style={{ flex: 1, paddingTop: 60 }}>
       <Text style={styles.sectionTitle}>SEARCHING RESULT</Text>
       {loading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
@@ -85,6 +57,7 @@ export default function SearchingScreen({ navigation, searchText }) {
           ) : (
             <FlatList
               data={events}
+              showsVerticalScrollIndicator={false}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item, index }) => (
                 <EventCardMini
