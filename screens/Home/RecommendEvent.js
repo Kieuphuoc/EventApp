@@ -2,71 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, StatusBar, SafeAreaView, Alert, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native-paper';
-import Apis, { endpoints } from '../../configs/Apis';
+import Apis, { authApis, endpoints } from '../../configs/Apis';
 import COLORS from '../../constants/colors';
 import EventCardMini from '../../components/EventCardMini';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ITEMS_PER_PAGE = 6;
 
 const RecommendEvent = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
-  const [events, setEvents] = useState([]);
+  const [recommend, setRecommend] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const scrollY = new Animated.Value(0);
 
-  const [count, setCount] = useState();
 
-
-  const loadEvents = async (page = 1) => {
+ const loadRecommend = async () => {
     try {
       setLoading(true);
-      let url = `${endpoints['recommend']}?page=${page}`;
 
-      let res = await Apis.get(url);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      let res = await authApis(token).get(endpoints["recommend"]);
+      // console.log("Recommend", res.data);
       if (res.data) {
-        setEvents(res.data.results);
-        setCount(res.data.count);
+        setRecommend(res.data);
+        console.log("Lấy được recommned");
       }
     } catch (ex) {
-      console.error("Error loading events:", ex);
+      console.error("Error loading Recommend:", ex);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    loadEvents(currentPage);
-  }, [currentPage]);
-
-  const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+    loadRecommend();
+  },);
   
-  const pagination = () => {
-    if (totalPages <= 1) return null;
-
-    return (
-      <View style={styles.pagination}>
-        <TouchableOpacity
-          style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
-          onPress={() => setCurrentPage(Math.max(currentPage - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? COLORS.grey : COLORS.primary} />
-        </TouchableOpacity>
-
-        <Text style={styles.pageText}>
-          Page {currentPage} of {totalPages}
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
-          onPress={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? COLORS.grey : COLORS.primary} />
-        </TouchableOpacity>
-      </View>
-    );
-  };
 
   return (
     <View style={styles.container}>
@@ -81,7 +56,7 @@ const RecommendEvent = ({ navigation }) => {
 
       </Animated.View>
       <FlatList
-        data={events}
+        data={recommend}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item, index }) => (
           <EventCardMini
@@ -101,7 +76,6 @@ const RecommendEvent = ({ navigation }) => {
         ListFooterComponent={
           <>
             {loading && <ActivityIndicator size={30} color={COLORS.primary} />}
-            {pagination()}
           </>
         }
       />
@@ -119,7 +93,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     padding: 20,
-    // paddingTop: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

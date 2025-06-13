@@ -2,13 +2,10 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Pressable } 
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../constants/colors";
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authApis, endpoints } from '../configs/Apis';
+
 import { MyUserContext } from '../configs/Context';
 
-const EventCard = ({ item, onPress, cardWidth }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [favorId, setFavorId] = useState(null);
+const EventCard = ({ item, onPress, cardWidth, isFavorite, onFavoritePress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const heartPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const heartOpacity = useRef(new Animated.Value(0)).current;
@@ -19,170 +16,14 @@ const EventCard = ({ item, onPress, cardWidth }) => {
   const date = new Date(item.start_time);
   const dayMonth = `${date.getDate()}/${date.getMonth() + 1}`;
   const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-  const [idFavor, setIdFavor] = useState();
-  const [nameFavor, setNameFavor] = useState([]);
-
-
-  const loadFavor = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      const res = await authApis(token).get(endpoints['favoriteEvent']);
-      if (res.data) {
-        const favoriteItem = res.data.find(fav => fav.event_id === item.id);
-        if (favoriteItem) {
-          setIsFavorite(true);
-          setFavorId(favoriteItem.id);
-        } else {
-          setIsFavorite(false);
-          setFavorId(null);
-        }
-      } else {
-        setIsFavorite(false);
-        setFavorId(null);
-      }
-    } catch (ex) {
-      console.error("Error loading favorite events:", ex);
-      console.log('Error details:', ex.response?.data);
-      setIsFavorite(false);
-      setFavorId(null);
-      Alert.alert('Error', 'Failed to load favorite status. Please try again.');
-    }
-  };
   const user = useContext(MyUserContext);
-
-
-  useEffect(() => {
-    if (user?._j?.role === 'participant') {
-      loadFavor();
-    }
-  }, []);
-
-  const favor = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      const response = await authApis(token).post(endpoints['favoriteEvent'], {
-        event_id: item.id,
-      });
-
-      if (response.status === 201 || response.status === 200) {
-        setIsFavorite(true);
-        setFavorId(response.data.id);
-      }
-    } catch (error) {
-      console.error('Favorite Error:', {
-        message: error.message,
-        response: error.response,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to add to favorites.'
-      );
-    }
-  };
-  const delete_favor = async () => {
-    try {
-      if (!favorId) {
-        console.error('No favorId available for deletion');
-        return;
-      }
-
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      const response = await authApis(token).delete(endpoints['delete-favor'](favorId));
-
-      if (response.status === 200 || response.status === 204) {
-        setIsFavorite(false);
-        setFavorId(null);
-      }
-    } catch (error) {
-      console.error('Delete Favorite Error:', {
-        message: error.message,
-        response: error.response,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to remove from favorites.'
-      );
-    }
-  };
-
-  // const getRandomOffset = () => {
-  //   return (Math.random() - 0.5) * 200; // Random value between -100 and 100
-  // };
-
-  // const createSmallHearts = () => {
-  //   const hearts = [];
-  //   for (let i = 0; i < 8; i++) {
-  //     hearts.push({
-  //       position: new Animated.ValueXY({ x: 0, y: 0 }),
-  //       opacity: new Animated.Value(1),
-  //       scale: new Animated.Value(0.5),
-  //     });
-  //   }
-  //   return hearts;
-  // };
-
-  // const animateSmallHearts = () => {
-  //   const hearts = createSmallHearts();
-  //   smallHearts.push(...hearts);
-
-  //   hearts.forEach((heart) => {
-  //     const randomX = getRandomOffset();
-  //     const randomY = getRandomOffset();
-
-  //     Animated.parallel([
-  //       Animated.timing(heart.position, {
-  //         toValue: { x: randomX, y: randomY },
-  //         duration: 1000,
-  //         useNativeDriver: true,
-  //       }),
-  //       Animated.timing(heart.opacity, {
-  //         toValue: 0,
-  //         duration: 1000,
-  //         useNativeDriver: true,
-  //       }),
-  //       Animated.timing(heart.scale, {
-  //         toValue: 1,
-  //         duration: 500,
-  //         useNativeDriver: true,
-  //       }),
-  //     ]).start(() => {
-  //       const index = smallHearts.indexOf(heart);
-  //       if (index > -1) {
-  //         smallHearts.splice(index, 1);
-  //       }
-  //     });
-  //   });
-  // };
 
   const handleDoubleTap = (event) => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
     if (now - lastTap.current < DOUBLE_PRESS_DELAY) {
-
-      if (isFavorite === true) {
-        delete_favor();
-        setIsFavorite(!isFavorite);
-
-      } else {
-        setIsFavorite(!isFavorite);
-        favor();
-      }
+      onFavoritePress();
+      
       const { locationX, locationY } = event.nativeEvent;
       touchPosition.x = locationX;
       touchPosition.y = locationY;
@@ -212,16 +53,13 @@ const EventCard = ({ item, onPress, cardWidth }) => {
       ]).start(() => {
         scaleAnim.setValue(1);
       });
-
-      // animateSmallHearts();
     }
     lastTap.current = now;
   };
 
   return (
     <View style={[styles.card, { width: cardWidth }]}>
-      <Pressable onPress={
-        handleDoubleTap}>
+      <Pressable onPress={handleDoubleTap}>
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: item.image }}
@@ -277,9 +115,10 @@ const EventCard = ({ item, onPress, cardWidth }) => {
             <View style={styles.category}>
               <Text style={styles.categoryText}>{item.category.name}</Text>
             </View>
-            {user && <TouchableOpacity style={styles.favoriteButton}
-              onPress={() => (setIdFavor(), isFavorite ? delete_favor() : favor())}            >
-
+            {user && <TouchableOpacity 
+              style={styles.favoriteButton}
+              onPress={onFavoritePress}
+            >
               <Ionicons
                 name={isFavorite ? "heart" : "heart-outline"}
                 size={22}

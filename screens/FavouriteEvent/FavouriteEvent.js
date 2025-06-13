@@ -6,6 +6,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import { authApis, endpoints } from '../../configs/Apis';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EventCardMini from '../../components/EventCardMini';
+import Header from '../../components/Header';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -79,18 +80,7 @@ const FavouriteEvent = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <Animated.View style={[styles.header, { paddingTop: 40 }]}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Favourite Events</Text>
-          <Text style={styles.headerSubtitle}>Your saved events</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.searchButton} onPress={loadFavoriteEvent}>
-            <Ionicons name="reload" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-         
-        </View>
-      </Animated.View>
+      <Header  title={"Your Favorite Events"} subtitle={"You saved events"} onPress={loadFavoriteEvent}/>
       <FlatList
         data={paginatedData}
         keyExtractor={(item) => item.id.toString()}
@@ -131,47 +121,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    // paddingTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.8,
-    marginTop: 4,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 15,
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   filterButton: {
     width: 40,

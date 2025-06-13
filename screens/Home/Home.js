@@ -21,6 +21,7 @@ import { MyUserContext } from "../../configs/Context";
 import LottieView from "lottie-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
+import { Alert } from "react-native";
 
 
 const Home = () => {
@@ -33,6 +34,7 @@ const Home = () => {
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
+  const [favorites, setFavorites] = useState({});
 
   // Searching 
   const [isFocused, setIsFocused] = useState(false);
@@ -112,12 +114,13 @@ const Home = () => {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         throw new Error("No token found");
-      }
+      } 
 
       let res = await authApis(token).get(endpoints["recommend"]);
       console.log("Recommend", res.data);
-      if (res.data.results) {
-        setRecommend(res.data.results);
+      if (res.data) {
+        setRecommend(res.data);
+        console.log("Lấy được recommned");
       }
     } catch (ex) {
       console.error("Error loading Recommend:", ex);
@@ -125,6 +128,74 @@ const Home = () => {
       setLoading(false);
     }
   }
+
+  const loadFavorites = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const res = await authApis(token).get(endpoints['favoriteEvent']);
+      if (res.data) {
+        const favoritesMap = {};
+        res.data.forEach(fav => {
+          favoritesMap[fav.event_id] = {
+            isFavorite: true,
+            favorId: fav.id
+          };
+        });
+        setFavorites(favoritesMap);
+      }
+    } catch (ex) {
+      console.error("Error loading favorite events:", ex);
+      console.log('Error details:', ex.response?.data);
+    }
+  };
+
+  const handleFavorite = async (eventId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const currentFavorite = favorites[eventId];
+      
+      if (currentFavorite?.isFavorite) {
+        // Delete favorite
+        const response = await authApis(token).delete(endpoints['delete-favor'](currentFavorite.favorId));
+        if (response.status === 200 || response.status === 204) {
+          setFavorites(prev => ({
+            ...prev,
+            [eventId]: { isFavorite: false, favorId: null }
+          }));
+        }
+      } else {
+        // Add favorite
+        const response = await authApis(token).post(endpoints['favoriteEvent'], {
+          event_id: eventId,
+        });
+        if (response.status === 201 || response.status === 200) {
+          setFavorites(prev => ({
+            ...prev,
+            [eventId]: { isFavorite: true, favorId: response.data.id }
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Favorite Error:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to update favorite status.'
+      );
+    }
+  };
 
   const loadAllData = async () => {
     try {
@@ -134,7 +205,8 @@ const Home = () => {
         loadCates(),
         loadEvents(),
         loadTrend(),
-        user?._j?.role === 'participant' && loadRecommend()
+        user?._j?.role === 'participant' && loadRecommend(),
+        user?._j?.role === 'participant' && loadFavorites()
       ]);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
@@ -211,9 +283,17 @@ const Home = () => {
   useEffect(() => {
   
   loadSuggestion(searchText);
-   
   }, [searchText]);
 
+  const renderEventCard = ({ item }) => (
+    <EventCard
+      item={item}
+      onPress={() => navigation.navigate('EventDetail', { event: item })}
+      cardWidth={300}
+      isFavorite={favorites[item.id]?.isFavorite || false}
+      onFavoritePress={() => handleFavorite(item.id)}
+    />
+  );
 
   return (
     globalLoading ? (
@@ -333,15 +413,7 @@ const Home = () => {
               <FlatList
                 style={{ paddingInline: 20 }}
                 data={recommend}
-                renderItem={({ item }) => (
-                  <EventCard
-                    item={item}
-                    key={`${item.id}`}
-                    onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-                    cardWidth={300}
-
-                  />
-                )}
+                renderItem={renderEventCard}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
@@ -363,14 +435,7 @@ const Home = () => {
           <FlatList
             style={{ paddingHorizontal: 20 }}
             data={events}
-            renderItem={({ item }) => (
-              <EventCard
-                key={`upcoming-${item.id}`}
-                item={item}
-                onPress={() => navigation.navigate('eventDetail', { id: item.id })}
-                cardWidth={300}
-              />
-            )}
+            renderItem={renderEventCard}
             horizontal
             showsHorizontalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
@@ -384,7 +449,6 @@ const Home = () => {
             )}
           />
 
-          {/* Add loading indicator at the bottom when loading more */}
           {isLoadingMore && (
             <View style={styles.loadingMoreContainer}>
               <ActivityIndicator size="small" color={COLORS.primary} />
@@ -393,7 +457,6 @@ const Home = () => {
 
           <View />
         </View>
-        {/* <FeaturedPosts /> */}
       </ScrollView>)
   );
 };
