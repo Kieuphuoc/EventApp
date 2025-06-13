@@ -26,7 +26,10 @@ import { Alert } from "react-native";
 
 const Home = () => {
   const navigation = useNavigation();
+
   const [globalLoading, setGlobalLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
   const [categories, setCategories] = useState([]);
   const [events, setEvents] = useState([]);
   const [trend, setTrend] = useState([]);
@@ -34,7 +37,7 @@ const Home = () => {
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
-  const [favorites, setFavorites] = useState({});
+
 
   // Searching 
   const [isFocused, setIsFocused] = useState(false);
@@ -44,12 +47,6 @@ const Home = () => {
 
   console.log(searchText)
   const user = useContext(MyUserContext);
-
-  const [loading, setLoading] = useState(false);
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
 
   const loadCates = async () => {
     let res = await Apis.get(endpoints['category']);
@@ -105,8 +102,6 @@ const Home = () => {
     }
   };
 
-
-
   const loadRecommend = async () => {
     try {
       setLoading(true);
@@ -114,7 +109,7 @@ const Home = () => {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         throw new Error("No token found");
-      } 
+      }
 
       let res = await authApis(token).get(endpoints["recommend"]);
       console.log("Recommend", res.data);
@@ -128,92 +123,28 @@ const Home = () => {
       setLoading(false);
     }
   }
+const loadAllData = async () => {
+  try {
+    setGlobalLoading(true);
 
-  const loadFavorites = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
+    const promises = [
+      loadCates(),
+      loadEvents(),
+      loadTrend(),
+    ];
 
-      const res = await authApis(token).get(endpoints['favoriteEvent']);
-      if (res.data) {
-        const favoritesMap = {};
-        res.data.forEach(fav => {
-          favoritesMap[fav.event_id] = {
-            isFavorite: true,
-            favorId: fav.id
-          };
-        });
-        setFavorites(favoritesMap);
-      }
-    } catch (ex) {
-      console.error("Error loading favorite events:", ex);
-      console.log('Error details:', ex.response?.data);
+    if (user?._j?.role === 'participant') {
+      promises.push(loadRecommend());
     }
-  };
 
-  const handleFavorite = async (eventId) => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
+    await Promise.all(promises);
+  } catch (error) {
+    console.error("Lỗi khi tải dữ liệu:", error);
+  } finally {
+    setGlobalLoading(false);
+  }
+};
 
-      const currentFavorite = favorites[eventId];
-      
-      if (currentFavorite?.isFavorite) {
-        // Delete favorite
-        const response = await authApis(token).delete(endpoints['delete-favor'](currentFavorite.favorId));
-        if (response.status === 200 || response.status === 204) {
-          setFavorites(prev => ({
-            ...prev,
-            [eventId]: { isFavorite: false, favorId: null }
-          }));
-        }
-      } else {
-        // Add favorite
-        const response = await authApis(token).post(endpoints['favoriteEvent'], {
-          event_id: eventId,
-        });
-        if (response.status === 201 || response.status === 200) {
-          setFavorites(prev => ({
-            ...prev,
-            [eventId]: { isFavorite: true, favorId: response.data.id }
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Favorite Error:', {
-        message: error.message,
-        response: error.response,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to update favorite status.'
-      );
-    }
-  };
-
-  const loadAllData = async () => {
-    try {
-      setGlobalLoading(true);
-
-      await Promise.all([
-        loadCates(),
-        loadEvents(),
-        loadTrend(),
-        user?._j?.role === 'participant' && loadRecommend(),
-        user?._j?.role === 'participant' && loadFavorites()
-      ]);
-    } catch (error) {
-      console.error("Lỗi khi tải dữ liệu:", error);
-    } finally {
-      setGlobalLoading(false);
-    }
-  };
 
   useEffect(() => {
     loadAllData();
@@ -233,7 +164,6 @@ const Home = () => {
       scrollX.value = e.contentOffset.x;
     },
   });
-  const [paginationIndex, setPaginationIndex] = useState(0);
 
   const getIconNameByCategory = (category) => {
     switch (category.toLowerCase()) {
@@ -268,10 +198,10 @@ const Home = () => {
       let allEvents = [];
 
       let res = await Apis.get(`${endpoints['event']}?search=${keyword}`);
-      if(res.data) {
+      if (res.data) {
         allEvents = [...allEvents, ...res.data.results];
       }
-      setSuggestion(allEvents); 
+      setSuggestion(allEvents);
     } catch (ex) {
       console.error("Error loading all suggestions:", ex);
       setSuggestion([]);
@@ -281,19 +211,9 @@ const Home = () => {
   };
 
   useEffect(() => {
-  
-  loadSuggestion(searchText);
+    loadSuggestion(searchText);
   }, [searchText]);
 
-  const renderEventCard = ({ item }) => (
-    <EventCard
-      item={item}
-      onPress={() => navigation.navigate('EventDetail', { event: item })}
-      cardWidth={300}
-      isFavorite={favorites[item.id]?.isFavorite || false}
-      onFavoritePress={() => handleFavorite(item.id)}
-    />
-  );
 
   return (
     globalLoading ? (
@@ -308,21 +228,10 @@ const Home = () => {
     ) : (
       <ScrollView
         style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
-        }
-        onScroll={({ nativeEvent }) => {
-          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-          const paddingToBottom = 20;
-          if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-            handleLoadMore();
-          }
-        }}
-        scrollEventThrottle={400}
-      >
-        <StatusBar barStyle="dark-content"/>
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />}>
         <View style={{ paddingTop: 40, }}>
-          <View style={[globalStyles.container, globalStyles.mb, { paddingInline: 20}]}>
+          <StatusBar barStyle="dark-content" />
+          <View style={[globalStyles.container, globalStyles.mb, { paddingInline: 20 }]}>
             <TextInput
               style={[globalStyles.input, globalStyles.placeholder, {}]}
               placeholder="Search Event.."
@@ -330,7 +239,8 @@ const Home = () => {
               value={searchText}
               onChangeText={setSearchText}
               onFocus={() => setIsFocused(true)}
-              onSubmitEditing={()=> navigation.navigate("searchingScreen",{searchText})}
+              onBlur={() => setIsFocused(false)}
+              onSubmitEditing={() => navigation.navigate("searchingScreen", { searchText })}
             />
             <TouchableOpacity style={[globalStyles.button]} >
               <Ionicons name="search" size={24} color="white" />
@@ -341,45 +251,30 @@ const Home = () => {
               <FlatList
                 scrollEnabled={false}
                 data={suggestion}
-                style ={{paddingLeft:20}}
+                style={{ paddingLeft: 20 }}
                 renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.suggestionItem}
-                    key={`suggestion-${item.id}`}
-
-                    onPress={() => {
-                      console.log("Pressed item id:", item.id);
-                      navigation.navigate('eventDetail', { id: item.id });
-                    }}
-                  >
-                    <Image source={{ uri: item.image }} style={styles.suggestionImage} />
-                    <View style={styles.suggestionContent}>
-                      <Text style={styles.suggestionTitle}>{item.title}</Text>
-                      <Text style={styles.suggestionDate}>{item.date}</Text>
-                    </View>
+                  <TouchableOpacity style={styles.suggestionItem} key={`suggestion-${item.id}`}
+                    onPress={() => { navigation.navigate('eventDetail', { id: item.id }); }}>
+                    <Text style={styles.suggestionTitle}>{item.title}</Text>
                   </TouchableOpacity>
                 )}
+                contentContainerStyle={{ gap: 10 }}
               />
             </View>
           )}
+
           {/* Trending Events */}
           <Text style={[globalStyles.title, globalStyles.mi]}>Trending Events</Text>
-          <View style={{}}>
+          <View>
             <Animated.FlatList
               data={trend}
               renderItem={({ item, index }) => <SliderItem item={item} key={`trending-${item.id}`}
                 index={index} scrollX={scrollX} onPress={() => navigation.navigate('eventDetail', { id: item.id })} />}
               horizontal
               showsHorizontalScrollIndicator={false}
-              pagingEnabled
-              onScroll={onScrollHandler}
-              style={{}}
-            />
-            <Pagination
-              items={trend}
-              paginationIndex={paginationIndex}
-              scrollX={scrollX}
-            />
+              // pagingEnabled
+              onScroll={onScrollHandler} />
+            <Pagination items={trend} scrollX={scrollX} />
           </View>
 
           {/* Categories */}
@@ -391,7 +286,6 @@ const Home = () => {
             renderItem={({ item }) => (
               <Category
                 key={`cate-${item.id}`}
-
                 type={item.name}
                 iconName={getIconNameByCategory(item.name)}
                 onPress={() => navigation.navigate('categoryFilter', { id: item.id })}
@@ -413,7 +307,12 @@ const Home = () => {
               <FlatList
                 style={{ paddingInline: 20 }}
                 data={recommend}
-                renderItem={renderEventCard}
+                renderItem={({item}) => <EventCard
+                  key={`recommend-${item.id}`}
+                  item={item}
+                  onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+                  cardWidth={300}
+                />}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
@@ -435,7 +334,12 @@ const Home = () => {
           <FlatList
             style={{ paddingHorizontal: 20 }}
             data={events}
-            renderItem={renderEventCard}
+            renderItem={({ item }) => <EventCard
+              key={`upcoming-${item.id}`}
+              item={item}
+              onPress={() => navigation.navigate('eventDetail', { id: item.id })}
+              cardWidth={300}
+            />}
             horizontal
             showsHorizontalScrollIndicator={false}
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}

@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../constants/colors';
 import { Chip } from 'react-native-paper';
 import { authApis, endpoints } from '../../configs/Apis';
+import Header from '../../components/Header';
 
 export default function EditEvent({ navigation, route }) {
   const { event: eventData } = route.params; // Lấy dữ liệu sự kiện từ params
@@ -205,13 +206,7 @@ export default function EditEvent({ navigation, route }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryDark} />
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Event</Text>
-      </View>
-
+      <Header title={"Create New Event"} navigation={true} />
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
           {/* Title Section */}
@@ -404,34 +399,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    paddingTop: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  backButton: {
-    marginRight: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 8,
-    borderRadius: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
   },
   content: {
     padding: 20,

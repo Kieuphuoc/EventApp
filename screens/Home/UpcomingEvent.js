@@ -5,6 +5,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import Apis, { endpoints } from '../../configs/Apis';
 import COLORS from '../../constants/colors';
 import EventCardMini from '../../components/EventCardMini';
+import Header from '../../components/Header';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -39,7 +40,7 @@ const UpcomingEvent = ({ navigation }) => {
   }, [currentPage]);
 
   const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
-  
+
   const pagination = () => {
     if (totalPages <= 1) return null;
 
@@ -71,15 +72,7 @@ const UpcomingEvent = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-      <Animated.View style={[styles.header, { paddingTop: 40, gap: 10 }]}>
-        <TouchableOpacity style={styles.searchButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Upcoming Event</Text>
-        </View>
-
-      </Animated.View>
+      <Header title={"Upcoming Event"} navigation={true} />
       <FlatList
         data={events}
         keyExtractor={(item) => item.id.toString()}
@@ -116,43 +109,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    backgroundColor: COLORS.primary,
-    padding: 20,
-    // paddingTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.8,
-    marginTop: 4,
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   filterButton: {
     width: 40,
     height: 40,

@@ -28,7 +28,6 @@ export default function MyTicket({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [qr, setQr] = useState("");
-  // const fadeAnim = useRef(new Animated.Value(0)).current; // Animation cho modal
 
   const loadTicket = async (isRefreshing = true) => {
     try {
