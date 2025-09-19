@@ -55,14 +55,7 @@ Attendees can chat with organizers through an in-app chatroom
 
 Some Screen bellow: 
 
-![Screenshot_20250801_203346_mobileapp](https://github.com/user-attachments/assets/e5e30![Screenshot_20250801_203430_mobileapp](https://github.com/user-attachments/assets/09ceaa7a-7bb1-4![Screenshot_20250801_203500_mobileapp](https://github.com/user-attachments/assets/240e809b-a922-4fbd-8bfd-19301fdddc0f)
-829-880c-40ce279f3f27)
-e74-ebd7-46df-a7b0-e9cee2ccd20a)![Scre![Screenshot_20250801_204225_mobileapp](https://github.com/user-attachments/assets/5dca7043-1433-4dfb-aedb-cf9e5bafb71b)
-enshot_20250801_20![Screenshot_20250801_203441_mobileapp](https://github.com/user-attachments/assets/ff0341cc-0774-43ba-![Screenshot_20250801_203404_mobileapp](https://github.com/user-attachments/assets/ab3b3d11-23f4-42ae-95b7-624f42eb96ce)
-9edb-f13112c04e36)![Screenshot_20250801_203450_![Screenshot_20250801_204045_mobileapp](https://github.com/user-attachments/assets/de41fdd2-1467-45dc-9c4c-37f3cfad7e9a)
-mobileapp](https://github.com/user-attachments/assets/48b8d1be-c420-43b6-937b-02a7cd153b60)
-
-3445_mobileapp](https://github.com/user-attachments/assets/5ee143fa-85f4-4362-a520-41d01947bbbf)
+<img src="https://github.com/user-attachments/assets/f633854d-e455-4755-9db8-dfe09fd6d8ba" width="200" />
 
 
 🛠️ Tech Stack
