@@ -74,8 +74,12 @@ Some Screen bellow:
 | **Audio Storage** | Cloudinary              |
 | **Payment** | Momo |
 
+
+## 🏁 Quick Setup (Local)
+
+```bash
 # 1. Clone the repository
-git clone https://github.com/KieuPhuoc/EventApp.git
+git clone https://github.com/Kieuphuoc/EventApp.git
 
 # 2. Install dependencies
 cd EventApp
@@ -83,6 +87,7 @@ npm install
 
 # 3. Configure environment variables
 cp .env.example .env
+# Update your DB
 
 # 4. Start development server
-npm run dev
+npm start
