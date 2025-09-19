@@ -61,7 +61,6 @@ Some Screen bellow:
 <img src="https://github.com/user-attachments/assets/1e934de4-ce23-491c-adc9-4668497a5dd9" width="200" />
 <img src="https://github.com/user-attachments/assets/560c9c71-6e21-40d0-9990-93db76153016" width="200" />
 <img src="https://github.com/user-attachments/assets/3c0638f7-a3f2-41d9-9578-90322f0c3f68" width="200" />
-<img src="https://github.com/user-attachments/assets/bba27776-88ae-41ea-a94c-3930f9a999f1" width="200" />
 <img src="https://github.com/user-attachments/assets/045cce7a-fdff-4878-b821-33fea4c52d9a" width="200" />
 <img src="https://github.com/user-attachments/assets/8e57c705-27e3-4800-ba4b-5a64ca59bbed" width="200" />
 
